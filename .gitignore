@@ -3,6 +3,10 @@
 # dependencies
 node_modules/
 
+screens
+screen-context/
+prompts/
+
 # Expo
 .expo/
 dist/
