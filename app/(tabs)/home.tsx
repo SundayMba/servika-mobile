@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import {
@@ -31,6 +32,7 @@ function SectionHeader({ title }: { title: string }) {
 
 export default function Home() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const bottomPadding = TAB_BAR_HEIGHT + Math.max(insets.bottom, 12) + 25;
 
   const [authPromptVisible, setAuthPromptVisible] = useState(false);
@@ -172,6 +174,14 @@ export default function Home() {
         title="Sign up to view this artisan"
         message="Create an account to view full artisan profiles, book services and chat with them directly."
         icon="person"
+        onSignUp={() => {
+          setAuthPromptVisible(false);
+          router.push('/register');
+        }}
+        onLogin={() => {
+          setAuthPromptVisible(false);
+          router.push('/login');
+        }}
       />
     </SafeAreaView>
   );

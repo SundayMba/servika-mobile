@@ -1,4 +1,4 @@
-import { Tabs } from 'expo-router';
+import { Tabs, useRouter } from 'expo-router';
 import { useState } from 'react';
 
 import { AuthPromptSheet } from '@/components/AuthPromptSheet';
@@ -12,6 +12,7 @@ const PROTECTED_TABS = ['bookings', 'messages', 'profile'];
 // button). Screen order here sets left-to-right order in the bar, so
 // `categories` sits in the middle of the five tabs.
 export default function TabsLayout() {
+  const router = useRouter();
   const [authPromptVisible, setAuthPromptVisible] = useState(false);
 
   return (
@@ -39,6 +40,14 @@ export default function TabsLayout() {
         title="Sign up to continue"
         message="Create an account to manage your bookings, messages and profile."
         icon="lock-closed"
+        onSignUp={() => {
+          setAuthPromptVisible(false);
+          router.push('/register');
+        }}
+        onLogin={() => {
+          setAuthPromptVisible(false);
+          router.push('/login');
+        }}
       />
     </>
   );
