@@ -20,6 +20,25 @@ export type Artisan = {
   /** Accent color for the avatar ring. */
   accent: string;
   avatar: ImageSourcePropType;
+  // ── Profile details ──
+  /** Cover/banner photo shown behind the avatar on the profile. */
+  cover: ImageSourcePropType;
+  /** Number of customer reviews. */
+  reviews: number;
+  /** Years of experience. */
+  experienceYears: number;
+  /** City / region the artisan operates in. */
+  location: string;
+  /** Typical response time, e.g. "15 min". */
+  responseTime: string;
+  /** Jobs-completed badge, e.g. "120+". */
+  jobsCount: string;
+  /** Short bio shown in the About section. */
+  about: string;
+  /** Services offered, rendered as chips. */
+  services: string[];
+  /** Work-gallery photos. */
+  gallery: ImageSourcePropType[];
 };
 
 export type WorkingArtisan = {
@@ -109,6 +128,21 @@ export const NEARBY_ARTISANS: Artisan[] = [
     available: true,
     accent: '#F97316',
     avatar: require('../assets/images/artisans/avatars/friendly_electrician_with_cable_coil.png'),
+    cover: require('../assets/images/artisans/working/electrician_working_on_wall_electrical_box.png'),
+    reviews: 124,
+    experienceYears: 6,
+    location: 'Lagos, Nigeria',
+    responseTime: '15 min',
+    jobsCount: '120+',
+    about:
+      'Professional electrician specializing in installations, repairs and maintenance. Committed to quality work and customer safety.',
+    services: ['Installation', 'Repair', 'Maintenance', 'Wiring'],
+    gallery: [
+      require('../assets/images/artisans/working/electrician_working_on_wall_electrical_box.png'),
+      require('../assets/images/artisans/working/hvac_technician_working_on_ac_unit.png'),
+      require('../assets/images/artisans/working/technician_repairing_refrigerator_with_tools.png'),
+      require('../assets/images/artisans/working/carpenter_focused_on_sawing_wood.png'),
+    ],
   },
   {
     id: 'ibrahim-yusuf',
@@ -119,6 +153,21 @@ export const NEARBY_ARTISANS: Artisan[] = [
     available: true,
     accent: '#3B82F6',
     avatar: require('../assets/images/artisans/avatars/confident_plumber_with_red_wrench.png'),
+    cover: require('../assets/images/artisans/working/plumber_fixing_sink_pipes_with_wrench.png'),
+    reviews: 98,
+    experienceYears: 8,
+    location: 'Lagos, Nigeria',
+    responseTime: '10 min',
+    jobsCount: '200+',
+    about:
+      'Experienced plumber handling installations, leak repairs and pipe maintenance. Reliable, neat and available for emergencies.',
+    services: ['Leak Repair', 'Installation', 'Drainage', 'Maintenance'],
+    gallery: [
+      require('../assets/images/artisans/working/plumber_fixing_sink_pipes_with_wrench.png'),
+      require('../assets/images/artisans/working/technician_repairing_refrigerator_with_tools.png'),
+      require('../assets/images/artisans/working/electrician_working_on_wall_electrical_box.png'),
+      require('../assets/images/artisans/working/carpenter_focused_on_sawing_wood.png'),
+    ],
   },
   {
     id: 'chidi-okeke',
@@ -129,8 +178,28 @@ export const NEARBY_ARTISANS: Artisan[] = [
     available: false,
     accent: '#10B981',
     avatar: require('../assets/images/artisans/avatars/hvac_technician_portrait_in_uniform.png'),
+    cover: require('../assets/images/artisans/working/hvac_technician_working_on_ac_unit.png'),
+    reviews: 76,
+    experienceYears: 5,
+    location: 'Abuja, Nigeria',
+    responseTime: '20 min',
+    jobsCount: '90+',
+    about:
+      'Certified HVAC technician for AC servicing, installation and gas refill. Focused on efficient cooling and long-term reliability.',
+    services: ['AC Servicing', 'Installation', 'Gas Refill', 'Repair'],
+    gallery: [
+      require('../assets/images/artisans/working/hvac_technician_working_on_ac_unit.png'),
+      require('../assets/images/artisans/working/technician_repairing_refrigerator_with_tools.png'),
+      require('../assets/images/artisans/working/electrician_working_on_wall_electrical_box.png'),
+      require('../assets/images/artisans/working/plumber_fixing_sink_pipes_with_wrench.png'),
+    ],
   },
 ];
+
+/** Look up a single artisan by id (used by the profile route). */
+export function getArtisanById(id: string): Artisan | undefined {
+  return NEARBY_ARTISANS.find((artisan) => artisan.id === id);
+}
 
 /** Working artisans that rotate inside the emergency hero banner. */
 export const WORKING_ARTISANS: WorkingArtisan[] = [

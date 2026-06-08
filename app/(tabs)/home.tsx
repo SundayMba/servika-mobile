@@ -7,7 +7,6 @@ import {
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 
-import { AuthPromptSheet } from '@/components/AuthPromptSheet';
 import { SearchSheet } from '@/components/SearchSheet';
 import { ArtisanCard } from '@/components/home/ArtisanCard';
 import { HeroCarousel } from '@/components/home/HeroCarousel';
@@ -35,7 +34,6 @@ export default function Home() {
   const router = useRouter();
   const bottomPadding = TAB_BAR_HEIGHT + Math.max(insets.bottom, 12) + 25;
 
-  const [authPromptVisible, setAuthPromptVisible] = useState(false);
   const [searchVisible, setSearchVisible] = useState(false);
 
   return (
@@ -111,7 +109,12 @@ export default function Home() {
               <ArtisanCard
                 key={artisan.id}
                 artisan={artisan}
-                onPress={() => setAuthPromptVisible(true)}
+                onPress={() =>
+                  router.push({
+                    pathname: '/artisan/[id]',
+                    params: { id: artisan.id },
+                  })
+                }
               />
             ))}
           </ScrollView>
@@ -165,23 +168,6 @@ export default function Home() {
       <SearchSheet
         visible={searchVisible}
         onClose={() => setSearchVisible(false)}
-      />
-
-      {/* ── Auth-required prompt (protected actions for guests) ── */}
-      <AuthPromptSheet
-        visible={authPromptVisible}
-        onClose={() => setAuthPromptVisible(false)}
-        title="Sign up to view this artisan"
-        message="Create an account to view full artisan profiles, book services and chat with them directly."
-        icon="person"
-        onSignUp={() => {
-          setAuthPromptVisible(false);
-          router.push('/register');
-        }}
-        onLogin={() => {
-          setAuthPromptVisible(false);
-          router.push('/login');
-        }}
       />
     </SafeAreaView>
   );
