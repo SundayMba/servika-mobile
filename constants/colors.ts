@@ -16,4 +16,7 @@ export const colors = {
 
   border: '#E5E7EB',
   white: '#FFFFFF',
+
+  /** Soothing off-white page canvas — cards sit on top of this. */
+  background: '#F2F4F8',
 } as const;

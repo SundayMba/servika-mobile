@@ -12,6 +12,8 @@ module.exports = {
           dark: '#EA6A0C',
           light: '#FB923C',
         },
+        // Soothing off-white page canvas — cards sit on top of this.
+        background: '#F2F4F8',
       },
     },
   },

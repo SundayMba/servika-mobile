@@ -1,7 +1,21 @@
-import { Stack } from 'expo-router';
+import { Tabs } from 'expo-router';
 
-// Minimal stack for now. When the search / categories / bookings / profile
-// screens exist, swap this for a <Tabs> navigator with the bottom tab bar.
+import { TabBar } from '@/components/navigation/TabBar';
+
+// Bottom tab navigator with a custom tab bar (raised center "Categories"
+// button). Screen order here sets left-to-right order in the bar, so
+// `categories` sits in the middle of the five tabs.
 export default function TabsLayout() {
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return (
+    <Tabs
+      screenOptions={{ headerShown: false }}
+      tabBar={(props) => <TabBar {...props} />}
+    >
+      <Tabs.Screen name="home" />
+      <Tabs.Screen name="bookings" />
+      <Tabs.Screen name="categories" />
+      <Tabs.Screen name="messages" />
+      <Tabs.Screen name="profile" />
+    </Tabs>
+  );
 }
