@@ -20,9 +20,9 @@ export function ArtisanCard({
       style={{
         shadowColor: '#0F172A',
         shadowOpacity: 0.01,
-        shadowRadius: 1,
+        // shadowRadius: 1,
         shadowOffset: { width: 0, height: 1 },
-        elevation: 1,
+        // elevation: 1,
       }}
       className="h-40 w-72 flex-row overflow-hidden rounded-2xl border border-gray-100 bg-white p-2"
     >

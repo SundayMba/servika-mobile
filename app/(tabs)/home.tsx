@@ -1,10 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useState } from 'react';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import {
   SafeAreaView,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 
+import { AuthPromptSheet } from '@/components/AuthPromptSheet';
+import { SearchSheet } from '@/components/SearchSheet';
 import { ArtisanCard } from '@/components/home/ArtisanCard';
 import { HeroCarousel } from '@/components/home/HeroCarousel';
 import { ServiceTile } from '@/components/home/ServiceTile';
@@ -28,7 +31,10 @@ function SectionHeader({ title }: { title: string }) {
 
 export default function Home() {
   const insets = useSafeAreaInsets();
-  const bottomPadding = TAB_BAR_HEIGHT + Math.max(insets.bottom, 12) + 16;
+  const bottomPadding = TAB_BAR_HEIGHT + Math.max(insets.bottom, 12) + 25;
+
+  const [authPromptVisible, setAuthPromptVisible] = useState(false);
+  const [searchVisible, setSearchVisible] = useState(false);
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
@@ -55,29 +61,30 @@ export default function Home() {
         </TouchableOpacity>
       </View>
 
+      {/* ── Fixed search bar (stays pinned while the body scrolls) ── */}
+      <TouchableOpacity
+        activeOpacity={0.7}
+        accessibilityRole="search"
+        onPress={() => setSearchVisible(true)}
+        className="mx-5 mb-4 h-14 flex-row items-center gap-2.5 rounded-2xl border border-gray-100/70 bg-white px-4"
+      >
+        <Ionicons name="search-outline" size={20} color={colors.textMuted} />
+        <Text className="text-[14px] text-gray-400">
+          Search services, artisans...
+        </Text>
+      </TouchableOpacity>
+
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: bottomPadding }}
       >
-        {/* ── Search (white card on the canvas) ── */}
-        <TouchableOpacity
-          activeOpacity={0.7}
-          accessibilityRole="search"
-          className="mx-5 mb-5 h-12 flex-row items-center gap-2.5 rounded-2xl border border-gray-100/70 bg-white px-4"
-        >
-          <Ionicons name="search-outline" size={20} color={colors.textMuted} />
-          <Text className="text-[14px] text-gray-400">
-            Search services, artisans...
-          </Text>
-        </TouchableOpacity>
-
         {/* ── Emergency hero (rotating working artisans) ── */}
-        <View className="mb-5 px-5">
+        <View className="mb-4 px-5">
           <HeroCarousel />
         </View>
 
         {/* ── Popular Services (wrapped in a white card) ── */}
-        <View className="mb-5 px-5">
+        <View className="mb-4 px-5">
           <View className="rounded-3xl border border-gray-100/70 bg-white px-4 pb-5 pt-4">
             <SectionHeader title="Popular Services" />
             <View className="flex-row flex-wrap" style={{ rowGap: 20 }}>
@@ -89,7 +96,7 @@ export default function Home() {
         </View>
 
         {/* ── Nearby Artisans ── */}
-        <View className="mb-7">
+        <View className="mb-4">
           <View className="px-5">
             <SectionHeader title="Nearby Artisans" />
           </View>
@@ -99,7 +106,11 @@ export default function Home() {
             contentContainerStyle={{ paddingHorizontal: 20, gap: 12 }}
           >
             {NEARBY_ARTISANS.map((artisan) => (
-              <ArtisanCard key={artisan.id} artisan={artisan} />
+              <ArtisanCard
+                key={artisan.id}
+                artisan={artisan}
+                onPress={() => setAuthPromptVisible(true)}
+              />
             ))}
           </ScrollView>
         </View>
@@ -109,10 +120,10 @@ export default function Home() {
           <View
             style={{
               shadowColor: '#0F172A',
-              shadowOpacity: 0.06,
-              shadowRadius: 12,
-              shadowOffset: { width: 0, height: 8 },
-              elevation: 3,
+              shadowOpacity: 0.01,
+              shadowRadius: 1,
+              shadowOffset: { width: 0, height: 10 },
+              elevation: 0.5,
             }}
             className="flex-row items-center justify-between rounded-2xl border border-gray-100 bg-white px-4 py-5"
           >
@@ -147,6 +158,21 @@ export default function Home() {
           </View>
         </View>
       </ScrollView>
+
+      {/* ── Search (open to guests) ── */}
+      <SearchSheet
+        visible={searchVisible}
+        onClose={() => setSearchVisible(false)}
+      />
+
+      {/* ── Auth-required prompt (protected actions for guests) ── */}
+      <AuthPromptSheet
+        visible={authPromptVisible}
+        onClose={() => setAuthPromptVisible(false)}
+        title="Sign up to view this artisan"
+        message="Create an account to view full artisan profiles, book services and chat with them directly."
+        icon="person"
+      />
     </SafeAreaView>
   );
 }
