@@ -149,6 +149,9 @@ export default function Home() {
             </View>
             <TouchableOpacity
               activeOpacity={0.85}
+              accessibilityRole="button"
+              accessibilityLabel="Sign up"
+              onPress={() => router.push('/register')}
               style={{
                 shadowColor: colors.primary,
                 shadowOpacity: 0.3,
