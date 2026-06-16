@@ -36,12 +36,26 @@ export type Artisan = {
   responseTime: string;
   /** Jobs-completed badge, e.g. "120+". */
   jobsCount: string;
+  /** Up-front inspection fee, e.g. "₦5,000". */
+  inspectionFee: string;
   /** Short bio shown in the About section. */
   about: string;
   /** Services offered, rendered as chips. */
   services: string[];
   /** Work-gallery photos. */
   gallery: ImageSourcePropType[];
+};
+
+export type Review = {
+  id: string;
+  /** Reviewer display name, e.g. "Blessing A.". */
+  name: string;
+  rating: number;
+  /** Relative time, e.g. "2 days ago". */
+  timeAgo: string;
+  /** The review body. */
+  text: string;
+  avatar: ImageSourcePropType;
 };
 
 export type WorkingArtisan = {
@@ -267,6 +281,7 @@ export const NEARBY_ARTISANS: Artisan[] = [
     location: 'Lagos, Nigeria',
     responseTime: '15 min',
     jobsCount: '120+',
+    inspectionFee: '₦5,000',
     about:
       'Professional electrician specializing in installations, repairs and maintenance. Committed to quality work and customer safety.',
     services: ['Installation', 'Repair', 'Maintenance', 'Wiring'],
@@ -292,6 +307,7 @@ export const NEARBY_ARTISANS: Artisan[] = [
     location: 'Lagos, Nigeria',
     responseTime: '10 min',
     jobsCount: '200+',
+    inspectionFee: '₦4,000',
     about:
       'Experienced plumber handling installations, leak repairs and pipe maintenance. Reliable, neat and available for emergencies.',
     services: ['Leak Repair', 'Installation', 'Drainage', 'Maintenance'],
@@ -317,6 +333,7 @@ export const NEARBY_ARTISANS: Artisan[] = [
     location: 'Abuja, Nigeria',
     responseTime: '20 min',
     jobsCount: '90+',
+    inspectionFee: '₦6,000',
     about:
       'Certified HVAC technician for AC servicing, installation and gas refill. Focused on efficient cooling and long-term reliability.',
     services: ['AC Servicing', 'Installation', 'Gas Refill', 'Repair'],
@@ -326,6 +343,34 @@ export const NEARBY_ARTISANS: Artisan[] = [
       require('../assets/images/artisans/working/electrician_working_on_wall_electrical_box.png'),
       require('../assets/images/artisans/working/plumber_fixing_sink_pipes_with_wrench.png'),
     ],
+  },
+];
+
+/** Sample customer reviews shown on the artisan profile. */
+export const SAMPLE_REVIEWS: Review[] = [
+  {
+    id: 'r1',
+    name: 'Blessing A.',
+    rating: 5,
+    timeAgo: '2 days ago',
+    text: 'Emmanuel was prompt, professional and fixed the issue perfectly. Highly recommended!',
+    avatar: require('../assets/images/artisans/avatars/professional_artisan_portrait_with_uniform.png'),
+  },
+  {
+    id: 'r2',
+    name: 'Tunde O.',
+    rating: 5,
+    timeAgo: '1 week ago',
+    text: 'Great work and fair pricing. Showed up on time and cleaned up after the job.',
+    avatar: require('../assets/images/artisans/avatars/professional_handyman_with_tools.png'),
+  },
+  {
+    id: 'r3',
+    name: 'Ngozi E.',
+    rating: 4,
+    timeAgo: '3 weeks ago',
+    text: 'Very knowledgeable and polite. Would definitely book again for future repairs.',
+    avatar: require('../assets/images/artisans/avatars/appliance_repair_expert_portrait.png'),
   },
 ];
 

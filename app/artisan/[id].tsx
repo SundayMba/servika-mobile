@@ -12,9 +12,10 @@ import {
 import { AuthPromptSheet } from '@/components/AuthPromptSheet';
 import { Button } from '@/components/ui/Button';
 import { colors } from '@/constants/colors';
-import { getArtisanById } from '@/constants/home-data';
+import { SAMPLE_REVIEWS, getArtisanById } from '@/constants/home-data';
 
-function InfoChip({
+/** A small inline icon + label stat used in the identity row. */
+function InfoStat({
   icon,
   label,
 }: {
@@ -22,9 +23,25 @@ function InfoChip({
   label: string;
 }) {
   return (
-    <View className="flex-row items-center gap-1.5 rounded-xl border border-gray-200 px-3 py-2">
-      <Ionicons name={icon} size={14} color={colors.textMuted} />
+    <View className="flex-row items-center gap-1.5">
+      <Ionicons name={icon} size={14} color={colors.primary} />
       <Text className="text-[12px] font-medium text-gray-600">{label}</Text>
+    </View>
+  );
+}
+
+/** Filled/empty star row for a given rating. */
+function Stars({ rating, size = 12 }: { rating: number; size?: number }) {
+  return (
+    <View className="flex-row items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <Ionicons
+          key={i}
+          name={i <= Math.round(rating) ? 'star' : 'star-outline'}
+          size={size}
+          color="#FBBF24"
+        />
+      ))}
     </View>
   );
 }
@@ -41,6 +58,7 @@ export default function ArtisanProfile() {
   const insets = useSafeAreaInsets();
 
   const [authPromptVisible, setAuthPromptVisible] = useState(false);
+  const [aboutExpanded, setAboutExpanded] = useState(false);
 
   const artisan = getArtisanById(id);
 
@@ -124,43 +142,165 @@ export default function ArtisanProfile() {
               </Text>
             </View>
 
-            {/* Info chips */}
-            <View className="mt-4 flex-row flex-wrap items-center justify-center gap-2">
-              <InfoChip icon="location-outline" label={artisan.location} />
-              <InfoChip
-                icon="time-outline"
-                label={`Response ${artisan.responseTime}`}
+            {/* Info row */}
+            <View className="mt-4 flex-row items-center justify-center gap-5">
+              <InfoStat
+                icon="location-outline"
+                label={`${artisan.distanceKm} km away`}
               />
-              <InfoChip
+              <View className="h-3.5 w-px bg-gray-200" />
+              <InfoStat
                 icon="briefcase-outline"
-                label={`${artisan.jobsCount} Jobs`}
+                label={`${artisan.experienceYears}+ years exp.`}
               />
+              <View className="h-3.5 w-px bg-gray-200" />
+              <InfoStat icon="shield-checkmark-outline" label="Verified" />
             </View>
-          </View>
-
-          {/* About */}
-          <View className="mt-7 px-5">
-            <SectionTitle title="About" />
-            <Text className="text-[14px] leading-5 text-gray-500">
-              {artisan.about}
-            </Text>
           </View>
 
           {/* Services */}
           <View className="mt-7 px-5">
             <SectionTitle title="Services" />
             <View className="flex-row flex-wrap gap-2">
-              {artisan.services.map((service) => (
+              {artisan.services.slice(0, 3).map((service) => (
                 <View
                   key={service}
-                  className="rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2"
+                  className="flex-row items-center gap-1.5 rounded-xl border border-gray-100 bg-gray-50 px-3.5 py-2"
                 >
+                  <Ionicons
+                    name="construct-outline"
+                    size={14}
+                    color={colors.primary}
+                  />
                   <Text className="text-[13px] font-medium text-gray-700">
                     {service}
                   </Text>
                 </View>
               ))}
+              {artisan.services.length > 3 && (
+                <View className="flex-row items-center rounded-xl border border-gray-100 bg-gray-50 px-3.5 py-2">
+                  <Text className="text-[13px] font-semibold text-primary">
+                    +{artisan.services.length - 3} more
+                  </Text>
+                </View>
+              )}
             </View>
+          </View>
+
+          {/* About */}
+          <View className="mt-7 px-5">
+            <SectionTitle title={`About ${artisan.name.split(' ')[0]}`} />
+            <Text
+              numberOfLines={aboutExpanded ? undefined : 3}
+              className="text-[14px] leading-5 text-gray-500"
+            >
+              {artisan.about}
+            </Text>
+            <Pressable hitSlop={6} onPress={() => setAboutExpanded((v) => !v)}>
+              <Text className="mt-1.5 text-[13px] font-semibold text-primary">
+                {aboutExpanded ? 'Read less' : 'Read more'}
+              </Text>
+            </Pressable>
+          </View>
+
+          {/* Inspection fee */}
+          <View className="mt-7 px-5">
+            <View className="rounded-2xl border border-blue-100 bg-blue-50/60 p-4">
+              <View className="flex-row items-center justify-between">
+                <View className="flex-row items-center gap-3">
+                  <View className="h-11 w-11 items-center justify-center rounded-xl bg-primary/10">
+                    <Ionicons
+                      name="receipt-outline"
+                      size={20}
+                      color={colors.primary}
+                    />
+                  </View>
+                  <View>
+                    <Text className="text-[12px] font-medium text-gray-500">
+                      Inspection Fee
+                    </Text>
+                    <Text className="text-[20px] font-bold text-gray-900">
+                      {artisan.inspectionFee}
+                    </Text>
+                  </View>
+                </View>
+                <View className="flex-row items-center gap-1">
+                  <Ionicons
+                    name="checkmark-circle"
+                    size={14}
+                    color="#22C55E"
+                  />
+                  <Text className="text-[11px] font-medium text-gray-500">
+                    Satisfaction{'\n'}Guaranteed
+                  </Text>
+                </View>
+              </View>
+              <Text className="mt-3 text-[12px] leading-4 text-gray-500">
+                Deducted from the final service cost once you proceed with the
+                job.
+              </Text>
+            </View>
+          </View>
+
+          {/* Customer reviews */}
+          <View className="mt-7">
+            <View className="mb-3 flex-row items-center justify-between px-5">
+              <Text className="text-[16px] font-bold text-gray-900">
+                Customer Reviews
+              </Text>
+              <Pressable hitSlop={8}>
+                <Text className="text-[13px] font-semibold text-primary">
+                  See all
+                </Text>
+              </Pressable>
+            </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: 20, gap: 12 }}
+            >
+              {SAMPLE_REVIEWS.map((review) => (
+                <View
+                  key={review.id}
+                  className="w-72 rounded-2xl border border-gray-100 bg-white p-4"
+                  style={{
+                    shadowColor: '#0F172A',
+                    shadowOpacity: 0.04,
+                    shadowRadius: 8,
+                    shadowOffset: { width: 0, height: 2 },
+                    elevation: 1,
+                  }}
+                >
+                  <View className="flex-row items-center gap-3">
+                    <View className="h-10 w-10 overflow-hidden rounded-full bg-background">
+                      <Image
+                        source={review.avatar}
+                        contentFit="cover"
+                        contentPosition="top"
+                        style={{ flex: 1 }}
+                      />
+                    </View>
+                    <View className="flex-1">
+                      <Text className="text-[14px] font-semibold text-gray-900">
+                        {review.name}
+                      </Text>
+                      <View className="mt-0.5 flex-row items-center gap-2">
+                        <Stars rating={review.rating} />
+                        <Text className="text-[11px] text-gray-400">
+                          {review.timeAgo}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                  <Text
+                    numberOfLines={3}
+                    className="mt-3 text-[13px] leading-5 text-gray-500"
+                  >
+                    {review.text}
+                  </Text>
+                </View>
+              ))}
+            </ScrollView>
           </View>
 
           {/* Work gallery */}
@@ -251,7 +391,7 @@ export default function ArtisanProfile() {
         </Pressable>
         <View className="flex-1">
           <Button
-            label="Request Service"
+            label="Book This Artisan"
             onPress={() =>
               router.push({
                 pathname: '/booking/request',

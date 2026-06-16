@@ -116,9 +116,9 @@ export function ArtisanCard({
           </Pressable>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={`Chat with ${artisan.name}`}
+            accessibilityLabel={`Chat with ${artisan.name} — sign in required`}
             onPress={onChat}
-            className="h-10 flex-row items-center pr-2 pl-2 gap-1.5  rounded-xl border border-gray-200 bg-white"
+            className="relative h-10 flex-row items-center pr-2 pl-2 gap-1.5  rounded-xl border border-gray-200 bg-white"
           >
             <Ionicons
               name="chatbubble-ellipses-outline"
@@ -126,6 +126,11 @@ export function ArtisanCard({
               color={colors.primary}
             />
             <Text className="text-[13px] font-bold text-primary">Chat</Text>
+
+            {/* Locked badge pinned to the top-right corner */}
+            <View className="absolute -right-1.5 -top-1.5 h-4 w-4 items-center justify-center rounded-full border border-white bg-gray-400">
+              <Ionicons name="lock-closed" size={9} color="#FFFFFF" />
+            </View>
           </Pressable>
         </View>
       </View>

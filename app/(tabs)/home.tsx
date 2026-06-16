@@ -7,6 +7,7 @@ import {
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 
+import { AuthPromptSheet } from '@/components/AuthPromptSheet';
 import { SearchSheet } from '@/components/SearchSheet';
 import { ArtisanCard } from '@/components/home/ArtisanCard';
 import { HeroCarousel } from '@/components/home/HeroCarousel';
@@ -35,6 +36,7 @@ export default function Home() {
   const bottomPadding = TAB_BAR_HEIGHT + Math.max(insets.bottom, 12) + 25;
 
   const [searchVisible, setSearchVisible] = useState(false);
+  const [authPromptVisible, setAuthPromptVisible] = useState(false);
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
@@ -130,12 +132,7 @@ export default function Home() {
                     params: { service: artisan.specialty },
                   })
                 }
-                onChat={() =>
-                  router.push({
-                    pathname: '/artisan/[id]',
-                    params: { id: artisan.id },
-                  })
-                }
+                onChat={() => setAuthPromptVisible(true)}
               />
             ))}
           </ScrollView>
@@ -192,6 +189,23 @@ export default function Home() {
       <SearchSheet
         visible={searchVisible}
         onClose={() => setSearchVisible(false)}
+      />
+
+      {/* ── Chat is gated behind sign-in ── */}
+      <AuthPromptSheet
+        visible={authPromptVisible}
+        onClose={() => setAuthPromptVisible(false)}
+        title="Sign in to chat"
+        message="Create an account or log in to message artisans directly."
+        icon="lock-closed"
+        onSignUp={() => {
+          setAuthPromptVisible(false);
+          router.push('/register');
+        }}
+        onLogin={() => {
+          setAuthPromptVisible(false);
+          router.push('/login');
+        }}
       />
     </SafeAreaView>
   );
