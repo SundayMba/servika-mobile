@@ -353,7 +353,7 @@ export const SAMPLE_REVIEWS: Review[] = [
     name: 'Blessing A.',
     rating: 5,
     timeAgo: '2 days ago',
-    text: 'Emmanuel was prompt, professional and fixed the issue perfectly. Highly recommended!',
+    text: 'The artisan was prompt, professional and fixed the issue perfectly. Highly recommended!',
     avatar: require('../assets/images/artisans/avatars/professional_artisan_portrait_with_uniform.png'),
   },
   {

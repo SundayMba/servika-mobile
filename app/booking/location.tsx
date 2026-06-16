@@ -1,8 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as Location from 'expo-location';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -19,12 +21,89 @@ import { colors } from '@/constants/colors';
 
 export default function BookingLocation() {
   const router = useRouter();
-  const { service } = useLocalSearchParams<{ service?: string }>();
+  const { service, description, date, time, urgency } = useLocalSearchParams<{
+    service?: string;
+    description?: string;
+    date?: string;
+    time?: string;
+    urgency?: string;
+  }>();
 
   const [instructions, setInstructions] = useState('');
+  const [addressLabel, setAddressLabel] = useState<'Home' | 'Work'>('Home');
+  const [addressText, setAddressText] = useState(
+    '12 Admiralty Way, Lekki Phase 1, Lagos, Nigeria'
+  );
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+
+  const handleUseCurrentLocation = async () => {
+    setLocationError(null);
+    setIsLoadingLocation(true);
+
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== Location.PermissionStatus.GRANTED) {
+        throw new Error('Location permission denied.');
+      }
+
+      const position = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.BestForNavigation,
+      });
+
+      const [reverseGeocode] = await Location.reverseGeocodeAsync({
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+      });
+
+      const formattedAddress = reverseGeocode
+        ? [
+            reverseGeocode.name,
+            reverseGeocode.street,
+            reverseGeocode.district,
+            reverseGeocode.city,
+            reverseGeocode.region,
+          ]
+            .filter(Boolean)
+            .join(', ')
+        : `${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}`;
+
+      setAddressLabel('Home');
+      setAddressText(formattedAddress);
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Unable to retrieve your current location.';
+      setLocationError(message);
+      Alert.alert('Location Error', message);
+    } finally {
+      setIsLoadingLocation(false);
+    }
+  };
+
+  const handleChangeAddress = () => {
+    if (addressLabel === 'Home') {
+      setAddressLabel('Work');
+      setAddressText('10B Adeola Odeku Street, Victoria Island, Lagos, Nigeria');
+    } else {
+      setAddressLabel('Home');
+      setAddressText('12 Admiralty Way, Lekki Phase 1, Lagos, Nigeria');
+    }
+  };
 
   const handleConfirm = () => {
-    router.push({ pathname: '/booking/summary', params: { service } });
+    router.push({
+      pathname: '/booking/summary',
+      params: {
+        service,
+        description,
+        date,
+        time,
+        urgency,
+        instructions,
+      },
+    });
   };
 
   return (
@@ -74,6 +153,8 @@ export default function BookingLocation() {
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Use my current location"
+              accessibilityState={{ busy: isLoadingLocation }}
+              onPress={handleUseCurrentLocation}
               style={{
                 shadowColor: '#0F172A',
                 shadowOpacity: 0.1,
@@ -93,12 +174,14 @@ export default function BookingLocation() {
               <Ionicons name="home-outline" size={18} color={colors.primary} />
             </View>
             <View className="ml-3 flex-1">
-              <Text className="text-[14px] font-bold text-gray-900">Home</Text>
+              <Text className="text-[14px] font-bold text-gray-900">
+                {addressLabel}
+              </Text>
               <Text className="mt-0.5 text-[12px] leading-4 text-gray-500">
-                12 Admiralty Way, Lekki Phase 1, Lagos, Nigeria
+                {addressText}
               </Text>
             </View>
-            <Pressable hitSlop={8}>
+            <Pressable hitSlop={8} onPress={handleChangeAddress}>
               <Text className="text-[13px] font-semibold text-primary">Change</Text>
             </Pressable>
           </View>

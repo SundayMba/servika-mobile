@@ -100,7 +100,16 @@ export default function BookingRequest() {
   const serviceName = service ?? 'Service Request';
 
   const handleContinue = () => {
-    router.push({ pathname: '/booking/location', params: { service: serviceName } });
+    router.push({
+      pathname: '/booking/location',
+      params: {
+        service: serviceName,
+        description,
+        date,
+        time,
+        urgency,
+      },
+    });
   };
 
   return (

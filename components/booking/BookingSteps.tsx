@@ -10,12 +10,14 @@ const STEPS = ['Details', 'Location', 'Confirm'];
  * `current` is 1-based (1 = Details, 2 = Location, 3 = Confirm).
  */
 export function BookingSteps({ current }: { current: number }) {
+  const currentStep = Math.max(1, Math.min(current, STEPS.length));
+
   return (
     <View className="flex-row items-start px-2">
       {STEPS.map((label, index) => {
         const step = index + 1;
-        const done = step < current;
-        const active = step === current;
+        const done = step < currentStep;
+        const active = step === currentStep;
         const isLast = index === STEPS.length - 1;
 
         return (
