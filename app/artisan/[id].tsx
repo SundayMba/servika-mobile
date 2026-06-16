@@ -252,7 +252,12 @@ export default function ArtisanProfile() {
         <View className="flex-1">
           <Button
             label="Request Service"
-            onPress={() => setAuthPromptVisible(true)}
+            onPress={() =>
+              router.push({
+                pathname: '/booking/request',
+                params: { service: `${artisan.specialty}`, artisanId: artisan.id },
+              })
+            }
           />
         </View>
       </View>

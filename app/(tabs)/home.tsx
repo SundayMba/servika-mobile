@@ -89,7 +89,16 @@ export default function Home() {
             <SectionHeader title="Popular Services" />
             <View className="flex-row flex-wrap" style={{ rowGap: 20 }}>
               {POPULAR_SERVICES.map((service) => (
-                <ServiceTile key={service.id} service={service} />
+                <ServiceTile
+                  key={service.id}
+                  service={service}
+                  onPress={() =>
+                    router.push({
+                      pathname: '/category/[id]',
+                      params: { id: service.id },
+                    })
+                  }
+                />
               ))}
             </View>
           </View>

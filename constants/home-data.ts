@@ -4,7 +4,10 @@ import type { ImageSourcePropType } from 'react-native';
 export type Service = {
   id: string;
   label: string;
-  image: ImageSourcePropType;
+  /** Service artwork. Omit and provide `icon` when no image asset exists. */
+  image?: ImageSourcePropType;
+  /** Vector-icon fallback used when there's no `image`. */
+  icon?: keyof typeof MaterialCommunityIcons.glyphMap;
   /** Tint used for the tile background wash. */
   tint: string;
 };
@@ -117,6 +120,136 @@ export const POPULAR_SERVICES: Service[] = [
   },
 ];
 
+/** Full service catalogue shown on the Categories tab. */
+export const SERVICE_CATEGORIES: Service[] = [
+  {
+    id: 'electrical',
+    label: 'Electrical',
+    tint: '#F59E0B',
+    image: require('../assets/images/services/batch-1-core/electrical_maintenance_tools_and_symbols.png'),
+  },
+  {
+    id: 'plumbing',
+    label: 'Plumbing',
+    tint: '#3B82F6',
+    image: require('../assets/images/services/batch-1-core/plumbing_tools_and_pipe_assembly.png'),
+  },
+  {
+    id: 'fridge',
+    label: 'Fridge Repair',
+    tint: '#06B6D4',
+    image: require('../assets/images/services/batch-1-core/refrigerator_and_repair_tools_icon.png'),
+  },
+  {
+    id: 'ac',
+    label: 'AC Repair',
+    tint: '#0EA5E9',
+    image: require('../assets/images/services/batch-1-core/ac_repair_icon_with_cool_airflow.png'),
+  },
+  {
+    id: 'generator',
+    label: 'Generator',
+    tint: '#8B5CF6',
+    image: require('../assets/images/services/batch-1-core/portable_generator_with_wrench_and_power_icon.png'),
+  },
+  {
+    id: 'solar',
+    label: 'Solar',
+    tint: '#F97316',
+    image: require('../assets/images/services/batch-1-core/solar_panel_with_wrench_and_sun.png'),
+  },
+  {
+    id: 'painting',
+    label: 'Painting',
+    tint: '#EC4899',
+    image: require('../assets/images/services/batch-1-core/paint_tools_in_vibrant_harmony.png'),
+  },
+  {
+    id: 'carpentry',
+    label: 'Carpentry',
+    tint: '#A16207',
+    image: require('../assets/images/services/batch-1-core/woodworking_tools_on_wooden_plank.png'),
+  },
+  {
+    id: 'appliance',
+    label: 'Appliance Repair',
+    tint: '#14B8A6',
+    image: require('../assets/images/services/batch-2-extra/washing_machine_with_tools_for_repair.png'),
+  },
+  {
+    id: 'cleaning',
+    label: 'Cleaning',
+    tint: '#22C55E',
+    image: require('../assets/images/services/batch-1-core/shiny_cleaning_tools_on_display.png'),
+  },
+  {
+    id: 'welding',
+    label: 'Welding',
+    tint: '#EF4444',
+    image: require('../assets/images/services/batch-1-core/welding_tools_and_sparks_in_motion.png'),
+  },
+  {
+    id: 'tiling',
+    label: 'Tiling',
+    tint: '#6366F1',
+    image: require('../assets/images/services/batch-2-extra/tiling_tools_and_stacked_ceramic_tiles.png'),
+  },
+  {
+    id: 'roofing',
+    label: 'Roofing',
+    tint: '#0EA5E9',
+    image: require('../assets/images/services/batch-2-extra/roof_repair_tools_in_sleek_3d.png'),
+  },
+  {
+    id: 'security',
+    label: 'CCTV & Security',
+    tint: '#64748B',
+    image: require('../assets/images/services/batch-2-extra/security_camera_with_tools_setup.png'),
+  },
+  {
+    id: 'pest-control',
+    label: 'Pest Control',
+    tint: '#16A34A',
+    image: require('../assets/images/services/batch-2-extra/pest_control_shield_and_spray_can.png'),
+  },
+  {
+    id: 'locksmith',
+    label: 'Locksmith',
+    tint: '#CA8A04',
+    image: require('../assets/images/services/batch-2-extra/lock_and_wrench_repair_tools.png'),
+  },
+  {
+    id: 'electronics',
+    label: 'Electronics',
+    tint: '#3B82F6',
+    image: require('../assets/images/services/batch-2-extra/laptop_and_phone_repair_tools_icon.png'),
+  },
+  {
+    id: 'satellite',
+    label: 'Satellite & TV',
+    tint: '#0891B2',
+    image: require('../assets/images/services/batch-2-extra/satellite_dish_installation_with_tools.png'),
+  },
+  {
+    id: 'plastering',
+    label: 'Plastering',
+    tint: '#A16207',
+    image: require('../assets/images/services/batch-2-extra/ceiling_panel_and_plastering_tools_set.png'),
+  },
+  {
+    id: 'water-pump',
+    label: 'Water Pumps',
+    tint: '#2563EB',
+    image: require('../assets/images/services/batch-2-extra/mechanical_pump_and_wrench_icon.png'),
+  },
+  {
+    id: 'vulcanizer',
+    label: 'Vulcanizer',
+    tint: '#334155',
+    icon: 'tire',
+  },
+];
+
 /** Nearby verified artisans shown in the horizontal carousel. */
 export const NEARBY_ARTISANS: Artisan[] = [
   {
@@ -199,6 +332,11 @@ export const NEARBY_ARTISANS: Artisan[] = [
 /** Look up a single artisan by id (used by the profile route). */
 export function getArtisanById(id: string): Artisan | undefined {
   return NEARBY_ARTISANS.find((artisan) => artisan.id === id);
+}
+
+/** Look up a single service category by id (used by the listing route). */
+export function getCategoryById(id: string): Service | undefined {
+  return SERVICE_CATEGORIES.find((category) => category.id === id);
 }
 
 /** Working artisans that rotate inside the emergency hero banner. */
