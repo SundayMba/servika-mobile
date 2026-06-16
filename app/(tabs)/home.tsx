@@ -124,6 +124,18 @@ export default function Home() {
                     params: { id: artisan.id },
                   })
                 }
+                onBook={() =>
+                  router.push({
+                    pathname: '/booking/request',
+                    params: { service: artisan.specialty },
+                  })
+                }
+                onChat={() =>
+                  router.push({
+                    pathname: '/artisan/[id]',
+                    params: { id: artisan.id },
+                  })
+                }
               />
             ))}
           </ScrollView>
