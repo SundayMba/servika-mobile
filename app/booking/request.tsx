@@ -44,7 +44,9 @@ function SelectField({
       className="h-14 flex-row items-center justify-between rounded-2xl border border-gray-200 bg-white px-4"
     >
       <Text
-        className={value ? 'text-[15px] text-gray-900' : 'text-[15px] text-gray-400'}
+        className={
+          value ? 'text-[15px] text-gray-900' : 'text-[15px] text-gray-400'
+        }
       >
         {value ?? placeholder}
       </Text>
@@ -147,7 +149,11 @@ export default function BookingRequest() {
         <ScrollView
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 24 }}
+          contentContainerStyle={{
+            padding: 20,
+            paddingTop: 4,
+            paddingBottom: 24,
+          }}
         >
           {/* Service needed */}
           <FieldLabel>Service needed</FieldLabel>

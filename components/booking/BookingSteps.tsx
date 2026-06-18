@@ -58,7 +58,9 @@ export function BookingSteps({ current }: { current: number }) {
             {!isLast ? (
               <View
                 className={
-                  done ? 'mt-3.5 h-0.5 flex-1 bg-primary' : 'mt-3.5 h-0.5 flex-1 bg-gray-200'
+                  done
+                    ? 'mt-3.5 h-0.5 flex-1 bg-primary'
+                    : 'mt-3.5 h-0.5 flex-1 bg-gray-200'
                 }
               />
             ) : null}

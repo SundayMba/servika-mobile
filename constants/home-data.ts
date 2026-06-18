@@ -77,9 +77,19 @@ export type RecentSearch = {
 export const RECENT_SEARCHES: RecentSearch[] = [
   { id: 'electrician', label: 'Electrician', icon: 'flash', tint: '#F59E0B' },
   { id: 'plumber', label: 'Plumber', icon: 'water-pump', tint: '#3B82F6' },
-  { id: 'fridge-repair', label: 'Fridge repair', icon: 'fridge-outline', tint: '#06B6D4' },
+  {
+    id: 'fridge-repair',
+    label: 'Fridge repair',
+    icon: 'fridge-outline',
+    tint: '#06B6D4',
+  },
   { id: 'ac-repair', label: 'AC repair', icon: 'snowflake', tint: '#0EA5E9' },
-  { id: 'generator-repair', label: 'Generator repair', icon: 'engine-outline', tint: '#F97316' },
+  {
+    id: 'generator-repair',
+    label: 'Generator repair',
+    icon: 'engine-outline',
+    tint: '#F97316',
+  },
 ];
 
 /** Popular service categories shown in the home grid. */

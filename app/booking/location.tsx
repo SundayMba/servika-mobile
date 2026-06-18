@@ -32,7 +32,7 @@ export default function BookingLocation() {
   const [instructions, setInstructions] = useState('');
   const [addressLabel, setAddressLabel] = useState<'Home' | 'Work'>('Home');
   const [addressText, setAddressText] = useState(
-    '12 Admiralty Way, Lekki Phase 1, Lagos, Nigeria'
+    '12 Admiralty Way, Lekki Phase 1, Lagos, Nigeria',
   );
   const [locationError, setLocationError] = useState<string | null>(null);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
@@ -85,7 +85,9 @@ export default function BookingLocation() {
   const handleChangeAddress = () => {
     if (addressLabel === 'Home') {
       setAddressLabel('Work');
-      setAddressText('10B Adeola Odeku Street, Victoria Island, Lagos, Nigeria');
+      setAddressText(
+        '10B Adeola Odeku Street, Victoria Island, Lagos, Nigeria',
+      );
     } else {
       setAddressLabel('Home');
       setAddressText('12 Admiralty Way, Lekki Phase 1, Lagos, Nigeria');
@@ -143,7 +145,11 @@ export default function BookingLocation() {
         <ScrollView
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 24 }}
+          contentContainerStyle={{
+            padding: 20,
+            paddingTop: 4,
+            paddingBottom: 24,
+          }}
         >
           {/* Map placeholder */}
           <View className="h-56 overflow-hidden rounded-2xl border border-gray-100 bg-gray-100">
@@ -182,7 +188,9 @@ export default function BookingLocation() {
               </Text>
             </View>
             <Pressable hitSlop={8} onPress={handleChangeAddress}>
-              <Text className="text-[13px] font-semibold text-primary">Change</Text>
+              <Text className="text-[13px] font-semibold text-primary">
+                Change
+              </Text>
             </Pressable>
           </View>
 
