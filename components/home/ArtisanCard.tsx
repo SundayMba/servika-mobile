@@ -1,9 +1,18 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View, type ImageSourcePropType } from 'react-native';
 
 import { colors } from '@/constants/colors';
-import type { Artisan } from '@/constants/home-data';
+
+/** Minimal shape an artisan card needs — works for static and API-backed data. */
+export type ArtisanCardItem = {
+  name: string;
+  specialty: string;
+  available: boolean;
+  rating: number;
+  distanceKm: number;
+  avatar?: ImageSourcePropType;
+};
 
 export function ArtisanCard({
   artisan,
@@ -11,7 +20,7 @@ export function ArtisanCard({
   onBook,
   onChat,
 }: {
-  artisan: Artisan;
+  artisan: ArtisanCardItem;
   onPress?: () => void;
   onBook?: () => void;
   onChat?: () => void;

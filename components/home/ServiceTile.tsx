@@ -1,13 +1,17 @@
 import { Image } from 'expo-image';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View, type ImageSourcePropType } from 'react-native';
 
-import type { Service } from '@/constants/home-data';
+/** Minimal shape a tile needs — works for both static and API-backed data. */
+export type ServiceTileItem = {
+  label: string;
+  image?: ImageSourcePropType;
+};
 
 export function ServiceTile({
   service,
   onPress,
 }: {
-  service: Service;
+  service: ServiceTileItem;
   onPress?: () => void;
 }) {
   return (

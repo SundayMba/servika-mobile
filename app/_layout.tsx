@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { SplashScreen } from '../components/SplashScreen';
 import { colors } from '@/constants/colors';
 import { QueryProvider } from '@/lib/query/QueryProvider';
+import { AuthProvider } from '@/lib/auth/AuthContext';
 import { ApiStatusBadge } from '@/components/ApiStatusBadge';
 
 ExpoSplashScreen.preventAutoHideAsync();
@@ -35,7 +36,8 @@ export default function RootLayout() {
 
   return (
     <QueryProvider>
-      <Stack
+      <AuthProvider>
+        <Stack
         screenOptions={{
           headerShown: false,
           // Light, consistent horizontal slide between screens.
@@ -51,9 +53,10 @@ export default function RootLayout() {
           name="artisan/[id]"
           options={{ contentStyle: { backgroundColor: colors.white } }}
         />
-      </Stack>
-      {/* Dev-only API connectivity indicator (Slice 0 rails check). */}
-      <ApiStatusBadge />
+        </Stack>
+        {/* Dev-only API connectivity indicator (Slice 0 rails check). */}
+        <ApiStatusBadge />
+      </AuthProvider>
     </QueryProvider>
   );
 }

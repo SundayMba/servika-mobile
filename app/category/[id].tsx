@@ -3,18 +3,24 @@ import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { SearchSheet } from '@/components/SearchSheet';
 import { colors } from '@/constants/colors';
-import { getCategoryById } from '@/constants/home-data';
 import {
-  getCategoryArtisanId,
   getCategoryServices,
   SERVICE_FILTERS,
   type ServiceListing,
 } from '@/constants/services-data';
+import { categoryImage } from '@/lib/catalogue/assets';
+import { useCategories, useCategoryArtisans } from '@/lib/catalogue/hooks';
 
 function ServiceRow({
   service,
@@ -67,15 +73,41 @@ export default function CategoryListing() {
   const [searchVisible, setSearchVisible] = useState(false);
   const [filter, setFilter] = useState<'All' | ServiceListing['type']>('All');
 
-  const category = getCategoryById(id);
+  const { data: categories, isLoading } = useCategories();
+  const category = categories?.find((c) => c.slug === id);
+  const artisansQuery = useCategoryArtisans(id);
+
   const services = useMemo(
-    () => (category ? getCategoryServices(category) : []),
+    () =>
+      category
+        ? getCategoryServices({
+            slug: category.slug,
+            name: category.name,
+            image: categoryImage(category.slug),
+          })
+        : [],
     [category],
   );
   const visible = useMemo(
     () => (filter === 'All' ? services : services.filter((s) => s.type === filter)),
     [services, filter],
   );
+
+  // Tapping any service row opens an artisan that serves this category.
+  const goToArtisan = () => {
+    const artisanId = artisansQuery.data?.[0]?.id;
+    if (artisanId) {
+      router.push({ pathname: '/artisan/[id]', params: { id: artisanId } });
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <SafeAreaView className="flex-1 items-center justify-center bg-white">
+        <ActivityIndicator color={colors.primary} />
+      </SafeAreaView>
+    );
+  }
 
   if (!category) {
     return (
@@ -106,7 +138,7 @@ export default function CategoryListing() {
           <Ionicons name="chevron-back" size={22} color={colors.textPrimary} />
         </Pressable>
         <Text className="text-[17px] font-bold text-gray-900">
-          {category.label} Services
+          {category.name} Services
         </Text>
       </View>
 
@@ -118,7 +150,7 @@ export default function CategoryListing() {
       >
         <Ionicons name="search-outline" size={20} color={colors.textMuted} />
         <Text className="flex-1 text-[14px] text-gray-400">
-          Search {category.label.toLowerCase()} services...
+          Search {category.name.toLowerCase()} services...
         </Text>
         <Ionicons name="options-outline" size={18} color={colors.primary} />
       </Pressable>
@@ -170,16 +202,7 @@ export default function CategoryListing() {
         contentContainerStyle={{ padding: 20, paddingTop: 16 }}
       >
         {visible.map((service) => (
-          <ServiceRow
-            key={service.id}
-            service={service}
-            onPress={() =>
-              router.push({
-                pathname: '/artisan/[id]',
-                params: { id: getCategoryArtisanId(category.id) },
-              })
-            }
-          />
+          <ServiceRow key={service.id} service={service} onPress={goToArtisan} />
         ))}
       </ScrollView>
 

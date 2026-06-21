@@ -3,9 +3,10 @@ import { useState } from 'react';
 
 import { AuthPromptSheet } from '@/components/AuthPromptSheet';
 import { TabBar } from '@/components/navigation/TabBar';
+import { useAuth } from '@/lib/auth/AuthContext';
 
 // Tabs a guest can't open without an account. Home and Categories stay open
-// so guests can keep browsing.
+// so guests can keep browsing; once signed in, everything unlocks.
 const PROTECTED_TABS = ['bookings', 'messages', 'profile'];
 
 // Bottom tab navigator with a custom tab bar (raised center "Categories"
@@ -13,6 +14,8 @@ const PROTECTED_TABS = ['bookings', 'messages', 'profile'];
 // `categories` sits in the middle of the five tabs.
 export default function TabsLayout() {
   const router = useRouter();
+  const { status } = useAuth();
+  const isAuthenticated = status === 'authenticated';
   const [authPromptVisible, setAuthPromptVisible] = useState(false);
 
   return (
@@ -22,7 +25,9 @@ export default function TabsLayout() {
         tabBar={(props) => (
           <TabBar
             {...props}
-            isProtected={(name) => PROTECTED_TABS.includes(name)}
+            isProtected={(name) =>
+              !isAuthenticated && PROTECTED_TABS.includes(name)
+            }
             onBlockedPress={() => setAuthPromptVisible(true)}
           />
         )}

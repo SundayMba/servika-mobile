@@ -17,7 +17,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { SocialAuthButtons } from '@/components/ui/SocialAuthButtons';
+import { VerifyEmailSheet } from '@/components/VerifyEmailSheet';
 import { colors } from '@/constants/colors';
+import { authErrorMessage, register } from '@/lib/api/auth';
 
 export default function Register() {
   const router = useRouter();
@@ -26,15 +28,47 @@ export default function Register() {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  // When set, the verification bottom sheet is shown for this email.
+  const [verifyEmail, setVerifyEmail] = useState<string | null>(null);
 
   // Focus chaining across fields.
   const emailRef = useRef<TextInput>(null);
   const phoneRef = useRef<TextInput>(null);
   const passwordRef = useRef<TextInput>(null);
 
-  const handleCreateAccount = () => {
-    // UI only — no backend yet. Drop the guest into the app for now.
-    router.replace('/home');
+  const handleCreateAccount = async () => {
+    if (submitting) return;
+    setError(null);
+
+    const name = fullName.trim();
+    const emailValue = email.trim();
+    const phoneNumber = phone.trim();
+    if (!name || !emailValue || !phoneNumber || !password) {
+      setError('Please fill in all fields.');
+      return;
+    }
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters.');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const { email: registeredEmail } = await register({
+        fullName: name,
+        email: emailValue,
+        phoneNumber,
+        password,
+      });
+      // Registration doesn't log you in — slide up the verification sheet.
+      setVerifyEmail(registeredEmail);
+    } catch (e) {
+      setError(authErrorMessage(e));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -120,9 +154,20 @@ export default function Register() {
             />
           </View>
 
+          {/* Error */}
+          {error ? (
+            <Text className="mt-4 text-center text-[13px] font-medium text-red-500">
+              {error}
+            </Text>
+          ) : null}
+
           {/* Submit */}
           <View className="mt-5">
-            <Button label="Create Account" onPress={handleCreateAccount} />
+            <Button
+              label="Create Account"
+              onPress={handleCreateAccount}
+              loading={submitting}
+            />
           </View>
 
           {/* Terms */}
@@ -161,6 +206,17 @@ export default function Register() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Email verification — slides up after a successful register. */}
+      <VerifyEmailSheet
+        visible={verifyEmail !== null}
+        email={verifyEmail ?? ''}
+        onClose={() => setVerifyEmail(null)}
+        onVerified={() => {
+          setVerifyEmail(null);
+          router.replace('/home');
+        }}
+      />
     </SafeAreaView>
   );
 }

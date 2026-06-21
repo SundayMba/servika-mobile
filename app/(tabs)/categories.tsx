@@ -2,7 +2,13 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from 'react-native';
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -10,7 +16,12 @@ import {
 
 import { SearchSheet } from '@/components/SearchSheet';
 import { colors } from '@/constants/colors';
-import { SERVICE_CATEGORIES, type Service } from '@/constants/home-data';
+import {
+  categoryIcon,
+  categoryImage,
+} from '@/lib/catalogue/assets';
+import { useCategories } from '@/lib/catalogue/hooks';
+import type { Category } from '@/lib/catalogue/types';
 
 // Height of the custom bottom tab bar (excluding the safe-area inset).
 const TAB_BAR_HEIGHT = 60;
@@ -19,13 +30,15 @@ function CategoryCard({
   category,
   onPress,
 }: {
-  category: Service;
+  category: Category;
   onPress?: () => void;
 }) {
+  const image = categoryImage(category.slug);
+  const icon = categoryIcon(category.iconKey);
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={category.label}
+      accessibilityLabel={category.name}
       onPress={onPress}
       className="mb-1 w-[33%] items-center border border-gray-100/70 bg-white py-3 active:opacity-80"
     >
@@ -33,15 +46,15 @@ function CategoryCard({
         style={{ backgroundColor: `${category.tint}14` }}
         className="h-20 w-20 items-center justify-center rounded-2xl"
       >
-        {category.image ? (
+        {image ? (
           <Image
-            source={category.image}
+            source={image}
             contentFit="contain"
             style={{ height: 70, width: 70 }}
           />
-        ) : category.icon ? (
+        ) : icon ? (
           <MaterialCommunityIcons
-            name={category.icon}
+            name={icon}
             size={32}
             color={category.tint}
           />
@@ -51,7 +64,7 @@ function CategoryCard({
         numberOfLines={2}
         className="mt-2 px-1 text-center text-[12px] font-medium text-gray-700"
       >
-        {category.label}
+        {category.name}
       </Text>
     </Pressable>
   );
@@ -63,6 +76,8 @@ export default function Categories() {
   const bottomPadding = TAB_BAR_HEIGHT + Math.max(insets.bottom, 12) + 16;
 
   const [searchVisible, setSearchVisible] = useState(false);
+
+  const { data: categories, isLoading, isError } = useCategories();
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
@@ -96,20 +111,32 @@ export default function Categories() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: bottomPadding }}
       >
-        <View className="flex-row flex-wrap justify-between px-5 pt-1">
-          {SERVICE_CATEGORIES.map((category) => (
-            <CategoryCard
-              key={category.id}
-              category={category}
-              onPress={() =>
-                router.push({
-                  pathname: '/category/[id]',
-                  params: { id: category.id },
-                })
-              }
-            />
-          ))}
-        </View>
+        {isLoading ? (
+          <View className="items-center justify-center py-16">
+            <ActivityIndicator color={colors.primary} />
+          </View>
+        ) : isError ? (
+          <View className="items-center justify-center px-6 py-16">
+            <Text className="text-center text-[14px] text-gray-400">
+              Couldn&apos;t load categories. Check your connection and try again.
+            </Text>
+          </View>
+        ) : (
+          <View className="flex-row flex-wrap justify-between px-5 pt-1">
+            {categories?.map((category) => (
+              <CategoryCard
+                key={category.id}
+                category={category}
+                onPress={() =>
+                  router.push({
+                    pathname: '/category/[id]',
+                    params: { id: category.slug },
+                  })
+                }
+              />
+            ))}
+          </View>
+        )}
       </ScrollView>
 
       {/* Search (open to guests) */}

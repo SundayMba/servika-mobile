@@ -3,7 +3,7 @@ import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -12,7 +12,15 @@ import {
 import { AuthPromptSheet } from '@/components/AuthPromptSheet';
 import { Button } from '@/components/ui/Button';
 import { colors } from '@/constants/colors';
-import { SAMPLE_REVIEWS, getArtisanById } from '@/constants/home-data';
+import { SAMPLE_REVIEWS } from '@/constants/home-data';
+import { useAuthGate } from '@/lib/auth/useAuthGate';
+import {
+  artisanAvatar,
+  artisanCover,
+  formatNaira,
+  galleryImages,
+} from '@/lib/catalogue/assets';
+import { useArtisan } from '@/lib/catalogue/hooks';
 
 /** A small inline icon + label stat used in the identity row. */
 function InfoStat({
@@ -57,12 +65,20 @@ export default function ArtisanProfile() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  const [authPromptVisible, setAuthPromptVisible] = useState(false);
+  const { guard, promptVisible, hidePrompt } = useAuthGate();
   const [aboutExpanded, setAboutExpanded] = useState(false);
 
-  const artisan = getArtisanById(id);
+  const { data: artisan, isLoading, isError } = useArtisan(id);
 
-  if (!artisan) {
+  if (isLoading) {
+    return (
+      <SafeAreaView className="flex-1 items-center justify-center bg-white">
+        <ActivityIndicator color={colors.primary} />
+      </SafeAreaView>
+    );
+  }
+
+  if (isError || !artisan) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center bg-white px-6">
         <Text className="text-[16px] font-semibold text-gray-900">
@@ -75,6 +91,10 @@ export default function ArtisanProfile() {
     );
   }
 
+  const cover = artisanCover(artisan.imageKey);
+  const avatar = artisanAvatar(artisan.imageKey);
+  const gallery = galleryImages(artisan.galleryKeys);
+
   return (
     <View className="flex-1 bg-white">
       <StatusBar style="light" />
@@ -86,7 +106,7 @@ export default function ArtisanProfile() {
         {/* Cover photo */}
         <View className="h-72 w-full bg-background">
           <Image
-            source={artisan.cover}
+            source={cover}
             contentFit="cover"
             contentPosition="top"
             style={{ flex: 1 }}
@@ -109,7 +129,7 @@ export default function ArtisanProfile() {
             >
               <View className="h-28 w-28 overflow-hidden rounded-full bg-background">
                 <Image
-                  source={artisan.avatar}
+                  source={avatar}
                   contentFit="cover"
                   contentPosition="top"
                   style={{ flex: 1 }}
@@ -118,7 +138,7 @@ export default function ArtisanProfile() {
             </View>
             <View className="mt-3 flex-row items-center gap-1.5">
               <Text className="text-[20px] font-bold text-gray-900">
-                {artisan.name}
+                {artisan.fullName}
               </Text>
               <MaterialCommunityIcons
                 name="check-decagram"
@@ -134,7 +154,7 @@ export default function ArtisanProfile() {
                 {artisan.rating.toFixed(1)}
               </Text>
               <Text className="text-[13px] text-gray-400">
-                ({artisan.reviews} reviews)
+                ({artisan.reviewCount} reviews)
               </Text>
               <Text className="text-[13px] text-gray-300">•</Text>
               <Text className="text-[13px] text-gray-500">
@@ -189,7 +209,7 @@ export default function ArtisanProfile() {
 
           {/* About */}
           <View className="mt-7 px-5">
-            <SectionTitle title={`About ${artisan.name.split(' ')[0]}`} />
+            <SectionTitle title={`About ${artisan.fullName.split(' ')[0]}`} />
             <Text
               numberOfLines={aboutExpanded ? undefined : 3}
               className="text-[14px] leading-5 text-gray-500"
@@ -220,7 +240,7 @@ export default function ArtisanProfile() {
                       Inspection Fee
                     </Text>
                     <Text className="text-[20px] font-bold text-gray-900">
-                      {artisan.inspectionFee}
+                      {formatNaira(artisan.inspectionFeeNaira)}
                     </Text>
                   </View>
                 </View>
@@ -320,7 +340,7 @@ export default function ArtisanProfile() {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={{ paddingHorizontal: 15, gap: 12 }}
             >
-              {artisan.gallery.map((image, index) => (
+              {gallery.map((image, index) => (
                 <View
                   key={index}
                   className="h-48 w-36 overflow-hidden rounded-2xl bg-background"
@@ -380,7 +400,7 @@ export default function ArtisanProfile() {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Chat"
-          onPress={() => setAuthPromptVisible(true)}
+          onPress={() => guard(() => router.push('/messages'))}
           className="h-14 w-14 items-center justify-center rounded-2xl border border-gray-200 bg-white"
         >
           <Ionicons
@@ -393,10 +413,12 @@ export default function ArtisanProfile() {
           <Button
             label="Book This Artisan"
             onPress={() =>
-              router.push({
-                pathname: '/booking/request',
-                params: { service: `${artisan.specialty}`, artisanId: artisan.id },
-              })
+              guard(() =>
+                router.push({
+                  pathname: '/booking/request',
+                  params: { service: `${artisan.specialty}`, artisanId: artisan.id },
+                }),
+              )
             }
           />
         </View>
@@ -404,17 +426,17 @@ export default function ArtisanProfile() {
 
       {/* Gate for booking / chat */}
       <AuthPromptSheet
-        visible={authPromptVisible}
-        onClose={() => setAuthPromptVisible(false)}
+        visible={promptVisible}
+        onClose={hidePrompt}
         title="Sign up to continue"
         message="Create an account to request services and chat with artisans directly."
         icon="lock-closed"
         onSignUp={() => {
-          setAuthPromptVisible(false);
+          hidePrompt();
           router.push('/register');
         }}
         onLogin={() => {
-          setAuthPromptVisible(false);
+          hidePrompt();
           router.push('/login');
         }}
       />

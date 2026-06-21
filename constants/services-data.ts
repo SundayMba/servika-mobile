@@ -1,8 +1,6 @@
 import type { Ionicons } from '@expo/vector-icons';
 import type { ImageSourcePropType } from 'react-native';
 
-import type { Service } from '@/constants/home-data';
-
 export type ServiceType = 'Installation' | 'Repair' | 'Maintenance';
 
 export type ServiceListing = {
@@ -37,29 +35,22 @@ const CATEGORY_PHOTOS: Record<string, ImageSourcePropType> = {
   carpentry: require('../assets/images/artisans/working/carpenter_focused_on_sawing_wood.png'),
 };
 
-/** Maps a category to a representative artisan profile for its services. */
-const CATEGORY_ARTISAN: Record<string, string> = {
-  electrical: 'emeka-okafor',
-  plumbing: 'ibrahim-yusuf',
-  ac: 'chidi-okeke',
-  fridge: 'chidi-okeke',
-};
-
-export function getCategoryArtisanId(categoryId: string): string {
-  return CATEGORY_ARTISAN[categoryId] ?? 'emeka-okafor';
-}
-
 /**
- * Builds the list of bookable services for a category. Mock data — tailored
- * copy per service type, with the category label woven in.
+ * Builds the list of bookable services for a category. The service rows are
+ * presentational copy (Installation/Repair/Maintenance/Emergency) tailored to
+ * the category; the category itself comes from the API.
  */
-export function getCategoryServices(category: Service): ServiceListing[] {
-  const photo = CATEGORY_PHOTOS[category.id] ?? category.image;
-  const label = category.label;
+export function getCategoryServices(category: {
+  slug: string;
+  name: string;
+  image?: ImageSourcePropType;
+}): ServiceListing[] {
+  const photo = CATEGORY_PHOTOS[category.slug] ?? category.image;
+  const label = category.name;
 
   return [
     {
-      id: `${category.id}-installation`,
+      id: `${category.slug}-installation`,
       title: `${label} Installation`,
       description: 'New setup, fitting and configuration',
       priceFrom: '₦15,000',
@@ -69,7 +60,7 @@ export function getCategoryServices(category: Service): ServiceListing[] {
       image: photo,
     },
     {
-      id: `${category.id}-repair`,
+      id: `${category.slug}-repair`,
       title: `${label} Repair`,
       description: 'Fault diagnosis and quick fixes',
       priceFrom: '₦10,000',
@@ -79,7 +70,7 @@ export function getCategoryServices(category: Service): ServiceListing[] {
       image: photo,
     },
     {
-      id: `${category.id}-maintenance`,
+      id: `${category.slug}-maintenance`,
       title: `${label} Maintenance`,
       description: 'Routine servicing and safety checks',
       priceFrom: '₦12,000',
@@ -89,7 +80,7 @@ export function getCategoryServices(category: Service): ServiceListing[] {
       image: photo,
     },
     {
-      id: `${category.id}-emergency`,
+      id: `${category.slug}-emergency`,
       title: `Emergency ${label}`,
       description: 'Fast response for urgent issues',
       priceFrom: '₦20,000',

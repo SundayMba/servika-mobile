@@ -1,7 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
-import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import {
+  ActivityIndicator,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -13,7 +19,9 @@ import { ArtisanCard } from '@/components/home/ArtisanCard';
 import { HeroCarousel } from '@/components/home/HeroCarousel';
 import { ServiceTile } from '@/components/home/ServiceTile';
 import { colors } from '@/constants/colors';
-import { NEARBY_ARTISANS, POPULAR_SERVICES } from '@/constants/home-data';
+import { useAuthGate } from '@/lib/auth/useAuthGate';
+import { artisanAvatar, categoryImage } from '@/lib/catalogue/assets';
+import { useCategories, useNearbyArtisans } from '@/lib/catalogue/hooks';
 
 // Approx. height of the custom bottom tab bar (excluding the safe-area inset,
 // which we add separately) so scroll content clears it.
@@ -30,13 +38,43 @@ function SectionHeader({ title }: { title: string }) {
   );
 }
 
+/** Compact loading spinner / error message for an async section. */
+function SectionState({
+  loading,
+  error,
+}: {
+  loading: boolean;
+  error?: boolean;
+}) {
+  return (
+    <View className="items-center justify-center py-6">
+      {loading ? (
+        <ActivityIndicator color={colors.primary} />
+      ) : (
+        <Text className="text-[13px] text-gray-400">
+          {error ? "Couldn't load — pull to retry." : 'Nothing here yet.'}
+        </Text>
+      )}
+    </View>
+  );
+}
+
 export default function Home() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const bottomPadding = TAB_BAR_HEIGHT + Math.max(insets.bottom, 12) + 25;
 
   const [searchVisible, setSearchVisible] = useState(false);
-  const [authPromptVisible, setAuthPromptVisible] = useState(false);
+  const { guard, promptVisible, hidePrompt } = useAuthGate();
+
+  const categoriesQuery = useCategories();
+  const artisansQuery = useNearbyArtisans();
+
+  // Home shows only the "popular" subset of the catalogue.
+  const popularServices = useMemo(
+    () => (categoriesQuery.data ?? []).filter((c) => c.isPopular),
+    [categoriesQuery.data],
+  );
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
@@ -89,20 +127,30 @@ export default function Home() {
         <View className="mb-4 px-5">
           <View className="rounded-3xl border border-gray-100/70 bg-white px-4 pb-5 pt-4">
             <SectionHeader title="Popular Services" />
-            <View className="flex-row flex-wrap" style={{ rowGap: 20 }}>
-              {POPULAR_SERVICES.map((service) => (
-                <ServiceTile
-                  key={service.id}
-                  service={service}
-                  onPress={() =>
-                    router.push({
-                      pathname: '/category/[id]',
-                      params: { id: service.id },
-                    })
-                  }
-                />
-              ))}
-            </View>
+            {popularServices.length === 0 ? (
+              <SectionState
+                loading={categoriesQuery.isLoading}
+                error={categoriesQuery.isError}
+              />
+            ) : (
+              <View className="flex-row flex-wrap" style={{ rowGap: 20 }}>
+                {popularServices.map((category) => (
+                  <ServiceTile
+                    key={category.id}
+                    service={{
+                      label: category.name,
+                      image: categoryImage(category.slug),
+                    }}
+                    onPress={() =>
+                      router.push({
+                        pathname: '/category/[id]',
+                        params: { id: category.slug },
+                      })
+                    }
+                  />
+                ))}
+              </View>
+            )}
           </View>
         </View>
 
@@ -111,31 +159,49 @@ export default function Home() {
           <View className="px-5">
             <SectionHeader title="Nearby Artisans" />
           </View>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 20, gap: 12 }}
-          >
-            {NEARBY_ARTISANS.map((artisan) => (
-              <ArtisanCard
-                key={artisan.id}
-                artisan={artisan}
-                onPress={() =>
-                  router.push({
-                    pathname: '/artisan/[id]',
-                    params: { id: artisan.id },
-                  })
-                }
-                onBook={() =>
-                  router.push({
-                    pathname: '/booking/request',
-                    params: { service: artisan.specialty },
-                  })
-                }
-                onChat={() => setAuthPromptVisible(true)}
+          {(artisansQuery.data?.length ?? 0) === 0 ? (
+            <View className="px-5">
+              <SectionState
+                loading={artisansQuery.isLoading}
+                error={artisansQuery.isError}
               />
-            ))}
-          </ScrollView>
+            </View>
+          ) : (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: 20, gap: 12 }}
+            >
+              {artisansQuery.data?.map((artisan) => (
+                <ArtisanCard
+                  key={artisan.id}
+                  artisan={{
+                    name: artisan.fullName,
+                    specialty: artisan.specialty,
+                    available: artisan.isAvailable,
+                    rating: artisan.rating,
+                    distanceKm: artisan.distanceKm,
+                    avatar: artisanAvatar(artisan.imageKey),
+                  }}
+                  onPress={() =>
+                    router.push({
+                      pathname: '/artisan/[id]',
+                      params: { id: artisan.id },
+                    })
+                  }
+                  onBook={() =>
+                    guard(() =>
+                      router.push({
+                        pathname: '/booking/request',
+                        params: { service: artisan.specialty, artisanId: artisan.id },
+                      }),
+                    )
+                  }
+                  onChat={() => guard(() => router.push('/messages'))}
+                />
+              ))}
+            </ScrollView>
+          )}
         </View>
 
         {/* ── "Browsing as Guest" banner (scrolls with content) ── */}
@@ -191,19 +257,19 @@ export default function Home() {
         onClose={() => setSearchVisible(false)}
       />
 
-      {/* ── Chat is gated behind sign-in ── */}
+      {/* ── Booking & chat are gated behind sign-in ── */}
       <AuthPromptSheet
-        visible={authPromptVisible}
-        onClose={() => setAuthPromptVisible(false)}
-        title="Sign in to chat"
-        message="Create an account or log in to message artisans directly."
+        visible={promptVisible}
+        onClose={hidePrompt}
+        title="Sign in to continue"
+        message="Create an account or log in to book services and message artisans."
         icon="lock-closed"
         onSignUp={() => {
-          setAuthPromptVisible(false);
+          hidePrompt();
           router.push('/register');
         }}
         onLogin={() => {
-          setAuthPromptVisible(false);
+          hidePrompt();
           router.push('/login');
         }}
       />

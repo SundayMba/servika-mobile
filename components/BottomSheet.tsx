@@ -1,5 +1,5 @@
 import { type ReactNode, useEffect, useRef, useState } from 'react';
-import { Modal, Pressable, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, Pressable, View } from 'react-native';
 import Animated, {
   Easing,
   runOnJS,
@@ -119,22 +119,24 @@ export function BottomSheet({
           />
         </Animated.View>
 
-        {/* Sheet */}
-        <Animated.View
-          onLayout={(e) => handleLayout(e.nativeEvent.layout.height)}
-          style={[
-            { paddingBottom: Math.max(insets.bottom, 16) + 8 },
-            sheetStyle,
-          ]}
-          className={`rounded-t-3xl bg-white px-6 pt-3 ${className ?? ''}`}
-        >
-          {showHandle ? (
-            <View className="mb-5 items-center">
-              <View className="h-1.5 w-11 rounded-full bg-gray-200" />
-            </View>
-          ) : null}
-          {children}
-        </Animated.View>
+        {/* Sheet — rises above the keyboard when an input inside is focused. */}
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          <Animated.View
+            onLayout={(e) => handleLayout(e.nativeEvent.layout.height)}
+            style={[
+              { paddingBottom: Math.max(insets.bottom, 16) + 8 },
+              sheetStyle,
+            ]}
+            className={`rounded-t-3xl bg-white px-6 pt-3 ${className ?? ''}`}
+          >
+            {showHandle ? (
+              <View className="mb-5 items-center">
+                <View className="h-1.5 w-11 rounded-full bg-gray-200" />
+              </View>
+            ) : null}
+            {children}
+          </Animated.View>
+        </KeyboardAvoidingView>
       </View>
     </Modal>
   );

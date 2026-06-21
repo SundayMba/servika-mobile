@@ -16,18 +16,40 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { SocialAuthButtons } from '@/components/ui/SocialAuthButtons';
+import { authErrorMessage, login } from '@/lib/api/auth';
+import { useAuth } from '@/lib/auth/AuthContext';
 
 export default function Login() {
   const router = useRouter();
+  const { signIn } = useAuth();
 
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const passwordRef = useRef<TextInput>(null);
 
-  const handleSignIn = () => {
-    // UI only — no backend yet. Drop the guest into the app for now.
-    router.replace('/home');
+  const handleSignIn = async () => {
+    if (submitting) return;
+    setError(null);
+
+    const emailOrPhone = identifier.trim();
+    if (!emailOrPhone || !password) {
+      setError('Enter your email/phone and password.');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const auth = await login({ emailOrPhone, password });
+      await signIn(auth);
+      router.replace('/home');
+    } catch (e) {
+      setError(authErrorMessage(e, 'Invalid email/phone or password.'));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -97,8 +119,11 @@ export default function Login() {
                 returnKeyType="done"
                 onSubmitEditing={handleSignIn}
               />
-              {/* Routes to a forgot-password screen in a later chunk. */}
-              <TouchableOpacity hitSlop={8} className="mt-2 self-end">
+              <TouchableOpacity
+                hitSlop={8}
+                className="mt-2 self-end"
+                onPress={() => router.push('/forgot-password')}
+              >
                 <Text className="text-[13px] font-semibold text-primary">
                   Forgot Password?
                 </Text>
@@ -106,9 +131,20 @@ export default function Login() {
             </View>
           </View>
 
+          {/* Error */}
+          {error ? (
+            <Text className="mt-4 text-center text-[13px] font-medium text-red-500">
+              {error}
+            </Text>
+          ) : null}
+
           {/* Submit */}
           <View className="mt-5">
-            <Button label="Sign in" onPress={handleSignIn} />
+            <Button
+              label="Sign in"
+              onPress={handleSignIn}
+              loading={submitting}
+            />
           </View>
 
           {/* Social sign-in (visual placeholders) */}
