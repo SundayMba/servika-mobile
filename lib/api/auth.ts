@@ -1,8 +1,8 @@
 import axios from 'axios';
 import { apiClient } from '@/lib/api/client';
 import type {
-  AuthResponse,
   LoginRequest,
+  LoginResponse,
   OtpType,
   RegisterRequest,
   RegisterResponse,
@@ -22,9 +22,14 @@ export async function register(body: RegisterRequest): Promise<RegisterResponse>
   return data;
 }
 
-export async function login(body: LoginRequest): Promise<AuthResponse> {
-  const { data } = await apiClient.post<AuthResponse>(`${BASE}/login`, body);
+export async function login(body: LoginRequest): Promise<LoginResponse> {
+  const { data } = await apiClient.post<LoginResponse>(`${BASE}/login`, body);
   return data;
+}
+
+/** Revokes the refresh token server-side. Idempotent — safe to call anytime. */
+export async function logout(refreshToken: string): Promise<void> {
+  await apiClient.post(`${BASE}/logout`, { refreshToken });
 }
 
 /** Verifies a code. For account verification the response carries the session. */

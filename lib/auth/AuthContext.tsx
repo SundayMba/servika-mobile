@@ -7,6 +7,8 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { logout as logoutRequest } from '@/lib/api/auth';
+import { setOnSessionExpired } from '@/lib/api/client';
 import { tokenStorage } from '@/lib/auth/tokenStorage';
 import type { AuthResponse, User } from '@/lib/auth/types';
 
@@ -53,6 +55,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  // When the API client can't refresh an expired session, drop to guest. The
+  // client has already cleared SecureStore, so we only update React state here.
+  useEffect(() => {
+    setOnSessionExpired(() => {
+      setUser(null);
+      setStatus('unauthenticated');
+    });
+    return () => setOnSessionExpired(null);
+  }, []);
+
   const signIn = useCallback(async (auth: AuthResponse) => {
     await tokenStorage.setTokens(auth.accessToken, auth.refreshToken);
     await tokenStorage.setUser(auth.user);
@@ -61,6 +73,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
+    // Best-effort: revoke the refresh token server-side. Even if the network
+    // call fails, we always clear the local session so the user is logged out.
+    try {
+      const refresh = await tokenStorage.getRefreshToken();
+      if (refresh) await logoutRequest(refresh);
+    } catch {
+      // ignore — local sign-out below is what matters to the user
+    }
     await tokenStorage.clear();
     setUser(null);
     setStatus('unauthenticated');

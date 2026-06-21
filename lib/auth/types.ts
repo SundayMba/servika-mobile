@@ -32,6 +32,16 @@ export interface RegisterResponse {
   verificationRequired: boolean;
 }
 
+/**
+ * Response from POST /login. A verified account gets a `session`; an unverified
+ * one gets `verificationRequired: true` (+ a freshly emailed code) and no session.
+ */
+export interface LoginResponse {
+  verificationRequired: boolean;
+  email: string;
+  session?: AuthResponse;
+}
+
 /** The OTP purposes the backend accepts (wire values). */
 export type OtpType = 'account_verification' | 'password_reset';
 

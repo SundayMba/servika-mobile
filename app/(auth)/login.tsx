@@ -16,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { SocialAuthButtons } from '@/components/ui/SocialAuthButtons';
+import { VerifyEmailSheet } from '@/components/VerifyEmailSheet';
 import { authErrorMessage, login } from '@/lib/api/auth';
 import { useAuth } from '@/lib/auth/AuthContext';
 
@@ -27,6 +28,8 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // When set, the account exists but its email isn't verified — show the sheet.
+  const [verifyEmail, setVerifyEmail] = useState<string | null>(null);
 
   const passwordRef = useRef<TextInput>(null);
 
@@ -42,9 +45,14 @@ export default function Login() {
 
     setSubmitting(true);
     try {
-      const auth = await login({ emailOrPhone, password });
-      await signIn(auth);
-      router.replace('/home');
+      const res = await login({ emailOrPhone, password });
+      if (res.session) {
+        await signIn(res.session);
+        router.replace('/home');
+      } else if (res.verificationRequired) {
+        // Account exists but email unverified — finish the verify step.
+        setVerifyEmail(res.email);
+      }
     } catch (e) {
       setError(authErrorMessage(e, 'Invalid email/phone or password.'));
     } finally {
@@ -168,6 +176,17 @@ export default function Login() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Unverified account → finish email verification, then home. */}
+      <VerifyEmailSheet
+        visible={verifyEmail !== null}
+        email={verifyEmail ?? ''}
+        onClose={() => setVerifyEmail(null)}
+        onVerified={() => {
+          setVerifyEmail(null);
+          router.replace('/home');
+        }}
+      />
     </SafeAreaView>
   );
 }
