@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
 import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import {
   SafeAreaView,
@@ -12,91 +12,85 @@ import { useAuth } from '@/lib/auth/AuthContext';
 
 const TAB_BAR_HEIGHT = 60;
 
+type IconName = keyof typeof Ionicons.glyphMap;
+
 function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return '?';
   return (parts[0][0] + (parts[1]?.[0] ?? '')).toUpperCase();
 }
 
-type IconName = keyof typeof Ionicons.glyphMap;
+/** One stat in the identity card (e.g. 12 Bookings). */
+function Stat({
+  icon,
+  value,
+  label,
+  tint,
+}: {
+  icon: IconName;
+  value: string;
+  label: string;
+  tint: string;
+}) {
+  return (
+    <View className="flex-1 items-center">
+      <Ionicons name={icon} size={18} color={tint} />
+      <Text className="mt-1 text-[16px] font-bold text-gray-900">{value}</Text>
+      <Text className="text-[11px] text-gray-400">{label}</Text>
+    </View>
+  );
+}
 
-/** A tappable settings/menu row with leading icon, optional badge, and chevron. */
-function MenuRow({
+/** A Quick Access grid tile. */
+function QuickTile({
   icon,
   label,
+  tint,
   badge,
-  badgeTone = 'muted',
   onPress,
-  last,
 }: {
   icon: IconName;
   label: string;
-  badge?: string;
-  badgeTone?: 'muted' | 'warning';
+  tint: string;
+  badge?: boolean;
   onPress?: () => void;
-  last?: boolean;
 }) {
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
       onPress={onPress}
-      className={`flex-row items-center gap-3 py-3.5 active:opacity-60 ${last ? '' : 'border-b border-gray-100'}`}
+      className="mb-1 w-1/4 items-center py-2 active:opacity-70"
     >
-      <View className="h-9 w-9 items-center justify-center rounded-full bg-background">
-        <Ionicons name={icon} size={18} color={colors.primary} />
+      <View
+        style={{ backgroundColor: `${tint}1A` }}
+        className="h-14 w-14 items-center justify-center rounded-2xl"
+      >
+        <Ionicons name={icon} size={24} color={tint} />
+        {badge ? (
+          <View className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full border-2 border-white bg-red-500" />
+        ) : null}
       </View>
-      <Text className="flex-1 text-[15px] font-medium text-gray-800">{label}</Text>
-      {badge ? (
-        <View
-          className={
-            badgeTone === 'warning'
-              ? 'rounded-full bg-amber-50 px-2.5 py-1'
-              : 'rounded-full bg-background px-2.5 py-1'
-          }
+      <View className="mt-1.5 h-8 w-full px-0.5">
+        <Text
+          numberOfLines={2}
+          className="text-center text-[11px] font-medium leading-[14px] text-gray-600"
         >
-          <Text
-            className={
-              badgeTone === 'warning'
-                ? 'text-[11px] font-semibold text-amber-600'
-                : 'text-[11px] font-semibold text-gray-500'
-            }
-          >
-            {badge}
-          </Text>
-        </View>
-      ) : null}
-      <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-    </Pressable>
-  );
-}
-
-function MenuSection({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <View className="mt-6">
-      <Text className="mb-2 px-1 text-[12px] font-semibold uppercase tracking-wide text-gray-400">
-        {title}
-      </Text>
-      <View className="rounded-3xl border border-gray-100/70 bg-white px-4">
-        {children}
+          {label}
+        </Text>
       </View>
-    </View>
+    </Pressable>
   );
 }
 
 export default function Profile() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { user, signOut } = useAuth();
-  const [loggingOut, setLoggingOut] = useState(false);
+  const { user } = useAuth();
 
   const bottomPadding = TAB_BAR_HEIGHT + Math.max(insets.bottom, 12) + 16;
+  const comingSoon = (label: string) =>
+    Alert.alert(label, 'Coming soon.', [{ text: 'OK' }]);
 
   // Guests are normally gated before reaching this tab; safe fallback.
   if (!user) {
@@ -105,11 +99,7 @@ export default function Profile() {
         className="flex-1 items-center justify-center bg-white px-8"
         edges={['top']}
       >
-        <Ionicons
-          name="person-circle-outline"
-          size={56}
-          color={colors.textMuted}
-        />
+        <Ionicons name="person-circle-outline" size={56} color={colors.textMuted} />
         <Text className="mt-4 text-center text-[16px] font-semibold text-gray-900">
           You&apos;re browsing as a guest
         </Text>
@@ -137,151 +127,183 @@ export default function Profile() {
     );
   }
 
-  // Placeholder for features not yet built — keeps the menu honest about state.
-  const comingSoon = (label: string) =>
-    Alert.alert(label, 'Coming soon.', [{ text: 'OK' }]);
-
-  const handleLogout = () => {
-    Alert.alert('Log out', 'Are you sure you want to log out?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Log out',
-        style: 'destructive',
-        onPress: async () => {
-          setLoggingOut(true);
-          try {
-            await signOut();
-            router.replace('/home');
-          } finally {
-            setLoggingOut(false);
-          }
-        },
-      },
-    ]);
-  };
+  const quickAccess: {
+    key: string;
+    icon: IconName;
+    label: string;
+    tint: string;
+    badge?: boolean;
+    onPress: () => void;
+  }[] = [
+    { key: 'bookings', icon: 'calendar', label: 'Bookings', tint: '#3B82F6', onPress: () => router.push('/bookings') },
+    { key: 'addresses', icon: 'location', label: 'Addresses', tint: '#22C55E', onPress: () => comingSoon('Addresses') },
+    { key: 'wallet', icon: 'wallet', label: 'Wallet', tint: '#F97316', onPress: () => comingSoon('Wallet') },
+    { key: 'payments', icon: 'card', label: 'Payments', tint: '#8B5CF6', onPress: () => comingSoon('Payments') },
+    { key: 'notifications', icon: 'notifications', label: 'Notifications', tint: '#EF4444', badge: true, onPress: () => comingSoon('Notifications') },
+    { key: 'help', icon: 'help-buoy', label: 'Help & Support', tint: '#14B8A6', onPress: () => comingSoon('Help & Support') },
+    { key: 'settings', icon: 'settings', label: 'Settings', tint: '#64748B', onPress: () => router.push('/settings') },
+    { key: 'invite', icon: 'gift', label: 'Invite & Earn', tint: '#EC4899', onPress: () => comingSoon('Invite & Earn') },
+  ];
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-      <View className="px-5 pb-1 pt-2">
-        <Text className="text-[26px] font-bold text-gray-900">Profile</Text>
+      {/* Header */}
+      <View className="flex-row items-center justify-between px-5 pb-2 pt-2">
+        <View className="flex-1">
+          <Text className="text-[26px] font-bold text-gray-900">Profile</Text>
+          <Text className="mt-0.5 text-[13px] text-gray-500">
+            Manage your account and preferences
+          </Text>
+        </View>
+        <View className="flex-row items-center gap-2">
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Notifications"
+            onPress={() => comingSoon('Notifications')}
+            className="h-10 w-10 items-center justify-center rounded-full bg-white"
+          >
+            <Ionicons name="notifications-outline" size={20} color={colors.textPrimary} />
+            <View className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full border border-white bg-red-500" />
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Settings"
+            onPress={() => router.push('/settings')}
+            className="h-10 w-10 items-center justify-center rounded-full bg-white"
+          >
+            <Ionicons name="settings-outline" size={20} color={colors.textPrimary} />
+          </Pressable>
+        </View>
       </View>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: bottomPadding }}
       >
-        {/* Identity card */}
-        <View className="mt-3 flex-row items-center gap-4 rounded-3xl border border-gray-100/70 bg-white p-5">
-          <View className="h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-            <Text className="text-[22px] font-bold text-primary">
-              {initials(user.fullName)}
-            </Text>
-          </View>
-          <View className="flex-1">
-            <Text className="text-[18px] font-bold text-gray-900">
-              {user.fullName}
-            </Text>
-            <Text numberOfLines={1} className="mt-0.5 text-[13px] text-gray-500">
-              {user.email}
-            </Text>
-            <View className="mt-1.5 flex-row items-center gap-1 self-start rounded-full bg-background px-2.5 py-1">
-              <Ionicons
-                name="shield-checkmark"
-                size={12}
-                color={colors.primary}
-              />
-              <Text className="text-[11px] font-semibold text-gray-600">
-                {user.role}
+        {/* Identity + stats */}
+        <View className="mt-2 rounded-3xl border border-gray-100/70 bg-white p-5">
+          <View className="flex-row items-center">
+            <View className="relative">
+              <View className="h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+                <Text className="text-[22px] font-bold text-primary">
+                  {initials(user.fullName)}
+                </Text>
+              </View>
+              <View className="absolute -bottom-0.5 -right-0.5 rounded-full border-2 border-white bg-blue-500">
+                <Ionicons name="checkmark" size={12} color="#FFFFFF" />
+              </View>
+            </View>
+
+            <View className="ml-4 flex-1">
+              <Text className="text-[17px] font-bold text-gray-900">
+                {user.fullName}
+              </Text>
+              {user.phoneNumber ? (
+                <Text className="mt-0.5 text-[13px] text-gray-500">
+                  {user.phoneNumber}
+                </Text>
+              ) : null}
+              <Text numberOfLines={1} className="text-[13px] text-gray-400">
+                {user.email}
               </Text>
             </View>
+
+            <Pressable
+              accessibilityRole="button"
+              hitSlop={8}
+              onPress={() => comingSoon('Edit profile')}
+              className="flex-row items-center gap-1"
+            >
+              <Ionicons name="create-outline" size={14} color={colors.primary} />
+              <Text className="text-[12px] font-semibold text-primary">Edit</Text>
+            </Pressable>
+          </View>
+
+          <View className="mt-5 flex-row border-t border-gray-100 pt-4">
+            <Stat icon="calendar-outline" value="0" label="Bookings" tint="#3B82F6" />
+            <View className="w-px bg-gray-100" />
+            <Stat icon="heart-outline" value="0" label="Saved" tint="#EC4899" />
+            <View className="w-px bg-gray-100" />
+            <Stat icon="wallet-outline" value="₦0" label="Total Spent" tint={colors.primary} />
           </View>
         </View>
 
-        {/* Account */}
-        <MenuSection title="Account">
-          <MenuRow
-            icon="person-outline"
-            label="Edit profile"
-            onPress={() => comingSoon('Edit profile')}
-          />
-          <MenuRow
-            icon="call-outline"
-            label="Phone number"
-            badge={user.phoneNumber ? 'Unverified' : 'Add'}
-            badgeTone="warning"
-            onPress={() => comingSoon('Verify phone number')}
-          />
-          <MenuRow
-            icon="lock-closed-outline"
-            label="Change password"
-            onPress={() => comingSoon('Change password')}
-            last
-          />
-        </MenuSection>
-
-        {/* Activity */}
-        <MenuSection title="Activity">
-          <MenuRow
-            icon="calendar-outline"
-            label="My bookings"
-            onPress={() => router.push('/bookings')}
-          />
-          <MenuRow
-            icon="heart-outline"
-            label="Saved artisans"
-            onPress={() => comingSoon('Saved artisans')}
-          />
-          <MenuRow
-            icon="card-outline"
-            label="Payment methods"
-            onPress={() => comingSoon('Payment methods')}
-          />
-          <MenuRow
-            icon="location-outline"
-            label="Saved addresses"
-            onPress={() => comingSoon('Saved addresses')}
-            last
-          />
-        </MenuSection>
-
-        {/* Support */}
-        <MenuSection title="Support">
-          <MenuRow
-            icon="notifications-outline"
-            label="Notifications"
-            onPress={() => comingSoon('Notifications')}
-          />
-          <MenuRow
-            icon="help-circle-outline"
-            label="Help & support"
-            onPress={() => comingSoon('Help & support')}
-          />
-          <MenuRow
-            icon="information-circle-outline"
-            label="About Servika"
-            onPress={() => comingSoon('About Servika')}
-            last
-          />
-        </MenuSection>
-
-        {/* Logout */}
+        {/* Servika Plus */}
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Log out"
-          disabled={loggingOut}
-          onPress={handleLogout}
-          className="mt-6 h-14 flex-row items-center justify-center gap-2 rounded-2xl border border-red-100 bg-red-50 active:opacity-80"
-          style={{ opacity: loggingOut ? 0.6 : 1 }}
+          onPress={() => comingSoon('Servika Plus')}
+          className="mt-4 overflow-hidden rounded-3xl"
         >
-          <Ionicons name="log-out-outline" size={20} color="#EF4444" />
-          <Text className="text-[15px] font-bold text-red-500">
-            {loggingOut ? 'Logging out…' : 'Log out'}
-          </Text>
+          <LinearGradient
+            colors={['#1E293B', '#0F172A']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{ padding: 16, flexDirection: 'row', alignItems: 'center' }}
+          >
+            <View className="h-11 w-11 items-center justify-center rounded-full bg-white/10">
+              <Ionicons name="star" size={20} color={colors.primaryLight} />
+            </View>
+            <View className="ml-3 flex-1">
+              <Text className="text-[15px] font-bold text-white">Servika Plus</Text>
+              <Text className="mt-0.5 text-[12px] leading-4 text-gray-300">
+                Priority support, exclusive benefits and special offers.
+              </Text>
+            </View>
+            <View className="rounded-full bg-primary px-3.5 py-2">
+              <Text className="text-[12px] font-bold text-white">Upgrade</Text>
+            </View>
+          </LinearGradient>
         </Pressable>
 
-        <Text className="mt-5 text-center text-[12px] text-gray-400">
-          Servika v1.0.0
+        {/* Quick Access */}
+        <Text className="mb-1 mt-6 px-1 text-[16px] font-bold text-gray-900">
+          Quick Access
         </Text>
+        <View className="rounded-3xl border border-gray-100/70 bg-white px-2 py-3">
+          <View className="flex-row flex-wrap">
+            {quickAccess.map((t) => (
+              <QuickTile
+                key={t.key}
+                icon={t.icon}
+                label={t.label}
+                tint={t.tint}
+                badge={t.badge}
+                onPress={t.onPress}
+              />
+            ))}
+          </View>
+        </View>
+
+        {/* Support card */}
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => comingSoon('Contact Support')}
+          className="mt-4 overflow-hidden rounded-3xl"
+        >
+          <LinearGradient
+            colors={[colors.primaryLight, colors.primary, colors.primaryDark]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{ padding: 18 }}
+          >
+            <View className="flex-row items-center justify-between">
+              <View className="flex-1 pr-3">
+                <Text className="text-[15px] font-bold text-white">
+                  Need help with a service?
+                </Text>
+                <Text className="mt-1 text-[12px] leading-4 text-white/90">
+                  Our support team is ready to assist you.
+                </Text>
+                <View className="mt-3 self-start rounded-full bg-white px-4 py-2">
+                  <Text className="text-[12px] font-bold text-primary">
+                    Contact Support
+                  </Text>
+                </View>
+              </View>
+              <Ionicons name="headset-outline" size={48} color="rgba(255,255,255,0.85)" />
+            </View>
+          </LinearGradient>
+        </Pressable>
       </ScrollView>
     </SafeAreaView>
   );

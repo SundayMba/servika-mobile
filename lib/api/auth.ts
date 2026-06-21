@@ -60,8 +60,9 @@ export async function forgotPassword(emailOrPhone: string): Promise<void> {
   await apiClient.post(`${BASE}/forgot-password`, { emailOrPhone });
 }
 
-/** Completes a password reset with the code from the forgot-password step. */
+/** Completes a password reset with the 6-digit code from the forgot-password step. */
 export async function resetPassword(body: {
+  emailOrPhone: string;
   tokenOrOtp: string;
   newPassword: string;
   confirmPassword: string;

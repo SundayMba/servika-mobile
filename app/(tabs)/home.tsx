@@ -19,6 +19,7 @@ import { ArtisanCard } from '@/components/home/ArtisanCard';
 import { HeroCarousel } from '@/components/home/HeroCarousel';
 import { ServiceTile } from '@/components/home/ServiceTile';
 import { colors } from '@/constants/colors';
+import { useAuth } from '@/lib/auth/AuthContext';
 import { useAuthGate } from '@/lib/auth/useAuthGate';
 import { artisanAvatar, categoryImage } from '@/lib/catalogue/assets';
 import { useCategories, useNearbyArtisans } from '@/lib/catalogue/hooks';
@@ -65,7 +66,11 @@ export default function Home() {
   const bottomPadding = TAB_BAR_HEIGHT + Math.max(insets.bottom, 12) + 25;
 
   const [searchVisible, setSearchVisible] = useState(false);
-  const { guard, promptVisible, hidePrompt } = useAuthGate();
+  const { user } = useAuth();
+  const { isAuthenticated, guard, promptVisible, hidePrompt } = useAuthGate();
+
+  // Greet the signed-in user by first name; guests see "Guest".
+  const firstName = user?.fullName.trim().split(/\s+/)[0] || 'Guest';
 
   const categoriesQuery = useCategories();
   const artisansQuery = useNearbyArtisans();
@@ -82,7 +87,7 @@ export default function Home() {
       <View className="flex-row items-center justify-between bg-background px-5 pb-4 pt-2">
         <View>
           <Text className="text-[22px] font-bold text-gray-900">
-            Good morning, Guest 👋
+            Good morning, {firstName} 👋
           </Text>
           <Text className="mt-0.5 text-[13px] text-gray-500">
             What needs fixing today?
@@ -198,57 +203,60 @@ export default function Home() {
                     )
                   }
                   onChat={() => guard(() => router.push('/messages'))}
+                  chatLocked={!isAuthenticated}
                 />
               ))}
             </ScrollView>
           )}
         </View>
 
-        {/* ── "Browsing as Guest" banner (scrolls with content) ── */}
-        <View className="mx-5">
-          <View
-            style={{
-              shadowColor: '#0F172A',
-              shadowOpacity: 0.01,
-              shadowRadius: 1,
-              shadowOffset: { width: 0, height: 10 },
-              elevation: 0.5,
-            }}
-            className="flex-row items-center justify-between rounded-2xl border border-gray-100 bg-white px-4 py-5"
-          >
-            <View className="flex-1 pr-3">
-              <View className="flex-row items-center gap-1.5">
-                <Ionicons
-                  name="person-circle-outline"
-                  size={18}
-                  color={colors.primary}
-                />
-                <Text className="text-[13px] font-semibold text-gray-900">
-                  Browsing as Guest
+        {/* ── "Browsing as Guest" banner — only for guests ── */}
+        {!isAuthenticated ? (
+          <View className="mx-5">
+            <View
+              style={{
+                shadowColor: '#0F172A',
+                shadowOpacity: 0.01,
+                shadowRadius: 1,
+                shadowOffset: { width: 0, height: 10 },
+                elevation: 0.5,
+              }}
+              className="flex-row items-center justify-between rounded-2xl border border-gray-100 bg-white px-4 py-5"
+            >
+              <View className="flex-1 pr-3">
+                <View className="flex-row items-center gap-1.5">
+                  <Ionicons
+                    name="person-circle-outline"
+                    size={18}
+                    color={colors.primary}
+                  />
+                  <Text className="text-[13px] font-semibold text-gray-900">
+                    Browsing as Guest
+                  </Text>
+                </View>
+                <Text className="mt-0.5 text-[10px] text-gray-500">
+                  Sign up to book services and track your jobs
                 </Text>
               </View>
-              <Text className="mt-0.5 text-[10px] text-gray-500">
-                Sign up to book services and track your jobs
-              </Text>
+              <TouchableOpacity
+                activeOpacity={0.85}
+                accessibilityRole="button"
+                accessibilityLabel="Sign up"
+                onPress={() => router.push('/register')}
+                style={{
+                  shadowColor: colors.primary,
+                  shadowOpacity: 0.3,
+                  shadowRadius: 8,
+                  shadowOffset: { width: 0, height: 4 },
+                  elevation: 5,
+                }}
+                className="rounded-xl bg-primary px-5 py-2.5"
+              >
+                <Text className="text-[13px] font-bold text-white">Sign Up</Text>
+              </TouchableOpacity>
             </View>
-            <TouchableOpacity
-              activeOpacity={0.85}
-              accessibilityRole="button"
-              accessibilityLabel="Sign up"
-              onPress={() => router.push('/register')}
-              style={{
-                shadowColor: colors.primary,
-                shadowOpacity: 0.3,
-                shadowRadius: 8,
-                shadowOffset: { width: 0, height: 4 },
-                elevation: 5,
-              }}
-              className="rounded-xl bg-primary px-5 py-2.5"
-            >
-              <Text className="text-[13px] font-bold text-white">Sign Up</Text>
-            </TouchableOpacity>
           </View>
-        </View>
+        ) : null}
       </ScrollView>
 
       {/* ── Search (open to guests) ── */}

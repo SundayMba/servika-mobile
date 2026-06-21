@@ -19,11 +19,14 @@ export function ArtisanCard({
   onPress,
   onBook,
   onChat,
+  chatLocked = true,
 }: {
   artisan: ArtisanCardItem;
   onPress?: () => void;
   onBook?: () => void;
   onChat?: () => void;
+  /** Show the lock badge on chat (guests). Hidden once signed in. */
+  chatLocked?: boolean;
 }) {
   return (
     <Pressable
@@ -125,7 +128,11 @@ export function ArtisanCard({
           </Pressable>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={`Chat with ${artisan.name} — sign in required`}
+            accessibilityLabel={
+              chatLocked
+                ? `Chat with ${artisan.name} — sign in required`
+                : `Chat with ${artisan.name}`
+            }
             onPress={onChat}
             className="relative h-10 flex-row items-center pr-2 pl-2 gap-1.5  rounded-xl border border-gray-200 bg-white"
           >
@@ -136,10 +143,12 @@ export function ArtisanCard({
             />
             <Text className="text-[13px] font-bold text-primary">Chat</Text>
 
-            {/* Locked badge pinned to the top-right corner */}
-            <View className="absolute -right-1.5 -top-1.5 h-4 w-4 items-center justify-center rounded-full border border-white bg-gray-400">
-              <Ionicons name="lock-closed" size={9} color="#FFFFFF" />
-            </View>
+            {/* Locked badge — only while signed out */}
+            {chatLocked ? (
+              <View className="absolute -right-1.5 -top-1.5 h-4 w-4 items-center justify-center rounded-full border border-white bg-gray-400">
+                <Ionicons name="lock-closed" size={9} color="#FFFFFF" />
+              </View>
+            ) : null}
           </Pressable>
         </View>
       </View>

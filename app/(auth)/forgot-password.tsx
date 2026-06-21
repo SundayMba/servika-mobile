@@ -61,8 +61,8 @@ export default function ForgotPassword() {
   const handleReset = async () => {
     if (submitting) return;
     setError(null);
-    if (!code.trim()) {
-      setError('Enter the reset code you received.');
+    if (code.trim().length < 6) {
+      setError('Enter the 6-digit code from your email.');
       return;
     }
     if (password.length < 8) {
@@ -76,6 +76,7 @@ export default function ForgotPassword() {
     setSubmitting(true);
     try {
       await resetPassword({
+        emailOrPhone: identifier.trim(),
         tokenOrOtp: code.trim(),
         newPassword: password,
         confirmPassword: confirm,
@@ -167,11 +168,12 @@ export default function ForgotPassword() {
             <View className="gap-4">
               <Input
                 label="Reset code"
-                icon="key-outline"
-                placeholder="Paste the code you received"
+                icon="keypad-outline"
+                placeholder="6-digit code"
                 value={code}
-                onChangeText={setCode}
-                autoCapitalize="none"
+                onChangeText={(t) => setCode(t.replace(/[^0-9]/g, '').slice(0, 6))}
+                keyboardType="number-pad"
+                maxLength={6}
                 returnKeyType="next"
                 onSubmitEditing={() => passwordRef.current?.focus()}
               />
