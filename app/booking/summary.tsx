@@ -1,22 +1,99 @@
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BookingSteps } from '@/components/booking/BookingSteps';
+import { Button } from '@/components/ui/Button';
 import { colors } from '@/constants/colors';
+import { formatDate } from '@/lib/booking/display';
+import { artisanAvatar, formatNaira } from '@/lib/catalogue/assets';
+import { useArtisan } from '@/lib/catalogue/hooks';
 
-// Placeholder — the full "Booking Summary" screen is the next chunk. Exists
-// now so "Confirm Location" advances cleanly.
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <View className="mt-4 rounded-2xl border border-gray-100 bg-white p-4">
+      <Text className="mb-2 text-[12px] font-bold uppercase tracking-wide text-gray-400">
+        {title}
+      </Text>
+      {children}
+    </View>
+  );
+}
+
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <View className="flex-row items-start justify-between py-1">
+      <Text className="text-[13px] text-gray-500">{label}</Text>
+      <Text className="ml-4 flex-1 text-right text-[13px] font-medium text-gray-900">
+        {value}
+      </Text>
+    </View>
+  );
+}
+
 export default function BookingSummary() {
   const router = useRouter();
-  const { service } = useLocalSearchParams<{ service?: string }>();
+  const params = useLocalSearchParams<{
+    service?: string;
+    artisanId?: string;
+    description?: string;
+    date?: string;
+    time?: string;
+    urgency?: string;
+    instructions?: string;
+    addressText?: string;
+    lat?: string;
+    lng?: string;
+    photos?: string;
+  }>();
+
+  const { data: artisan, isLoading: artisanLoading } = useArtisan(
+    params.artisanId,
+  );
+
+  const serviceName = params.service ?? 'Service Request';
+  const categorySlug = artisan?.categorySlugs?.[0];
+  const inspectionFee = artisan?.inspectionFeeNaira;
+  const photoCount = (() => {
+    try {
+      return params.photos ? (JSON.parse(params.photos) as string[]).length : 0;
+    } catch {
+      return 0;
+    }
+  })();
+
+  const canProceed = !!categorySlug && !!params.addressText && !artisanLoading;
+
+  const handleProceed = () => {
+    if (!categorySlug) return;
+    router.push({
+      pathname: '/booking/payment',
+      params: {
+        ...params,
+        categorySlug,
+        serviceName,
+        artisanName: artisan?.fullName ?? '',
+        amount: inspectionFee != null ? String(inspectionFee) : '',
+      },
+    });
+  };
+
+  const avatar = artisan ? artisanAvatar(artisan.imageKey) : undefined;
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <StatusBar style="dark" />
 
+      {/* Header */}
       <View className="flex-row items-center justify-center px-5 py-2">
         <Pressable
           accessibilityRole="button"
@@ -31,24 +108,115 @@ export default function BookingSummary() {
           <Text className="text-[17px] font-bold text-gray-900">
             Booking Summary
           </Text>
-          <Text className="text-[12px] text-gray-500">
-            {service ?? 'Service Request'}
-          </Text>
+          <Text className="text-[12px] text-gray-500">{serviceName}</Text>
         </View>
       </View>
 
+      {/* Steps */}
       <View className="px-5 py-4">
         <BookingSteps current={3} />
       </View>
 
-      <View className="flex-1 items-center justify-center px-6">
-        <Text className="text-[16px] font-semibold text-gray-900">
-          Booking Summary
-        </Text>
-        <Text className="mt-2 text-center text-[14px] text-gray-500">
-          Summary & payment coming next.
-        </Text>
-      </View>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 24 }}
+      >
+        {/* Artisan */}
+        {artisan ? (
+          <View className="flex-row items-center rounded-2xl border border-gray-100 bg-white p-4">
+            {avatar ? (
+              <Image
+                source={avatar}
+                style={{ width: 48, height: 48, borderRadius: 24 }}
+                contentFit="cover"
+              />
+            ) : (
+              <View className="h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                <Ionicons name="person" size={22} color={colors.primary} />
+              </View>
+            )}
+            <View className="ml-3 flex-1">
+              <Text className="text-[15px] font-bold text-gray-900">
+                {artisan.fullName}
+              </Text>
+              <View className="flex-row items-center gap-1">
+                <Ionicons name="star" size={13} color={colors.primary} />
+                <Text className="text-[12px] text-gray-600">
+                  {artisan.rating.toFixed(1)} ({artisan.reviewCount} reviews)
+                </Text>
+              </View>
+            </View>
+          </View>
+        ) : null}
+
+        {/* Job */}
+        <Section title="Job">
+          <Row label="Service" value={serviceName} />
+          {params.description ? (
+            <Text className="mt-1 text-[13px] leading-5 text-gray-700">
+              {params.description}
+            </Text>
+          ) : null}
+          {photoCount > 0 ? (
+            <View className="mt-2 flex-row items-center gap-1.5">
+              <Ionicons name="images-outline" size={14} color={colors.textMuted} />
+              <Text className="text-[12px] text-gray-500">
+                {photoCount} photo{photoCount > 1 ? 's' : ''} attached
+              </Text>
+            </View>
+          ) : null}
+        </Section>
+
+        {/* Schedule */}
+        <Section title="Schedule">
+          <Row label="Date" value={formatDate(params.date) || 'Not set'} />
+          <Row label="Time" value={params.time || 'Not set'} />
+          <Row
+            label="Urgency"
+            value={
+              params.urgency === 'urgent'
+                ? 'Urgent (2–4h)'
+                : 'Standard (24–48h)'
+            }
+          />
+        </Section>
+
+        {/* Location */}
+        <Section title="Location">
+          <Text className="text-[13px] leading-5 text-gray-900">
+            {params.addressText ?? 'No address provided'}
+          </Text>
+          {params.instructions ? (
+            <Text className="mt-1 text-[12px] leading-4 text-gray-500">
+              {params.instructions}
+            </Text>
+          ) : null}
+        </Section>
+
+        {/* Pricing */}
+        <Section title="Pricing">
+          {inspectionFee != null ? (
+            <Row
+              label="Call-out / inspection fee"
+              value={formatNaira(inspectionFee)}
+            />
+          ) : null}
+          <Text className="mt-1 text-[12px] leading-4 text-gray-500">
+            Final price is quoted after the artisan inspects the job. You only pay
+            the call-out fee now.
+          </Text>
+        </Section>
+
+        {/* Proceed */}
+        <View className="mt-6">
+          <Button
+            label="Proceed to Payment"
+            loading={artisanLoading}
+            disabled={!canProceed}
+            onPress={handleProceed}
+          />
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }

@@ -38,4 +38,7 @@ export interface ArtisanDetail extends ArtisanSummary {
   about: string;
   services: string[];
   galleryKeys: string[];
+  /** Category slugs this artisan serves; the first is the primary, used to
+   * pre-fill a booking's service category. */
+  categorySlugs: string[];
 }

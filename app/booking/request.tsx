@@ -16,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { BookingSteps } from '@/components/booking/BookingSteps';
 import { Button } from '@/components/ui/Button';
 import { colors } from '@/constants/colors';
+import { formatDate } from '@/lib/booking/display';
 
 function FieldLabel({ children }: { children: string }) {
   return (
@@ -92,21 +93,32 @@ function UrgencyOption({
 
 export default function BookingRequest() {
   const router = useRouter();
-  const { service } = useLocalSearchParams<{ service?: string }>();
+  const { service, artisanId } = useLocalSearchParams<{
+    service?: string;
+    artisanId?: string;
+  }>();
 
   const [description, setDescription] = useState('');
+  // `date` holds an ISO datetime; the field shows it formatted.
   const [date, setDate] = useState<string | undefined>(undefined);
   const [time, setTime] = useState<string | undefined>(undefined);
   const [urgency, setUrgency] = useState<'standard' | 'urgent'>('standard');
 
   const serviceName = service ?? 'Service Request';
+  const canContinue = description.trim().length > 0 && !!date && !!time;
+
+  // Lightweight stand-in for a real date picker (a later polish): pick tomorrow.
+  const handlePickDate = () => {
+    setDate(new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString());
+  };
 
   const handleContinue = () => {
     router.push({
-      pathname: '/booking/location',
+      pathname: '/booking/photos',
       params: {
         service: serviceName,
-        description,
+        artisanId,
+        description: description.trim(),
         date,
         time,
         urgency,
@@ -177,10 +189,10 @@ export default function BookingRequest() {
           <View className="mt-4">
             <FieldLabel>Preferred date</FieldLabel>
             <SelectField
-              value={date}
+              value={date ? formatDate(date) : undefined}
               placeholder="Select date"
               icon="calendar-outline"
-              onPress={() => setDate('May 25, 2025')}
+              onPress={handlePickDate}
             />
           </View>
 
@@ -215,7 +227,11 @@ export default function BookingRequest() {
 
           {/* Continue */}
           <View className="mt-7">
-            <Button label="Continue" onPress={handleContinue} />
+            <Button
+              label="Continue"
+              disabled={!canContinue}
+              onPress={handleContinue}
+            />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

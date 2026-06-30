@@ -41,7 +41,13 @@
           "backgroundColor": "#ffffff"
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Servika uses your location to share your live position with the customer while you travel to a job."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

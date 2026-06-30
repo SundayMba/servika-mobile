@@ -21,18 +21,24 @@ import { colors } from '@/constants/colors';
 
 export default function BookingLocation() {
   const router = useRouter();
-  const { service, description, date, time, urgency } = useLocalSearchParams<{
-    service?: string;
-    description?: string;
-    date?: string;
-    time?: string;
-    urgency?: string;
-  }>();
+  const { service, artisanId, description, date, time, urgency, photos } =
+    useLocalSearchParams<{
+      service?: string;
+      artisanId?: string;
+      description?: string;
+      date?: string;
+      time?: string;
+      urgency?: string;
+      photos?: string;
+    }>();
 
   const [instructions, setInstructions] = useState('');
   const [addressLabel, setAddressLabel] = useState<'Home' | 'Work'>('Home');
   const [addressText, setAddressText] = useState(
     '12 Admiralty Way, Lekki Phase 1, Lagos, Nigeria',
+  );
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(
+    null,
   );
   const [locationError, setLocationError] = useState<string | null>(null);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
@@ -70,6 +76,10 @@ export default function BookingLocation() {
 
       setAddressLabel('Home');
       setAddressText(formattedAddress);
+      setCoords({
+        lat: position.coords.latitude,
+        lng: position.coords.longitude,
+      });
     } catch (error) {
       const message =
         error instanceof Error
@@ -83,6 +93,8 @@ export default function BookingLocation() {
   };
 
   const handleChangeAddress = () => {
+    // Saved addresses are mock copy without coordinates — drop any GPS fix.
+    setCoords(null);
     if (addressLabel === 'Home') {
       setAddressLabel('Work');
       setAddressText(
@@ -99,11 +111,17 @@ export default function BookingLocation() {
       pathname: '/booking/summary',
       params: {
         service,
+        artisanId,
         description,
         date,
         time,
         urgency,
+        photos,
         instructions,
+        addressText,
+        ...(coords
+          ? { lat: String(coords.lat), lng: String(coords.lng) }
+          : {}),
       },
     });
   };
