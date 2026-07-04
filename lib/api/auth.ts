@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { apiClient } from '@/lib/api/client';
 import type {
+  AuthResponse,
   LoginRequest,
   LoginResponse,
   OtpType,
@@ -19,6 +20,16 @@ const BASE = '/api/v1/auth';
 /** Creates an unverified account and emails a verification code (no session yet). */
 export async function register(body: RegisterRequest): Promise<RegisterResponse> {
   const { data } = await apiClient.post<RegisterResponse>(`${BASE}/register`, body);
+  return data;
+}
+
+/**
+ * "Become a Pro" — upgrades the signed-in account to an artisan and returns a
+ * fresh session (tokens carry the new role). The caller must `signIn` the result
+ * so subsequent artisan endpoints authorize.
+ */
+export async function becomeArtisan(): Promise<AuthResponse> {
+  const { data } = await apiClient.post<AuthResponse>(`${BASE}/become-artisan`);
   return data;
 }
 

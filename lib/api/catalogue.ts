@@ -4,6 +4,7 @@ import type {
   ArtisanSummary,
   Category,
 } from '@/lib/catalogue/types';
+import type { LatLng } from '@/lib/tracking/geo';
 
 /**
  * Marketplace catalogue endpoints (PRD §Marketplace). Read-only and open to
@@ -15,9 +16,20 @@ export async function getCategories(): Promise<Category[]> {
   return data;
 }
 
-export async function getArtisans(categorySlug?: string): Promise<ArtisanSummary[]> {
+/**
+ * List artisans, optionally filtered to a category. When the customer's
+ * coordinates are passed, the server returns real distances and sorts by
+ * proximity (available artisans first).
+ */
+export async function getArtisans(
+  categorySlug?: string,
+  coords?: LatLng | null,
+): Promise<ArtisanSummary[]> {
   const { data } = await apiClient.get<ArtisanSummary[]>('/api/v1/artisans', {
-    params: categorySlug ? { category: categorySlug } : undefined,
+    params: {
+      ...(categorySlug ? { category: categorySlug } : {}),
+      ...(coords ? { lat: coords.latitude, lng: coords.longitude } : {}),
+    },
   });
   return data;
 }

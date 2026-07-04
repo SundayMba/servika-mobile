@@ -12,7 +12,6 @@ import {
 import { AuthPromptSheet } from '@/components/AuthPromptSheet';
 import { Button } from '@/components/ui/Button';
 import { colors } from '@/constants/colors';
-import { SAMPLE_REVIEWS } from '@/constants/home-data';
 import { useAuthGate } from '@/lib/auth/useAuthGate';
 import {
   artisanAvatar,
@@ -21,6 +20,7 @@ import {
   galleryImages,
 } from '@/lib/catalogue/assets';
 import { useArtisan } from '@/lib/catalogue/hooks';
+import { timeAgo, useArtisanReviews } from '@/lib/reviews/hooks';
 
 /** A small inline icon + label stat used in the identity row. */
 function InfoStat({
@@ -69,6 +69,7 @@ export default function ArtisanProfile() {
   const [aboutExpanded, setAboutExpanded] = useState(false);
 
   const { data: artisan, isLoading, isError } = useArtisan(id);
+  const { data: reviews } = useArtisanReviews(id);
 
   if (isLoading) {
     return (
@@ -268,72 +269,88 @@ export default function ArtisanProfile() {
               <Text className="text-[16px] font-bold text-gray-900">
                 Customer Reviews
               </Text>
-              <Pressable hitSlop={8}>
-                <Text className="text-[13px] font-semibold text-primary">
-                  See all
+              {(reviews?.length ?? 0) > 0 ? (
+                <Text className="text-[13px] font-semibold text-gray-400">
+                  {reviews!.length} total
                 </Text>
-              </Pressable>
+              ) : null}
             </View>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingHorizontal: 20, gap: 12 }}
-            >
-              {SAMPLE_REVIEWS.map((review) => (
-                <View
-                  key={review.id}
-                  className="w-72 rounded-2xl border border-gray-100 bg-white p-4"
-                  style={{
-                    shadowColor: '#0F172A',
-                    shadowOpacity: 0.04,
-                    shadowRadius: 8,
-                    shadowOffset: { width: 0, height: 2 },
-                    elevation: 1,
-                  }}
-                >
-                  <View className="flex-row items-center gap-3">
-                    <View className="h-10 w-10 overflow-hidden rounded-full bg-background">
-                      <Image
-                        source={review.avatar}
-                        contentFit="cover"
-                        contentPosition="top"
-                        style={{ flex: 1 }}
-                      />
-                    </View>
-                    <View className="flex-1">
-                      <Text className="text-[14px] font-semibold text-gray-900">
-                        {review.name}
-                      </Text>
-                      <View className="mt-0.5 flex-row items-center gap-2">
-                        <Stars rating={review.rating} />
-                        <Text className="text-[11px] text-gray-400">
-                          {review.timeAgo}
+            {reviews === undefined ? (
+              <View className="items-center py-6">
+                <ActivityIndicator color={colors.primary} />
+              </View>
+            ) : reviews.length === 0 ? (
+              <View className="mx-5 items-center rounded-2xl border border-gray-100 bg-white px-4 py-7">
+                <Ionicons name="star-outline" size={26} color={colors.textMuted} />
+                <Text className="mt-2 text-[13px] font-semibold text-gray-700">
+                  No reviews yet
+                </Text>
+                <Text className="mt-0.5 text-center text-[12px] text-gray-400">
+                  Be the first to review {artisan.fullName.split(' ')[0]} after a job.
+                </Text>
+              </View>
+            ) : (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ paddingHorizontal: 20, gap: 12 }}
+              >
+                {reviews.map((review) => (
+                  <View
+                    key={review.id}
+                    className="w-72 rounded-2xl border border-gray-100 bg-white p-4"
+                    style={{
+                      shadowColor: '#0F172A',
+                      shadowOpacity: 0.04,
+                      shadowRadius: 8,
+                      shadowOffset: { width: 0, height: 2 },
+                      elevation: 1,
+                    }}
+                  >
+                    <View className="flex-row items-center gap-3">
+                      <View
+                        className="h-10 w-10 items-center justify-center rounded-full"
+                        style={{ backgroundColor: `${artisan.accent}22` }}
+                      >
+                        <Text
+                          className="text-[15px] font-bold"
+                          style={{ color: artisan.accent }}
+                        >
+                          {review.customerName.trim().charAt(0).toUpperCase()}
                         </Text>
                       </View>
+                      <View className="flex-1">
+                        <Text className="text-[14px] font-semibold text-gray-900">
+                          {review.customerName}
+                        </Text>
+                        <View className="mt-0.5 flex-row items-center gap-2">
+                          <Stars rating={review.rating} />
+                          <Text className="text-[11px] text-gray-400">
+                            {timeAgo(review.createdAt)}
+                          </Text>
+                        </View>
+                      </View>
                     </View>
+                    {review.comment ? (
+                      <Text
+                        numberOfLines={3}
+                        className="mt-3 text-[13px] leading-5 text-gray-500"
+                      >
+                        {review.comment}
+                      </Text>
+                    ) : null}
                   </View>
-                  <Text
-                    numberOfLines={3}
-                    className="mt-3 text-[13px] leading-5 text-gray-500"
-                  >
-                    {review.text}
-                  </Text>
-                </View>
-              ))}
-            </ScrollView>
+                ))}
+              </ScrollView>
+            )}
           </View>
 
           {/* Work gallery */}
           <View className="mt-7">
-            <View className="mb-3 flex-row items-center justify-between px-5">
+            <View className="mb-3 px-5">
               <Text className="text-[16px] font-bold text-gray-900">
                 Work Gallery
               </Text>
-              <Pressable hitSlop={8}>
-                <Text className="text-[13px] font-semibold text-primary">
-                  See all
-                </Text>
-              </Pressable>
             </View>
             <ScrollView
               horizontal
@@ -371,18 +388,8 @@ export default function ArtisanProfile() {
         >
           <Ionicons name="chevron-back" size={22} color={colors.textPrimary} />
         </Pressable>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="More options"
-          hitSlop={8}
-          className="h-10 w-10 items-center justify-center rounded-full bg-white/90"
-        >
-          <Ionicons
-            name="ellipsis-horizontal"
-            size={20}
-            color={colors.textPrimary}
-          />
-        </Pressable>
+        {/* Spacer keeps the back button left-aligned (no dead "more options" menu). */}
+        <View className="h-10 w-10" />
       </View>
 
       {/* Sticky bottom action bar */}

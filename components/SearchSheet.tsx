@@ -1,34 +1,69 @@
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
+import { useRouter } from 'expo-router';
+import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 
 import { BottomSheet } from '@/components/BottomSheet';
 import { colors } from '@/constants/colors';
-import { RECENT_SEARCHES, type RecentSearch } from '@/constants/home-data';
+import { artisanAvatar } from '@/lib/catalogue/assets';
+import { useCategories, useNearbyArtisans } from '@/lib/catalogue/hooks';
 
 type SearchSheetProps = {
   visible: boolean;
   onClose: () => void;
-  /** Fired when a recent search term is tapped. */
-  onSelectRecent?: (term: RecentSearch) => void;
 };
 
-export function SearchSheet({
-  visible,
-  onClose,
-  onSelectRecent,
-}: SearchSheetProps) {
+/**
+ * Live search over the real catalogue. Empty query → popular services; typing →
+ * matching services + artisans, filtered client-side over the cached catalogue.
+ * Tapping a result closes the sheet and navigates to that category / artisan.
+ */
+export function SearchSheet({ visible, onClose }: SearchSheetProps) {
+  const router = useRouter();
   const [query, setQuery] = useState('');
-  const [recents, setRecents] = useState(RECENT_SEARCHES);
+
+  const { data: categories } = useCategories();
+  const { data: artisans } = useNearbyArtisans();
+
+  const q = query.trim().toLowerCase();
+
+  const matchedCategories = useMemo(() => {
+    const all = categories ?? [];
+    if (!q) return all.filter((c) => c.isPopular).slice(0, 6);
+    return all.filter(
+      (c) =>
+        c.name.toLowerCase().includes(q) || c.slug.toLowerCase().includes(q),
+    );
+  }, [categories, q]);
+
+  const matchedArtisans = useMemo(() => {
+    if (!q) return [];
+    return (artisans ?? []).filter(
+      (a) =>
+        a.fullName.toLowerCase().includes(q) ||
+        a.specialty.toLowerCase().includes(q),
+    );
+  }, [artisans, q]);
+
+  const noResults =
+    q.length > 0 && matchedCategories.length === 0 && matchedArtisans.length === 0;
+
+  const go = (navigate: () => void) => {
+    setQuery('');
+    onClose();
+    navigate();
+  };
 
   return (
     <BottomSheet
       visible={visible}
       onClose={onClose}
+      fill
       className="h-[60%]"
-      estimatedHeight={460}
+      estimatedHeight={480}
     >
-      {/* Search input + filter */}
+      {/* Search input */}
       <View className="h-12 flex-row items-center gap-2.5 rounded-2xl border border-gray-100 bg-background px-4">
         <Ionicons name="search-outline" size={20} color={colors.textMuted} />
         <TextInput
@@ -37,70 +72,100 @@ export function SearchSheet({
           placeholder="Search services, artisans..."
           placeholderTextColor={colors.textMuted}
           returnKeyType="search"
+          autoFocus
           className="flex-1 text-[14px] text-gray-900"
         />
-        <Pressable accessibilityLabel="Filters" hitSlop={8}>
-          <MaterialCommunityIcons
-            name="tune-variant"
-            size={20}
-            color={colors.primary}
-          />
-        </Pressable>
-      </View>
-
-      {/* Recent searches header */}
-      <View className="mb-1 mt-6 flex-row items-center justify-between">
-        <Text className="text-[15px] font-bold text-gray-900">
-          Recent searches
-        </Text>
-        {recents.length > 0 ? (
-          <Pressable hitSlop={8} onPress={() => setRecents([])}>
-            <Text className="text-[13px] font-semibold text-primary">
-              Clear all
-            </Text>
+        {query.length > 0 ? (
+          <Pressable accessibilityLabel="Clear" hitSlop={8} onPress={() => setQuery('')}>
+            <Ionicons name="close-circle" size={18} color={colors.textMuted} />
           </Pressable>
         ) : null}
       </View>
 
-      {/* Recent searches list */}
       <ScrollView
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        className="mt-4 flex-1"
       >
-        {recents.length === 0 ? (
-          <Text className="py-6 text-[14px] text-gray-400">
-            No recent searches.
-          </Text>
-        ) : (
-          recents.map((item) => (
-            <Pressable
-              key={item.id}
-              accessibilityRole="button"
-              accessibilityLabel={item.label}
-              onPress={() => onSelectRecent?.(item)}
-              className="flex-row items-center gap-3 py-3 active:opacity-70"
-            >
-              <View
-                style={{ backgroundColor: `${item.tint}14` }}
-                className="h-10 w-10 items-center justify-center rounded-xl"
+        {noResults ? (
+          <View className="items-center py-10">
+            <Ionicons name="search-outline" size={28} color={colors.textMuted} />
+            <Text className="mt-2 text-[14px] text-gray-400">
+              No results for &ldquo;{query.trim()}&rdquo;
+            </Text>
+          </View>
+        ) : null}
+
+        {/* Services */}
+        {matchedCategories.length > 0 ? (
+          <>
+            <Text className="mb-1 text-[13px] font-bold uppercase tracking-wide text-gray-400">
+              {q ? 'Services' : 'Popular services'}
+            </Text>
+            {matchedCategories.map((c) => (
+              <Pressable
+                key={c.id}
+                accessibilityRole="button"
+                accessibilityLabel={c.name}
+                onPress={() =>
+                  go(() =>
+                    router.push({ pathname: '/category/[id]', params: { id: c.slug } }),
+                  )
+                }
+                className="flex-row items-center gap-3 py-3 active:opacity-70"
               >
-                <MaterialCommunityIcons
-                  name={item.icon}
-                  size={20}
-                  color={item.tint}
-                />
-              </View>
-              <Text className="flex-1 text-[15px] font-medium text-gray-800">
-                {item.label}
-              </Text>
-              <Ionicons
-                name="chevron-forward"
-                size={18}
-                color={colors.textMuted}
-              />
-            </Pressable>
-          ))
-        )}
+                <View
+                  style={{ backgroundColor: `${c.tint}1A` }}
+                  className="h-10 w-10 items-center justify-center rounded-xl"
+                >
+                  <Ionicons name="construct-outline" size={20} color={c.tint} />
+                </View>
+                <Text className="flex-1 text-[15px] font-medium text-gray-800">
+                  {c.name}
+                </Text>
+                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+              </Pressable>
+            ))}
+          </>
+        ) : null}
+
+        {/* Artisans */}
+        {matchedArtisans.length > 0 ? (
+          <>
+            <Text className="mb-1 mt-4 text-[13px] font-bold uppercase tracking-wide text-gray-400">
+              Artisans
+            </Text>
+            {matchedArtisans.map((a) => (
+              <Pressable
+                key={a.id}
+                accessibilityRole="button"
+                accessibilityLabel={a.fullName}
+                onPress={() =>
+                  go(() =>
+                    router.push({ pathname: '/artisan/[id]', params: { id: a.id } }),
+                  )
+                }
+                className="flex-row items-center gap-3 py-2.5 active:opacity-70"
+              >
+                <View className="h-10 w-10 overflow-hidden rounded-full bg-background">
+                  <Image
+                    source={artisanAvatar(a.imageKey)}
+                    contentFit="cover"
+                    contentPosition="top"
+                    style={{ flex: 1 }}
+                  />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-[15px] font-medium text-gray-800">
+                    {a.fullName}
+                  </Text>
+                  <Text className="text-[12px] text-gray-400">{a.specialty}</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+              </Pressable>
+            ))}
+          </>
+        ) : null}
       </ScrollView>
     </BottomSheet>
   );

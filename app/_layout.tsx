@@ -7,12 +7,15 @@ import { colors } from '@/constants/colors';
 import { QueryProvider } from '@/lib/query/QueryProvider';
 import { AuthProvider } from '@/lib/auth/AuthContext';
 import { ApiStatusBadge } from '@/components/ApiStatusBadge';
+import { useNotificationObserver } from '@/lib/push/useNotificationObserver';
 
 ExpoSplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [appReady, setAppReady] = useState(false);
   const [splashDone, setSplashDone] = useState(false);
+  // Deep-link a tapped push notification to its booking.
+  useNotificationObserver();
 
   useEffect(() => {
     async function prepare() {

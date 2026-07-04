@@ -6,6 +6,8 @@ import { Platform, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors } from '@/constants/colors';
+import { useAuth } from '@/lib/auth/AuthContext';
+import { useChatUnreadCount } from '@/lib/chat/hooks';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -49,6 +51,11 @@ export function TabBar({
   onBlockedPress,
 }: TabBarProps) {
   const insets = useSafeAreaInsets();
+  const { status } = useAuth();
+  const { data: unreadMessages } = useChatUnreadCount({
+    enabled: status === 'authenticated',
+  });
+  const hasUnread = (unreadMessages ?? 0) > 0;
 
   return (
     <View
@@ -116,7 +123,7 @@ export function TabBar({
                 size={24}
                 color={color}
               />
-              {meta.badge ? (
+              {meta.badge && hasUnread ? (
                 <View className="absolute -right-1.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-red-500" />
               ) : null}
             </View>

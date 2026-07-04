@@ -47,7 +47,15 @@
         {
           "locationWhenInUsePermission": "Servika uses your location to share your live position with the customer while you travel to a job."
         }
-      ]
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Servika needs photo access so you can upload your ID and profile photos.",
+          "cameraPermission": "Servika needs camera access to take your verification selfie."
+        }
+      ],
+      "expo-notifications"
     ],
     "experiments": {
       "typedRoutes": true,

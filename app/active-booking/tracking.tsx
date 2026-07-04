@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useMemo, useState } from 'react';
-import { Alert, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ArtisanRow, VerifiedBadges } from '@/components/active-booking/parts';
@@ -58,7 +58,10 @@ export default function LiveTracking() {
 
   const bookingId = params.id && params.id !== 'demo' ? params.id : undefined;
   const { data: booking } = useBooking(bookingId);
-  const { data: artisan } = useArtisan(params.artisanId);
+  // Resolve the artisan from the param, or from the booking (e.g. when opened from
+  // a notification that only knows the booking id).
+  const artisanId = params.artisanId ?? booking?.artisanId ?? undefined;
+  const { data: artisan } = useArtisan(artisanId);
   const { data: nearbyArtisans } = useNearbyArtisans();
   const { location, state } = useLiveTracking(bookingId);
 
@@ -101,13 +104,13 @@ export default function LiveTracking() {
   const nearby: NearbyMarker[] = useMemo(
     () =>
       (nearbyArtisans ?? [])
-        .filter((a) => a.id !== params.artisanId)
+        .filter((a) => a.id !== artisanId)
         .slice(0, 6)
         .map((a, i) => ({
           id: a.id,
           position: destinationPoint(destination, a.distanceKm || 0.6 + i * 0.4, (i * 67) % 360),
         })),
-    [nearbyArtisans, destination, params.artisanId],
+    [nearbyArtisans, destination, artisanId],
   );
 
   const status = (() => {
@@ -117,12 +120,6 @@ export default function LiveTracking() {
     if (!location) return { title: 'Artisan on the way', sub: 'Waiting for live location…' };
     return { title: 'Artisan on the way', sub: `ETA ${eta} min · ${formatDistance(km ?? 0)} away` };
   })();
-
-  const cancel = () =>
-    Alert.alert('Cancel booking?', 'This will withdraw your request.', [
-      { text: 'Keep booking', style: 'cancel' },
-      { text: 'Cancel booking', style: 'destructive', onPress: () => router.back() },
-    ]);
 
   return (
     <SafeAreaView className="flex-1 bg-gray-100" edges={['top']}>
@@ -138,9 +135,8 @@ export default function LiveTracking() {
           <Ionicons name="chevron-back" size={22} color={colors.textPrimary} />
         </Pressable>
         <Text className="text-[16px] font-extrabold text-gray-900">SERVIKA</Text>
-        <View className="h-10 w-10 items-center justify-center rounded-full bg-white">
-          <Ionicons name="ellipsis-vertical" size={18} color={colors.textPrimary} />
-        </View>
+        {/* Spacer keeps the title centered (no dead menu button). */}
+        <View className="h-10 w-10" />
       </View>
 
       {/* Map area */}
@@ -191,13 +187,12 @@ export default function LiveTracking() {
           <VerifiedBadges />
         </View>
         <View className="mt-4 flex-row gap-3">
-          <ActionPill icon="call" label="Call" onPress={() => Alert.alert('Call', `Calling ${name}…`)} />
           <ActionPill
             icon="chatbubble-ellipses"
             label="Message"
             onPress={() => router.push({ pathname: '/chat/[id]', params: chatParams })}
           />
-          <ActionPill icon="close-circle" label="Cancel" tone="danger" onPress={cancel} />
+          <ActionPill icon="information-circle" label="Details" onPress={() => setSheet(true)} />
         </View>
       </View>
 

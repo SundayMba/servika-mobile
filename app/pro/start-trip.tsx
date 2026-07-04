@@ -141,14 +141,7 @@ export default function StartTrip() {
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={['top']}>
-      <ProHeader
-        title="Start Trip"
-        right={
-          <Pressable accessibilityRole="button" hitSlop={8} className="h-10 w-10 items-center justify-center">
-            <Ionicons name="ellipsis-vertical" size={20} color={colors.textPrimary} />
-          </Pressable>
-        }
-      />
+      <ProHeader title="Start Trip" />
 
       {/* Live map (artisan's own position → the customer's address) */}
       <View className="flex-1">
@@ -188,10 +181,13 @@ export default function StartTrip() {
           </View>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Call customer"
+            accessibilityLabel="Message customer"
+            onPress={() =>
+              id ? router.push({ pathname: '/chat/[id]', params: { id, name: 'Customer' } }) : undefined
+            }
             className="h-10 w-10 items-center justify-center rounded-full bg-primary/10"
           >
-            <Ionicons name="call" size={18} color={colors.primary} />
+            <Ionicons name="chatbubble-ellipses" size={18} color={colors.primary} />
           </Pressable>
         </View>
 

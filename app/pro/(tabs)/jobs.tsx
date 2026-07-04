@@ -50,6 +50,7 @@ export default function ProJobs() {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Notifications"
+          onPress={() => router.push('/notifications')}
           className="h-10 w-10 items-center justify-center rounded-full bg-white"
         >
           <Ionicons name="notifications-outline" size={20} color={colors.textPrimary} />

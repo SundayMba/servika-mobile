@@ -28,6 +28,7 @@ export default function Register() {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [referralCode, setReferralCode] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // When set, the verification bottom sheet is shown for this email.
@@ -37,6 +38,7 @@ export default function Register() {
   const emailRef = useRef<TextInput>(null);
   const phoneRef = useRef<TextInput>(null);
   const passwordRef = useRef<TextInput>(null);
+  const referralRef = useRef<TextInput>(null);
 
   const handleCreateAccount = async () => {
     if (submitting) return;
@@ -61,6 +63,7 @@ export default function Register() {
         email: emailValue,
         phoneNumber,
         password,
+        referralCode: referralCode.trim() || undefined,
       });
       // Registration doesn't log you in — slide up the verification sheet.
       setVerifyEmail(registeredEmail);
@@ -149,6 +152,17 @@ export default function Register() {
               password
               autoCapitalize="none"
               textContentType="newPassword"
+              returnKeyType="next"
+              onSubmitEditing={() => referralRef.current?.focus()}
+            />
+            <Input
+              ref={referralRef}
+              icon="gift-outline"
+              placeholder="Referral code (optional)"
+              value={referralCode}
+              onChangeText={(t) => setReferralCode(t.toUpperCase())}
+              autoCapitalize="characters"
+              autoCorrect={false}
               returnKeyType="done"
               onSubmitEditing={handleCreateAccount}
             />

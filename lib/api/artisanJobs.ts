@@ -1,5 +1,9 @@
 import { apiClient } from '@/lib/api/client';
-import type { BookingDetail, BookingSummary } from '@/lib/booking/types';
+import type {
+  BookingDetail,
+  BookingSummary,
+  SubmitCompletionRequest,
+} from '@/lib/booking/types';
 
 /**
  * Artisan-side job endpoints (Slice 5a). Thin wrappers over the shared axios
@@ -36,5 +40,18 @@ export async function advanceArtisanJob(
   action: ArtisanAction,
 ): Promise<BookingDetail> {
   const { data } = await apiClient.post<BookingDetail>(`${BASE}/${id}/${action}`);
+  return data;
+}
+
+/** Submit proof of completed work (InProgress → AwaitingConfirmation). */
+export async function submitJobCompletion(
+  id: string,
+  body: SubmitCompletionRequest,
+): Promise<BookingDetail> {
+  const { data } = await apiClient.post<BookingDetail>(
+    `${BASE}/${id}/submit-completion`,
+    body,
+    { timeout: 120_000 },
+  );
   return data;
 }

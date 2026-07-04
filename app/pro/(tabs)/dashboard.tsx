@@ -12,16 +12,14 @@ import {
   TodayScheduleCard,
 } from '@/components/artisan/parts';
 import { colors } from '@/constants/colors';
-import {
-  DASHBOARD_STATS,
-  MOCK_ME,
-  TODAY_SCHEDULE,
-  formatNaira,
-} from '@/lib/artisan/mock';
+import { formatNaira } from '@/lib/artisan/mock';
 import { bookingToCard } from '@/lib/artisan/jobDisplay';
 import { useAdvanceArtisanJob, useArtisanJobs } from '@/lib/artisan/jobHooks';
+import { useArtisanWallet } from '@/lib/artisan/walletHooks';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { artisanAvatar } from '@/lib/catalogue/assets';
+import { useMyArtisanProfile } from '@/lib/artisan/onboardingHooks';
+import { useUnreadCount } from '@/lib/notifications/hooks';
 
 const TAB_BAR_HEIGHT = 60;
 
@@ -36,8 +34,21 @@ export default function ProDashboard() {
   const advance = useAdvanceArtisanJob();
   const topRequest = pending?.[0];
 
-  const avatar = artisanAvatar(MOCK_ME.imageKey);
-  const greetingName = user?.fullName ?? MOCK_ME.name;
+  // Overview metrics — live from the jobs list + wallet ledger.
+  const { data: allJobs } = useArtisanJobs();
+  const { data: wallet } = useArtisanWallet();
+  const { data: profile } = useMyArtisanProfile();
+  const { data: unread } = useUnreadCount();
+  const unreadCount = unread?.count ?? 0;
+  const scheduleJobs = (allJobs ?? [])
+    .filter((j) => ['Accepted', 'OnMyWay', 'Arrived', 'InProgress'].includes(j.status))
+    .slice(0, 4);
+  const jobsCount = allJobs?.length ?? 0;
+  const completedCount =
+    allJobs?.filter((j) => j.status === 'Completed').length ?? 0;
+
+  const avatar = profile?.imageKey ? artisanAvatar(profile.imageKey) : undefined;
+  const greetingName = user?.fullName ?? profile?.fullName ?? 'there';
   const bottomPadding = TAB_BAR_HEIGHT + Math.max(insets.bottom, 12) + 16;
 
   const acceptTop = (id: string) =>
@@ -61,10 +72,13 @@ export default function ProDashboard() {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Notifications"
+          onPress={() => router.push('/notifications')}
           className="h-10 w-10 items-center justify-center rounded-full bg-white"
         >
           <Ionicons name="notifications-outline" size={20} color={colors.textPrimary} />
-          <View className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full border border-white bg-red-500" />
+          {unreadCount > 0 ? (
+            <View className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full border border-white bg-red-500" />
+          ) : null}
         </Pressable>
       </View>
 
@@ -99,15 +113,18 @@ export default function ProDashboard() {
             style={{ padding: 18 }}
           >
             <View className="flex-row items-center justify-between">
-              <Text className="text-[14px] font-semibold text-white">Today&apos;s Overview</Text>
+              <Text className="text-[14px] font-semibold text-white">Overview</Text>
               <Text className="text-[12px] text-primary">View all</Text>
             </View>
             <View className="mt-4 flex-row">
-              <DashboardMetricCard value={String(DASHBOARD_STATS.jobs)} label="Jobs" />
+              <DashboardMetricCard value={String(jobsCount)} label="Jobs" />
               <View className="w-px bg-white/10" />
-              <DashboardMetricCard value={String(DASHBOARD_STATS.completed)} label="Completed" />
+              <DashboardMetricCard value={String(completedCount)} label="Completed" />
               <View className="w-px bg-white/10" />
-              <DashboardMetricCard value={formatNaira(DASHBOARD_STATS.earningsNaira)} label="Earnings" />
+              <DashboardMetricCard
+                value={formatNaira(wallet?.availableNaira ?? 0)}
+                label="Balance"
+              />
             </View>
           </LinearGradient>
         </Pressable>
@@ -132,23 +149,29 @@ export default function ProDashboard() {
           </View>
         )}
 
-        {/* Today's Schedule */}
+        {/* Upcoming jobs (accepted / in-progress) */}
         <View className="mb-1 mt-6 flex-row items-center justify-between">
-          <Text className="text-[16px] font-bold text-gray-900">Today&apos;s Schedule</Text>
-          <Pressable accessibilityRole="button" hitSlop={8}>
-            <Text className="text-[13px] font-semibold text-primary">View calendar</Text>
+          <Text className="text-[16px] font-bold text-gray-900">Your schedule</Text>
+          <Pressable accessibilityRole="button" hitSlop={8} onPress={() => router.push('/pro/jobs')}>
+            <Text className="text-[13px] font-semibold text-primary">View all</Text>
           </Pressable>
         </View>
         <View className="rounded-3xl border border-gray-100 bg-white px-4 pt-1">
-          {TODAY_SCHEDULE.map((s) => (
-            <TodayScheduleCard
-              key={s.id}
-              time={s.time}
-              service={s.service}
-              area={s.area}
-              tone={s.tone}
-            />
-          ))}
+          {scheduleJobs.length === 0 ? (
+            <Text className="px-1 py-6 text-center text-[13px] text-gray-400">
+              No scheduled jobs right now.
+            </Text>
+          ) : (
+            scheduleJobs.map((j) => (
+              <TodayScheduleCard
+                key={j.id}
+                time={j.preferredTimeSlot || 'Scheduled'}
+                service={j.serviceName}
+                area={j.addressText}
+                tone="confirmed"
+              />
+            ))
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>

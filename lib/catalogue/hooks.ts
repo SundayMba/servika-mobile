@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { getArtisan, getArtisans, getCategories } from '@/lib/api/catalogue';
+import type { LatLng } from '@/lib/tracking/geo';
 
 /**
  * TanStack Query hooks for the marketplace catalogue. Categories and artisan
@@ -14,11 +15,18 @@ export function useCategories() {
   });
 }
 
-/** Home "Nearby Artisans" carousel (no category filter). */
-export function useNearbyArtisans() {
+/**
+ * Home "Nearby Artisans" carousel (no category filter). Pass the customer's
+ * coordinates to sort by real proximity; the coords are part of the query key,
+ * so changing your location refetches (rounded to ~100m to avoid churn).
+ */
+export function useNearbyArtisans(coords?: LatLng | null) {
+  const key = coords
+    ? { lat: Math.round(coords.latitude * 1000) / 1000, lng: Math.round(coords.longitude * 1000) / 1000 }
+    : null;
   return useQuery({
-    queryKey: ['artisans'],
-    queryFn: () => getArtisans(),
+    queryKey: ['artisans', 'nearby', key],
+    queryFn: () => getArtisans(undefined, coords),
     staleTime: 60_000,
   });
 }

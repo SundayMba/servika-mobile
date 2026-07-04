@@ -18,7 +18,18 @@ const HERO_HEIGHT = 210;
 
 type Phase = 'typing' | 'holding' | 'deleting';
 
-export function HeroCarousel({ onGetHelp }: { onGetHelp?: () => void }) {
+export function HeroCarousel({
+  onGetHelp,
+  bare = false,
+  height = HERO_HEIGHT,
+}: {
+  onGetHelp?: () => void;
+  /** When true, drop the rounded orange card so the hero sits flush on an
+   *  already-orange canopy and bleeds to the screen edges. */
+  bare?: boolean;
+  /** Override the hero height (default 210). Thinner reads sleeker on the canopy. */
+  height?: number;
+}) {
   const len = WORKING_ARTISANS.length;
   const [step, setStep] = useState(0); // monotonic counter — only ever increments
   const [sub, setSub] = useState('');
@@ -99,12 +110,14 @@ export function HeroCarousel({ onGetHelp }: { onGetHelp?: () => void }) {
   return (
     // Flat brand-orange surface that matches the artisan images' solid #F97316
     // background exactly, so each image dissolves seamlessly into the card.
+    // `bare` drops the card chrome so it merges into the orange canopy.
     <View
       style={{
-        height: HERO_HEIGHT,
-        borderRadius: 26,
+        height,
         overflow: 'hidden',
-        backgroundColor: colors.primary,
+        ...(bare
+          ? null
+          : { borderRadius: 26, backgroundColor: colors.primary }),
       }}
     >
       {/* ── Rotating working-artisan images (right side, bleeds to edge) ──

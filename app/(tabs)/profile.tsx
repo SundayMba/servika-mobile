@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { Linking, Pressable, ScrollView, Text, View } from 'react-native';
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -9,6 +9,22 @@ import {
 
 import { colors } from '@/constants/colors';
 import { useAuth } from '@/lib/auth/AuthContext';
+import { useBookings } from '@/lib/booking/hooks';
+import { useUnreadCount } from '@/lib/notifications/hooks';
+
+/** Where "Contact support" / "Help" open. */
+const SUPPORT_EMAIL = 'support@servika.com';
+const openSupport = () =>
+  Linking.openURL(`mailto:${SUPPORT_EMAIL}?subject=Servika%20Support`).catch(() => {});
+
+const ACTIVE_STATUSES = [
+  'Pending',
+  'Accepted',
+  'OnMyWay',
+  'Arrived',
+  'InProgress',
+  'AwaitingConfirmation',
+];
 
 const TAB_BAR_HEIGHT = 60;
 
@@ -87,10 +103,14 @@ export default function Profile() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
+  const { data: bookings } = useBookings(undefined, { enabled: !!user });
+  const { data: unread } = useUnreadCount({ enabled: !!user });
 
   const bottomPadding = TAB_BAR_HEIGHT + Math.max(insets.bottom, 12) + 16;
-  const comingSoon = (label: string) =>
-    Alert.alert(label, 'Coming soon.', [{ text: 'OK' }]);
+  const hasUnread = (unread?.count ?? 0) > 0;
+  const total = bookings?.length ?? 0;
+  const activeCount = bookings?.filter((b) => ACTIVE_STATUSES.includes(b.status)).length ?? 0;
+  const completedCount = bookings?.filter((b) => b.status === 'Completed').length ?? 0;
 
   // Guests are normally gated before reaching this tab; safe fallback.
   if (!user) {
@@ -136,13 +156,11 @@ export default function Profile() {
     onPress: () => void;
   }[] = [
     { key: 'bookings', icon: 'calendar', label: 'Bookings', tint: '#3B82F6', onPress: () => router.push('/bookings') },
-    { key: 'addresses', icon: 'location', label: 'Addresses', tint: '#22C55E', onPress: () => comingSoon('Addresses') },
-    { key: 'wallet', icon: 'wallet', label: 'Wallet', tint: '#F97316', onPress: () => comingSoon('Wallet') },
-    { key: 'payments', icon: 'card', label: 'Payments', tint: '#8B5CF6', onPress: () => comingSoon('Payments') },
-    { key: 'notifications', icon: 'notifications', label: 'Notifications', tint: '#EF4444', badge: true, onPress: () => comingSoon('Notifications') },
-    { key: 'help', icon: 'help-buoy', label: 'Help & Support', tint: '#14B8A6', onPress: () => comingSoon('Help & Support') },
+    { key: 'messages', icon: 'chatbubbles', label: 'Messages', tint: '#22C55E', onPress: () => router.push('/messages') },
+    { key: 'notifications', icon: 'notifications', label: 'Notifications', tint: '#EF4444', badge: hasUnread, onPress: () => router.push('/notifications') },
+    { key: 'invite', icon: 'gift', label: 'Invite & Earn', tint: '#EC4899', onPress: () => router.push('/refer') },
     { key: 'settings', icon: 'settings', label: 'Settings', tint: '#64748B', onPress: () => router.push('/settings') },
-    { key: 'invite', icon: 'gift', label: 'Invite & Earn', tint: '#EC4899', onPress: () => comingSoon('Invite & Earn') },
+    { key: 'help', icon: 'help-buoy', label: 'Help & Support', tint: '#14B8A6', onPress: openSupport },
   ];
 
   return (
@@ -159,11 +177,13 @@ export default function Profile() {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Notifications"
-            onPress={() => comingSoon('Notifications')}
+            onPress={() => router.push('/notifications')}
             className="h-10 w-10 items-center justify-center rounded-full bg-white"
           >
             <Ionicons name="notifications-outline" size={20} color={colors.textPrimary} />
-            <View className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full border border-white bg-red-500" />
+            {hasUnread ? (
+              <View className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full border border-white bg-red-500" />
+            ) : null}
           </Pressable>
           <Pressable
             accessibilityRole="button"
@@ -183,15 +203,10 @@ export default function Profile() {
         {/* Identity + stats */}
         <View className="mt-2 rounded-3xl border border-gray-100/70 bg-white p-5">
           <View className="flex-row items-center">
-            <View className="relative">
-              <View className="h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-                <Text className="text-[22px] font-bold text-primary">
-                  {initials(user.fullName)}
-                </Text>
-              </View>
-              <View className="absolute -bottom-0.5 -right-0.5 rounded-full border-2 border-white bg-blue-500">
-                <Ionicons name="checkmark" size={12} color="#FFFFFF" />
-              </View>
+            <View className="h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+              <Text className="text-[22px] font-bold text-primary">
+                {initials(user.fullName)}
+              </Text>
             </View>
 
             <View className="ml-4 flex-1">
@@ -207,53 +222,16 @@ export default function Profile() {
                 {user.email}
               </Text>
             </View>
-
-            <Pressable
-              accessibilityRole="button"
-              hitSlop={8}
-              onPress={() => comingSoon('Edit profile')}
-              className="flex-row items-center gap-1"
-            >
-              <Ionicons name="create-outline" size={14} color={colors.primary} />
-              <Text className="text-[12px] font-semibold text-primary">Edit</Text>
-            </Pressable>
           </View>
 
           <View className="mt-5 flex-row border-t border-gray-100 pt-4">
-            <Stat icon="calendar-outline" value="0" label="Bookings" tint="#3B82F6" />
+            <Stat icon="calendar-outline" value={String(total)} label="Bookings" tint="#3B82F6" />
             <View className="w-px bg-gray-100" />
-            <Stat icon="heart-outline" value="0" label="Saved" tint="#EC4899" />
+            <Stat icon="time-outline" value={String(activeCount)} label="Active" tint="#8B5CF6" />
             <View className="w-px bg-gray-100" />
-            <Stat icon="wallet-outline" value="₦0" label="Total Spent" tint={colors.primary} />
+            <Stat icon="checkmark-done-outline" value={String(completedCount)} label="Completed" tint="#22C55E" />
           </View>
         </View>
-
-        {/* Servika Plus */}
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => comingSoon('Servika Plus')}
-          className="mt-4 overflow-hidden rounded-3xl"
-        >
-          <LinearGradient
-            colors={['#1E293B', '#0F172A']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={{ padding: 16, flexDirection: 'row', alignItems: 'center' }}
-          >
-            <View className="h-11 w-11 items-center justify-center rounded-full bg-white/10">
-              <Ionicons name="star" size={20} color={colors.primaryLight} />
-            </View>
-            <View className="ml-3 flex-1">
-              <Text className="text-[15px] font-bold text-white">Servika Plus</Text>
-              <Text className="mt-0.5 text-[12px] leading-4 text-gray-300">
-                Priority support, exclusive benefits and special offers.
-              </Text>
-            </View>
-            <View className="rounded-full bg-primary px-3.5 py-2">
-              <Text className="text-[12px] font-bold text-white">Upgrade</Text>
-            </View>
-          </LinearGradient>
-        </Pressable>
 
         {/* Quick Access */}
         <Text className="mb-1 mt-6 px-1 text-[16px] font-bold text-gray-900">
@@ -277,7 +255,7 @@ export default function Profile() {
         {/* Support card */}
         <Pressable
           accessibilityRole="button"
-          onPress={() => comingSoon('Contact Support')}
+          onPress={openSupport}
           className="mt-4 overflow-hidden rounded-3xl"
         >
           <LinearGradient

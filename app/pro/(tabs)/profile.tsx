@@ -10,19 +10,32 @@ import {
   PublicProfileButton,
 } from '@/components/artisan/parts';
 import { colors } from '@/constants/colors';
-import { MOCK_ME } from '@/lib/artisan/mock';
 import { useAuth } from '@/lib/auth/AuthContext';
+import { useMyArtisanProfile } from '@/lib/artisan/onboardingHooks';
 
 const TAB_BAR_HEIGHT = 60;
+
+const VERIFY_BANNER: Record<string, { tint: string; bg: string; border: string; label: string }> = {
+  Verified: { tint: '#16A34A', bg: 'bg-green-50', border: 'border-green-100', label: 'Your account is fully verified' },
+  Pending: { tint: '#D97706', bg: 'bg-amber-50', border: 'border-amber-100', label: 'Verification under review' },
+  Rejected: { tint: '#DC2626', bg: 'bg-red-50', border: 'border-red-100', label: 'Verification needs attention — resubmit' },
+};
 
 export default function ProProfile() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { user, signOut } = useAuth();
+  const { data: profile } = useMyArtisanProfile();
   const [loggingOut, setLoggingOut] = useState(false);
 
-  const comingSoon = (label: string) => Alert.alert(label, 'Coming soon.', [{ text: 'OK' }]);
   const bottomPadding = TAB_BAR_HEIGHT + Math.max(insets.bottom, 12) + 16;
+  const status = profile?.verificationStatus ?? 'Pending';
+  const banner = VERIFY_BANNER[status] ?? VERIFY_BANNER.Pending;
+  // Verified artisans can preview their public profile; others go to review status.
+  const openVerification = () =>
+    status === 'Verified' && profile
+      ? router.push({ pathname: '/artisan/[id]', params: { id: profile.id } })
+      : router.push('/pro/pending-review');
 
   const handleLogout = () => {
     Alert.alert('Log out', 'Are you sure you want to log out?', [
@@ -50,7 +63,7 @@ export default function ProProfile() {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Edit profile"
-          onPress={() => comingSoon('Edit profile')}
+          onPress={() => router.push('/pro/get-verified')}
           className="h-10 w-10 items-center justify-center rounded-full bg-white"
         >
           <Ionicons name="create-outline" size={20} color={colors.textPrimary} />
@@ -64,12 +77,12 @@ export default function ProProfile() {
         {/* Identity */}
         <View className="mt-2 rounded-3xl border border-gray-100 bg-white p-5">
           <ArtisanProfileHeader
-            name={user?.fullName ?? MOCK_ME.name}
-            specialty={MOCK_ME.specialty}
-            rating={MOCK_ME.rating}
-            reviewCount={MOCK_ME.reviewCount}
-            imageKey={MOCK_ME.imageKey}
-            verified={MOCK_ME.verified}
+            name={profile?.fullName ?? user?.fullName ?? 'Artisan'}
+            specialty={profile?.specialty ?? 'Artisan'}
+            rating={profile?.rating ?? 0}
+            reviewCount={profile?.reviewCount ?? 0}
+            imageKey={profile?.imageKey ?? ''}
+            verified={status === 'Verified'}
           />
         </View>
 
@@ -78,55 +91,51 @@ export default function ProProfile() {
           <ArtisanProfileMenuRow
             icon="person-outline"
             label="Profile Information"
-            onPress={() => comingSoon('Profile Information')}
-          />
-          <ArtisanProfileMenuRow
-            icon="location-outline"
-            label="Service Areas"
-            detail={MOCK_ME.serviceAreas}
-            onPress={() => comingSoon('Service Areas')}
+            onPress={() => router.push('/pro/get-verified')}
           />
           <ArtisanProfileMenuRow
             icon="construct-outline"
             label="My Services"
-            detail="5 services"
-            onPress={() => router.push('/pro/service-setup')}
-          />
-          <ArtisanProfileMenuRow
-            icon="images-outline"
-            label="Work Portfolio"
-            detail="12 Photos"
-            onPress={() => comingSoon('Work Portfolio')}
+            detail={profile ? `${profile.services.length} services` : undefined}
+            onPress={() => router.push('/pro/get-verified')}
           />
           <ArtisanProfileMenuRow
             icon="star-outline"
             label="Reviews"
-            detail="124 Reviews"
-            onPress={() => comingSoon('Reviews')}
+            detail={profile ? `${profile.reviewCount} reviews` : undefined}
+            onPress={() =>
+              profile
+                ? router.push({ pathname: '/artisan/[id]', params: { id: profile.id } })
+                : undefined
+            }
           />
           <ArtisanProfileMenuRow
             icon="settings-outline"
             label="Account Settings"
-            onPress={() => comingSoon('Account Settings')}
+            onPress={() => router.push('/settings')}
             last
           />
         </View>
 
-        <View className="mt-4">
-          <PublicProfileButton onPress={() => comingSoon('Public profile')} />
-        </View>
+        {profile ? (
+          <View className="mt-4">
+            <PublicProfileButton
+              onPress={() => router.push({ pathname: '/artisan/[id]', params: { id: profile.id } })}
+            />
+          </View>
+        ) : null}
 
-        {/* Verification shortcut */}
+        {/* Verification status */}
         <Pressable
           accessibilityRole="button"
-          onPress={() => router.push('/pro/kyc')}
-          className="mt-3 flex-row items-center gap-3 rounded-2xl border border-green-100 bg-green-50 p-4 active:opacity-80"
+          onPress={openVerification}
+          className={`mt-3 flex-row items-center gap-3 rounded-2xl border ${banner.border} ${banner.bg} p-4 active:opacity-80`}
         >
-          <Ionicons name="shield-checkmark" size={20} color="#16A34A" />
-          <Text className="flex-1 text-[13px] font-semibold text-green-700">
-            Your account is fully verified
+          <Ionicons name="shield-checkmark" size={20} color={banner.tint} />
+          <Text className="flex-1 text-[13px] font-semibold" style={{ color: banner.tint }}>
+            {banner.label}
           </Text>
-          <Ionicons name="chevron-forward" size={18} color="#16A34A" />
+          <Ionicons name="chevron-forward" size={18} color={banner.tint} />
         </Pressable>
 
         <Pressable

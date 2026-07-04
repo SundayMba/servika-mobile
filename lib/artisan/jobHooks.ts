@@ -4,8 +4,10 @@ import {
   advanceArtisanJob,
   getArtisanJob,
   getArtisanJobs,
+  submitJobCompletion,
   type ArtisanAction,
 } from '@/lib/api/artisanJobs';
+import type { SubmitCompletionRequest } from '@/lib/booking/types';
 
 /**
  * TanStack Query hooks for the artisan's jobs. Jobs change as the artisan drives
@@ -36,6 +38,19 @@ export function useAdvanceArtisanJob() {
   return useMutation({
     mutationFn: ({ id, action }: { id: string; action: ArtisanAction }) =>
       advanceArtisanJob(id, action),
+    onSuccess: (job) => {
+      queryClient.invalidateQueries({ queryKey: ['artisan-jobs'] });
+      queryClient.setQueryData(['artisan-job', job.id], job);
+    },
+  });
+}
+
+/** Submit proof of completed work (InProgress → AwaitingConfirmation). */
+export function useSubmitJobCompletion() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, body }: { id: string; body: SubmitCompletionRequest }) =>
+      submitJobCompletion(id, body),
     onSuccess: (job) => {
       queryClient.invalidateQueries({ queryKey: ['artisan-jobs'] });
       queryClient.setQueryData(['artisan-job', job.id], job);

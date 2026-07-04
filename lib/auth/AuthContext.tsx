@@ -11,6 +11,7 @@ import { logout as logoutRequest } from '@/lib/api/auth';
 import { setOnSessionExpired } from '@/lib/api/client';
 import { tokenStorage } from '@/lib/auth/tokenStorage';
 import type { AuthResponse, User } from '@/lib/auth/types';
+import { registerForPush, unregisterForPush } from '@/lib/push/notifications';
 
 /**
  * App-wide auth session state. Hydrates from SecureStore on boot so a returning
@@ -65,6 +66,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => setOnSessionExpired(null);
   }, []);
 
+  // Register this device for push whenever we're signed in (covers login + a
+  // rehydrated boot session). Best-effort; no-ops on a simulator / in Expo Go.
+  useEffect(() => {
+    if (status === 'authenticated') void registerForPush();
+  }, [status]);
+
   const signIn = useCallback(async (auth: AuthResponse) => {
     await tokenStorage.setTokens(auth.accessToken, auth.refreshToken);
     await tokenStorage.setUser(auth.user);
@@ -73,6 +80,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
+    // Unregister this device's push token first — the endpoint needs the session.
+    await unregisterForPush();
     // Best-effort: revoke the refresh token server-side. Even if the network
     // call fails, we always clear the local session so the user is logged out.
     try {

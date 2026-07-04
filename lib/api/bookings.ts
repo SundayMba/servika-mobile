@@ -3,6 +3,7 @@ import type {
   BookingDetail,
   BookingSummary,
   CreateBookingRequest,
+  JobCompletion,
 } from '@/lib/booking/types';
 
 /**
@@ -38,5 +39,17 @@ export async function getBooking(id: string): Promise<BookingDetail> {
 /** Cancel a booking (allowed only while Pending/Accepted). Returns the updated booking. */
 export async function cancelBooking(id: string): Promise<BookingDetail> {
   const { data } = await apiClient.post<BookingDetail>(`${BASE}/${id}/cancel`);
+  return data;
+}
+
+/** Confirm the job is complete (customer). Returns the updated booking (Completed). */
+export async function completeBooking(id: string): Promise<BookingDetail> {
+  const { data } = await apiClient.post<BookingDetail>(`${BASE}/${id}/complete`);
+  return data;
+}
+
+/** The artisan's proof-of-work (note + photo data URIs) for the customer to review. */
+export async function getJobCompletion(id: string): Promise<JobCompletion> {
+  const { data } = await apiClient.get<JobCompletion>(`${BASE}/${id}/completion`);
   return data;
 }

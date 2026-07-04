@@ -61,6 +61,8 @@ export interface RegisterRequest {
   phoneNumber: string;
   password: string;
   role?: Role;
+  /** Optional referrer's share code — links this signup to them. */
+  referralCode?: string;
 }
 
 /** Body for POST /login (LoginRequest). */

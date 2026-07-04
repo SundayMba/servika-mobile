@@ -1,9 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -15,48 +15,56 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { colors } from '@/constants/colors';
-import { CHAT_MESSAGES, MOCK_ARTISAN, type ChatMessage } from '@/lib/active-booking/mock';
-import { artisanAvatar } from '@/lib/catalogue/assets';
+import { useAuth } from '@/lib/auth/AuthContext';
+import {
+  useChatMessages,
+  useChatRealtime,
+  useSendMessage,
+} from '@/lib/chat/hooks';
 
-function QuickChip({
-  icon,
-  label,
-  onPress,
-}: {
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      className="flex-row items-center gap-1.5 rounded-full bg-primary/5 px-3 py-2"
-    >
-      <Ionicons name={icon} size={14} color={colors.primary} />
-      <Text className="text-[12px] font-semibold text-primary">{label}</Text>
-    </Pressable>
-  );
+function initials(name: string) {
+  return name
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((p) => p[0])
+    .join('')
+    .toUpperCase();
+}
+
+function messageTime(iso: string) {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toLocaleTimeString('en-NG', { hour: '2-digit', minute: '2-digit' });
 }
 
 export default function ChatScreen() {
   const router = useRouter();
+  const { user } = useAuth();
   const params = useLocalSearchParams<{ id?: string; name?: string }>();
-  const name = params.name || MOCK_ARTISAN.name;
-  const avatar = artisanAvatar(MOCK_ARTISAN.imageKey);
+  // The `id` route param is the booking id — a conversation is per-booking.
+  const bookingId = params.id && params.id !== 'demo' ? params.id : undefined;
+  const name = params.name || 'Chat';
 
-  const [messages, setMessages] = useState<ChatMessage[]>(CHAT_MESSAGES);
+  const { data: messages, isLoading } = useChatMessages(bookingId);
+  const sendMessage = useSendMessage(bookingId ?? '');
+  useChatRealtime(bookingId);
+
   const [draft, setDraft] = useState('');
   const scrollRef = useRef<ScrollView>(null);
 
+  useEffect(() => {
+    if (messages?.length) {
+      requestAnimationFrame(() => scrollRef.current?.scrollToEnd({ animated: true }));
+    }
+  }, [messages?.length]);
+
   const send = () => {
     const text = draft.trim();
-    if (!text) return;
-    setMessages((prev) => [
-      ...prev,
-      { id: String(prev.length + 1), from: 'me', text, time: 'now' },
-    ]);
+    if (!text || !bookingId || sendMessage.isPending) return;
     setDraft('');
-    requestAnimationFrame(() => scrollRef.current?.scrollToEnd({ animated: true }));
+    sendMessage.mutate(text, {
+      onError: () => setDraft(text), // restore the draft so nothing is lost
+    });
   };
 
   return (
@@ -65,30 +73,29 @@ export default function ChatScreen() {
 
       {/* Header */}
       <View className="flex-row items-center border-b border-gray-100 px-4 py-2">
-        <Pressable hitSlop={8} onPress={() => router.back()} className="pr-2">
+        <Pressable
+          hitSlop={8}
+          onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)/messages'))}
+          className="pr-2"
+        >
           <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
         </Pressable>
-        {avatar ? (
-          <Image
-            source={avatar}
-            style={{ width: 38, height: 38, borderRadius: 19 }}
-            contentFit="cover"
-          />
-        ) : null}
+        <View className="h-9 w-9 items-center justify-center rounded-full bg-primary/10">
+          <Text className="text-[13px] font-bold text-primary">{initials(name)}</Text>
+        </View>
         <View className="ml-2 flex-1">
           <Text className="text-[15px] font-bold text-gray-900">{name}</Text>
-          <View className="flex-row items-center gap-1">
-            <View className="h-2 w-2 rounded-full bg-green-500" />
-            <Text className="text-[11px] text-gray-500">Online</Text>
-          </View>
+          <Text className="text-[11px] text-gray-400">Booking chat</Text>
         </View>
-        <Pressable
-          onPress={() =>
-            router.push({ pathname: '/active-booking/tracking', params: { id: params.id, name } })
-          }
-        >
-          <Text className="text-[12px] font-semibold text-primary">View Tracking</Text>
-        </Pressable>
+        {bookingId ? (
+          <Pressable
+            onPress={() =>
+              router.push({ pathname: '/booking/[id]', params: { id: bookingId } })
+            }
+          >
+            <Text className="text-[12px] font-semibold text-primary">View Booking</Text>
+          </Pressable>
+        ) : null}
       </View>
 
       <KeyboardAvoidingView
@@ -96,75 +103,58 @@ export default function ChatScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
-        <ScrollView
-          ref={scrollRef}
-          className="flex-1"
-          contentContainerStyle={{ padding: 16 }}
-          onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: false })}
-        >
-          {/* Tracking banner */}
-          <Pressable
-            onPress={() =>
-              router.push({ pathname: '/active-booking/tracking', params: { id: params.id, name } })
-            }
-            className="mb-4 flex-row items-center rounded-2xl bg-primary/5 p-3"
+        {isLoading ? (
+          <View className="flex-1 items-center justify-center">
+            <ActivityIndicator color={colors.primary} />
+          </View>
+        ) : (
+          <ScrollView
+            ref={scrollRef}
+            className="flex-1"
+            contentContainerStyle={{ padding: 16, flexGrow: 1 }}
+            onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: false })}
+            keyboardShouldPersistTaps="handled"
           >
-            <Ionicons name="navigate-circle" size={20} color={colors.primary} />
-            <View className="ml-2 flex-1">
-              <Text className="text-[13px] font-bold text-gray-900">Tracking active</Text>
-              <Text className="text-[11px] text-gray-500">
-                ETA {MOCK_ARTISAN.etaMinutes} min · {MOCK_ARTISAN.distanceKm} km away
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
-          </Pressable>
-
-          <Text className="mb-3 text-center text-[11px] text-gray-400">Today</Text>
-
-          {messages.map((m) => {
-            const mine = m.from === 'me';
-            return (
-              <View
-                key={m.id}
-                className={`mb-2 max-w-[78%] ${mine ? 'self-end' : 'self-start'}`}
-              >
-                <View
-                  className={
-                    mine
-                      ? 'rounded-2xl rounded-br-md bg-primary px-3.5 py-2.5'
-                      : 'rounded-2xl rounded-bl-md bg-gray-100 px-3.5 py-2.5'
-                  }
-                >
-                  <Text className={mine ? 'text-[14px] text-white' : 'text-[14px] text-gray-900'}>
-                    {m.text}
-                  </Text>
-                </View>
-                <Text
-                  className={`mt-0.5 text-[10px] text-gray-400 ${mine ? 'text-right' : 'text-left'}`}
-                >
-                  {m.time}
+            {!messages?.length ? (
+              <View className="flex-1 items-center justify-center px-8">
+                <Ionicons name="chatbubbles-outline" size={40} color={colors.textMuted} />
+                <Text className="mt-3 text-center text-[13px] text-gray-400">
+                  No messages yet. Say hello to coordinate the job.
                 </Text>
               </View>
-            );
-          })}
-        </ScrollView>
-
-        {/* Quick actions */}
-        <View className="flex-row gap-2 px-4 pb-2">
-          <QuickChip
-            icon="location-outline"
-            label="Share Location"
-            onPress={() => {}}
-          />
-          <QuickChip icon="call-outline" label="Call Artisan" onPress={() => {}} />
-          <QuickChip icon="calendar-outline" label="Reschedule" onPress={() => {}} />
-        </View>
+            ) : (
+              messages.map((m) => {
+                const mine = m.senderUserId === user?.id;
+                return (
+                  <View
+                    key={m.id}
+                    className={`mb-2 max-w-[78%] ${mine ? 'self-end' : 'self-start'}`}
+                  >
+                    <View
+                      className={
+                        mine
+                          ? 'rounded-2xl rounded-br-md bg-primary px-3.5 py-2.5'
+                          : 'rounded-2xl rounded-bl-md bg-gray-100 px-3.5 py-2.5'
+                      }
+                    >
+                      <Text className={mine ? 'text-[14px] text-white' : 'text-[14px] text-gray-900'}>
+                        {m.body}
+                      </Text>
+                    </View>
+                    <Text
+                      className={`mt-0.5 text-[10px] text-gray-400 ${mine ? 'text-right' : 'text-left'}`}
+                    >
+                      {messageTime(m.createdAt)}
+                    </Text>
+                  </View>
+                );
+              })
+            )}
+          </ScrollView>
+        )}
 
         {/* Input */}
         <View className="flex-row items-center gap-2 border-t border-gray-100 px-4 py-2">
-          <View className="h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-            <Ionicons name="add" size={22} color={colors.primary} />
-          </View>
           <TextInput
             value={draft}
             onChangeText={setDraft}
@@ -173,10 +163,13 @@ export default function ChatScreen() {
             className="h-11 flex-1 rounded-full bg-gray-100 px-4 text-[15px] text-gray-900"
             onSubmitEditing={send}
             returnKeyType="send"
+            editable={!!bookingId}
           />
           <Pressable
             onPress={send}
+            disabled={!bookingId || sendMessage.isPending}
             className="h-11 w-11 items-center justify-center rounded-full bg-primary"
+            style={!bookingId || sendMessage.isPending ? { opacity: 0.5 } : undefined}
           >
             <Ionicons name="send" size={18} color={colors.white} />
           </Pressable>

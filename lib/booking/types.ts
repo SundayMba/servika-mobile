@@ -13,12 +13,28 @@ export type BookingStatus =
   | 'OnMyWay'
   | 'Arrived'
   | 'InProgress'
+  | 'AwaitingConfirmation'
   | 'Completed'
   | 'Cancelled'
   | 'Disputed'
   | 'Expired';
 
 export type Urgency = 'standard' | 'urgent';
+
+/** Artisan's proof-of-work for a booking (GET /bookings/{id}/completion). */
+export interface JobCompletion {
+  status: BookingStatus;
+  note: string | null;
+  submittedAtUtc: string | null;
+  /** Photos as base64 data URIs the app renders directly. */
+  photos: string[];
+}
+
+/** Artisan submits proof of completed work. */
+export interface SubmitCompletionRequest {
+  note?: string | null;
+  photosBase64: string[];
+}
 
 /** POST /api/v1/bookings body. Pricing/commission are decided server-side. */
 export interface CreateBookingRequest {
@@ -67,6 +83,7 @@ export interface BookingDetail {
   preferredTimeSlot: string;
   urgency: string;
   pricingModel: string;
+  paymentState: string;
   initialQuoteAmountNaira: number | null;
   commissionRate: number;
   createdAt: string;

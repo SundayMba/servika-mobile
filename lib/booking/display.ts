@@ -16,6 +16,7 @@ const STATUS_STYLES: Record<BookingStatus, ChipStyle> = {
   OnMyWay: { label: 'On the way', bg: 'bg-blue-100', text: 'text-blue-700' },
   Arrived: { label: 'Arrived', bg: 'bg-blue-100', text: 'text-blue-700' },
   InProgress: { label: 'In progress', bg: 'bg-indigo-100', text: 'text-indigo-700' },
+  AwaitingConfirmation: { label: 'Awaiting your confirmation', bg: 'bg-orange-100', text: 'text-orange-700' },
   Completed: { label: 'Completed', bg: 'bg-green-100', text: 'text-green-700' },
   Cancelled: { label: 'Cancelled', bg: 'bg-gray-100', text: 'text-gray-500' },
   Disputed: { label: 'Disputed', bg: 'bg-red-100', text: 'text-red-700' },
@@ -29,6 +30,38 @@ export function statusStyle(status: BookingStatus): ChipStyle {
 /** A booking can still be cancelled by the customer only in these states. */
 export function canCancel(status: BookingStatus): boolean {
   return status === 'Pending' || status === 'Accepted';
+}
+
+/** The job is live — the customer can open the tracking map/dashboard. */
+export function isTrackable(status: BookingStatus): boolean {
+  return (
+    status === 'Accepted' ||
+    status === 'OnMyWay' ||
+    status === 'Arrived' ||
+    status === 'InProgress'
+  );
+}
+
+/** The artisan is actively en route/working → surface live tracking prominently. */
+export function isEnRoute(status: BookingStatus): boolean {
+  return status === 'OnMyWay' || status === 'Arrived' || status === 'InProgress';
+}
+
+/** Artisan submitted proof → the customer needs to review & confirm. */
+export function isAwaitingConfirmation(status: BookingStatus): boolean {
+  return status === 'AwaitingConfirmation';
+}
+
+/**
+ * The customer can raise a dispute once work has actually happened — mirrors the
+ * backend's disputable states (InProgress / AwaitingConfirmation / Completed).
+ */
+export function canDispute(status: BookingStatus): boolean {
+  return (
+    status === 'InProgress' ||
+    status === 'AwaitingConfirmation' ||
+    status === 'Completed'
+  );
 }
 
 /** "25 Jun 2026" from an ISO string; empty string if unparseable. */

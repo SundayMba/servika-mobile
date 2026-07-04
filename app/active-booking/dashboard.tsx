@@ -1,13 +1,27 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useEffect, useRef } from 'react';
 import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ArtisanRow, StatusTimeline } from '@/components/active-booking/parts';
 import { Button } from '@/components/ui/Button';
 import { colors } from '@/constants/colors';
-import { MOCK_ARTISAN, TRACK_STEPS } from '@/lib/active-booking/mock';
+import { TRACK_STEPS } from '@/lib/active-booking/mock';
+import { statusStyle, isEnRoute, formatDate } from '@/lib/booking/display';
+import { useBooking, useCancelBooking } from '@/lib/booking/hooks';
+import { useArtisan } from '@/lib/catalogue/hooks';
+import { authErrorMessage } from '@/lib/api/auth';
+
+// Booking status → index in TRACK_STEPS (Request Sent, Accepted, On My Way, Arrived, Job Started).
+const STEP_INDEX: Record<string, number> = {
+  Pending: 0,
+  Accepted: 1,
+  OnMyWay: 2,
+  Arrived: 3,
+  InProgress: 4,
+};
 
 function shortRef(id?: string) {
   if (!id) return 'SVK-78D45';
@@ -23,20 +37,60 @@ export default function ActiveBookingDashboard() {
     artisanName?: string;
   }>();
 
-  const artisanName = params.artisanName || MOCK_ARTISAN.name;
-  const serviceName = params.serviceName || 'Electrical Installation';
+  const bookingId =
+    params.bookingId && params.bookingId !== 'demo' ? params.bookingId : undefined;
+  const { data: booking } = useBooking(bookingId);
+  const cancelBooking = useCancelBooking();
+
+  const artisanId = params.artisanId ?? booking?.artisanId ?? undefined;
+  const { data: artisan } = useArtisan(artisanId);
+  const artisanName = params.artisanName || booking?.artisanName || artisan?.fullName || 'Your artisan';
+  const serviceName = params.serviceName || booking?.serviceName || 'Your booking';
+  const status = booking?.status;
+  const chip = status ? statusStyle(status) : null;
+
   const linkParams = {
     id: params.bookingId || 'demo',
-    artisanId: params.artisanId,
+    artisanId,
     name: artisanName,
     serviceName,
   };
 
-  const cancel = () =>
+  // Route by real status (once): en route → jump straight to the live map;
+  // completed → the booking detail (to leave a review). Otherwise stay on the hub.
+  // `replace` so we don't loop back here.
+  const jumped = useRef(false);
+  useEffect(() => {
+    if (jumped.current || !status) return;
+    if (isEnRoute(status)) {
+      jumped.current = true;
+      router.replace({ pathname: '/active-booking/tracking', params: linkParams });
+    } else if (status === 'AwaitingConfirmation') {
+      jumped.current = true;
+      router.replace({ pathname: '/active-booking/completion', params: linkParams });
+    } else if (status === 'Completed' && bookingId) {
+      jumped.current = true;
+      router.replace({ pathname: '/booking/[id]', params: { id: bookingId } });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status]);
+
+  const canCancel = status === 'Pending' || status === 'Accepted';
+  const cancel = () => {
+    if (!bookingId) return;
     Alert.alert('Cancel booking?', 'This will withdraw your request.', [
       { text: 'Keep booking', style: 'cancel' },
-      { text: 'Cancel booking', style: 'destructive', onPress: () => router.back() },
+      {
+        text: 'Cancel booking',
+        style: 'destructive',
+        onPress: () =>
+          cancelBooking.mutate(bookingId, {
+            onSuccess: () => router.replace('/bookings'),
+            onError: (e) => Alert.alert('Could not cancel', authErrorMessage(e, 'Please try again.')),
+          }),
+      },
     ]);
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
@@ -44,21 +98,40 @@ export default function ActiveBookingDashboard() {
 
       {/* Header */}
       <View className="flex-row items-center justify-between px-5 py-2">
-        <View>
-          <Text className="text-[22px] font-bold text-gray-900">
-            Active Booking
-          </Text>
-          <Text className="text-[13px] text-gray-500">
-            Track your booking status in real time
-          </Text>
+        <View className="flex-1 flex-row items-center gap-2.5">
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+            hitSlop={8}
+            onPress={() => (router.canGoBack() ? router.back() : router.replace('/home'))}
+            className="h-10 w-10 items-center justify-center rounded-full bg-white"
+          >
+            <Ionicons name="chevron-back" size={22} color={colors.textPrimary} />
+          </Pressable>
+          <View>
+            <Text className="text-[20px] font-bold text-gray-900">Active Booking</Text>
+            <Text className="text-[12px] text-gray-500">
+              Track your booking status in real time
+            </Text>
+          </View>
         </View>
         <View className="flex-row gap-2">
-          <View className="h-10 w-10 items-center justify-center rounded-full bg-white">
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Notifications"
+            onPress={() => router.push('/notifications')}
+            className="h-10 w-10 items-center justify-center rounded-full bg-white"
+          >
             <Ionicons name="notifications-outline" size={20} color={colors.textPrimary} />
-          </View>
-          <View className="h-10 w-10 items-center justify-center rounded-full bg-white">
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Settings"
+            onPress={() => router.push('/settings')}
+            className="h-10 w-10 items-center justify-center rounded-full bg-white"
+          >
             <Ionicons name="settings-outline" size={20} color={colors.textPrimary} />
-          </View>
+          </Pressable>
         </View>
       </View>
 
@@ -77,9 +150,10 @@ export default function ActiveBookingDashboard() {
                 {serviceName}
               </Text>
             </View>
-            <View className="flex-row items-center gap-1 rounded-full bg-green-100 px-2.5 py-1">
-              <Ionicons name="checkmark-circle" size={13} color="#15803D" />
-              <Text className="text-[11px] font-bold text-green-700">Accepted</Text>
+            <View className={`rounded-full px-2.5 py-1 ${chip?.bg ?? 'bg-green-100'}`}>
+              <Text className={`text-[11px] font-bold ${chip?.text ?? 'text-green-700'}`}>
+                {chip?.label ?? 'Accepted'}
+              </Text>
             </View>
           </View>
 
@@ -87,13 +161,13 @@ export default function ActiveBookingDashboard() {
             <View className="flex-row items-center gap-2">
               <Ionicons name="calendar-outline" size={14} color={colors.textMuted} />
               <Text className="text-[12px] text-gray-600">
-                Mon, 26 May 2025 • 10:00 AM
+                {booking ? `${formatDate(booking.preferredDate) || '—'} • ${booking.preferredTimeSlot || '—'}` : '—'}
               </Text>
             </View>
             <View className="flex-row items-center gap-2">
               <Ionicons name="location-outline" size={14} color={colors.textMuted} />
               <Text className="text-[12px] text-gray-600">
-                12 Admiralty Way, Ikoyi, Lagos
+                {booking?.addressText || '—'}
               </Text>
             </View>
             <View className="flex-row items-center gap-2">
@@ -108,16 +182,16 @@ export default function ActiveBookingDashboard() {
 
           <ArtisanRow
             name={artisanName}
-            specialty={MOCK_ARTISAN.specialty}
-            rating={MOCK_ARTISAN.rating}
-            jobsCount={MOCK_ARTISAN.jobsCount}
-            imageKey={MOCK_ARTISAN.imageKey}
+            specialty={artisan?.specialty ?? ''}
+            rating={artisan?.rating ?? 0}
+            jobsCount={artisan?.jobsCount ?? ''}
+            imageKey={artisan?.imageKey ?? ''}
             right={
               <Pressable
                 onPress={() => router.push({ pathname: '/chat/[id]', params: linkParams })}
                 className="h-10 w-10 items-center justify-center rounded-full bg-primary/10"
               >
-                <Ionicons name="call" size={18} color={colors.primary} />
+                <Ionicons name="chatbubble-ellipses" size={18} color={colors.primary} />
               </Pressable>
             }
           />
@@ -125,10 +199,10 @@ export default function ActiveBookingDashboard() {
 
         {/* Timeline */}
         <View className="mt-4 rounded-3xl border border-gray-100 bg-white p-4">
-          <StatusTimeline steps={TRACK_STEPS} current={1} />
-          <Text className="mt-2 text-center text-[11px] text-gray-400">
-            Accepted • 9:42 AM
-          </Text>
+          <StatusTimeline steps={TRACK_STEPS} current={status ? STEP_INDEX[status] ?? 0 : 0} />
+          {chip ? (
+            <Text className="mt-2 text-center text-[11px] text-gray-400">{chip.label}</Text>
+          ) : null}
         </View>
 
         {/* Live tracking */}
@@ -165,12 +239,18 @@ export default function ActiveBookingDashboard() {
           </View>
         </View>
 
-        <Pressable onPress={cancel} className="mt-4 flex-row items-center justify-center gap-1.5">
-          <Ionicons name="close-circle-outline" size={16} color="#DC2626" />
-          <Text className="text-[14px] font-semibold text-red-600">
-            Cancel Booking
-          </Text>
-        </Pressable>
+        {canCancel ? (
+          <Pressable
+            onPress={cancel}
+            disabled={cancelBooking.isPending}
+            className="mt-4 flex-row items-center justify-center gap-1.5"
+          >
+            <Ionicons name="close-circle-outline" size={16} color="#DC2626" />
+            <Text className="text-[14px] font-semibold text-red-600">
+              {cancelBooking.isPending ? 'Cancelling…' : 'Cancel Booking'}
+            </Text>
+          </Pressable>
+        ) : null}
 
         <Text className="mt-5 text-center text-[11px] text-gray-400">
           🛡 Secure. Trusted. Servika.

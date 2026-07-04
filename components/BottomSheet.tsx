@@ -22,6 +22,12 @@ type BottomSheetProps = {
   children: ReactNode;
   /** Extra classes for the sheet surface (e.g. a fixed `h-[80%]`). */
   className?: string;
+  /**
+   * Let the sheet grow tall (e.g. a `flex-1` surface). Sizes the wrapper so
+   * percentage/flex heights on the surface resolve, while still letting a tap in
+   * the gap above the sheet fall through to the backdrop to dismiss.
+   */
+  fill?: boolean;
   /** Show the grab handle at the top. Defaults to true. */
   showHandle?: boolean;
   /**
@@ -43,6 +49,7 @@ export function BottomSheet({
   onClose,
   children,
   className,
+  fill = false,
   showHandle = true,
   estimatedHeight = 420,
   onOpened,
@@ -119,8 +126,15 @@ export function BottomSheet({
           />
         </Animated.View>
 
-        {/* Sheet — rises above the keyboard when an input inside is focused. */}
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        {/* Sheet — rises above the keyboard when an input inside is focused.
+            When `fill`, the wrapper fills the screen (so a tall/flex surface can
+            size itself) but stays `box-none` so taps in the gap above the sheet
+            still reach the backdrop and dismiss. */}
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          pointerEvents={fill ? 'box-none' : undefined}
+          style={fill ? { flex: 1, justifyContent: 'flex-end' } : undefined}
+        >
           <Animated.View
             onLayout={(e) => handleLayout(e.nativeEvent.layout.height)}
             style={[

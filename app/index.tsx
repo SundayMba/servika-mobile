@@ -16,7 +16,8 @@ export default function Index() {
 
   if (status === 'loading') return null;
   if (status === 'authenticated') {
-    if (user?.role === 'Artisan') return <Redirect href="/pro/dashboard" />;
+    // The Pro gate routes by onboarding/verification state.
+    if (user?.role === 'Artisan') return <Redirect href="/pro" />;
     return <Redirect href="/home" />;
   }
   return <Redirect href="/welcome" />;

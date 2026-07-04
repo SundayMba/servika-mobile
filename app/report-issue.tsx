@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
 import {
@@ -16,24 +16,53 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { colors } from '@/constants/colors';
 import { ISSUE_TYPES } from '@/lib/active-booking/mock';
+import { authErrorMessage } from '@/lib/api/auth';
+import { useRaiseDispute } from '@/lib/disputes/hooks';
 
 const DANGER = '#DC2626';
 
 export default function ReportIssue() {
   const router = useRouter();
+  // Reached from the booking detail / active-booking screens with the real booking
+  // id — that's when the report becomes a real dispute. Without one (a mock
+  // scaffold), it degrades to the informational confirmation.
+  const { bookingId } = useLocalSearchParams<{ bookingId?: string }>();
   const [selected, setSelected] = useState<string | null>(null);
   const [details, setDetails] = useState('');
 
-  const submit = () => {
+  const raiseDispute = useRaiseDispute(bookingId ?? '');
+
+  const submit = async () => {
     if (!selected) {
       Alert.alert('Select an issue', 'Please choose what went wrong.');
       return;
     }
-    Alert.alert(
-      'Issue submitted',
-      "Thank you. Our team will review it and take appropriate action.",
-      [{ text: 'Done', onPress: () => router.back() }],
-    );
+
+    if (!bookingId) {
+      // No booking in hand (mock scaffold) — keep the informational confirmation.
+      Alert.alert(
+        'Issue submitted',
+        'Thank you. Our team will review it and take appropriate action.',
+        [{ text: 'Done', onPress: () => router.back() }],
+      );
+      return;
+    }
+
+    const issue = ISSUE_TYPES.find((it) => it.id === selected);
+    // The backend requires a description; fall back to the issue's summary.
+    const fallback = issue ? issue.detail : 'Reported issue';
+    const description = details.trim() || fallback;
+
+    try {
+      await raiseDispute.mutateAsync({ category: selected, description });
+      Alert.alert(
+        'Issue reported',
+        'Thank you. Our team will review your dispute and get back to you.',
+        [{ text: 'Done', onPress: () => router.back() }],
+      );
+    } catch (e) {
+      Alert.alert('Could not submit', authErrorMessage(e, 'Please try again.'));
+    }
   };
 
   return (
@@ -130,11 +159,14 @@ export default function ReportIssue() {
 
           <Pressable
             onPress={submit}
+            disabled={raiseDispute.isPending}
             className="mt-5 h-14 flex-row items-center justify-center gap-2 rounded-2xl active:opacity-90"
-            style={{ backgroundColor: DANGER }}
+            style={{ backgroundColor: DANGER, opacity: raiseDispute.isPending ? 0.6 : 1 }}
           >
             <Ionicons name="alert-circle" size={18} color={colors.white} />
-            <Text className="text-[16px] font-bold text-white">Submit Issue</Text>
+            <Text className="text-[16px] font-bold text-white">
+              {raiseDispute.isPending ? 'Submitting…' : 'Submit Issue'}
+            </Text>
           </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>

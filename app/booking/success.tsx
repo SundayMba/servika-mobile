@@ -1,8 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as Clipboard from 'expo-clipboard';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { Text, View } from 'react-native';
+import { useState } from 'react';
+import { Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/ui/Button';
@@ -63,6 +65,13 @@ export default function BookingSuccess() {
   const amount = params.amount ? Number(params.amount) : null;
   const { data: artisan } = useArtisan(params.artisanId || undefined);
   const avatar = artisan ? artisanAvatar(artisan.imageKey) : undefined;
+  const [copied, setCopied] = useState(false);
+
+  const copyRef = async () => {
+    await Clipboard.setStringAsync(shortRef(params.bookingId));
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1600);
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top', 'bottom']}>
@@ -87,12 +96,22 @@ export default function BookingSuccess() {
         <View className="mt-8 rounded-3xl border border-gray-100 bg-white p-5">
           <View className="flex-row items-center justify-between">
             <Text className="text-[13px] text-gray-500">Booking ID</Text>
-            <View className="flex-row items-center gap-1.5">
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Copy booking ID"
+              onPress={copyRef}
+              hitSlop={8}
+              className="flex-row items-center gap-1.5 active:opacity-60"
+            >
               <Text className="text-[14px] font-bold text-gray-900">
                 {shortRef(params.bookingId)}
               </Text>
-              <Ionicons name="copy-outline" size={15} color={colors.textMuted} />
-            </View>
+              <Ionicons
+                name={copied ? 'checkmark-circle' : 'copy-outline'}
+                size={15}
+                color={copied ? '#22C55E' : colors.textMuted}
+              />
+            </Pressable>
           </View>
 
           <View className="my-4 h-px bg-gray-100" />
@@ -163,6 +182,15 @@ export default function BookingSuccess() {
                 : router.replace('/bookings')
             }
           />
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => router.replace('/home')}
+            className="items-center py-1"
+          >
+            <Text className="text-[14px] font-semibold text-gray-500">
+              Back to Home
+            </Text>
+          </Pressable>
         </View>
       </View>
     </SafeAreaView>

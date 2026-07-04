@@ -93,6 +93,26 @@ export default function JobDetail() {
             <Text className="text-[14px] leading-5 text-gray-600">{job.locationInstructions}</Text>
           </>
         ) : null}
+
+        <Pressable
+          accessibilityRole="button"
+          onPress={() =>
+            router.push({
+              pathname: '/chat/[id]',
+              params: { id: job.id, name: 'Customer' },
+            })
+          }
+          className="mt-6 flex-row items-center gap-3 rounded-2xl border border-gray-100 bg-white p-4 active:bg-gray-50"
+        >
+          <View className="h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+            <Ionicons name="chatbubble-ellipses-outline" size={20} color={colors.primary} />
+          </View>
+          <View className="flex-1">
+            <Text className="text-[14px] font-bold text-gray-900">Message customer</Text>
+            <Text className="text-[12px] text-gray-500">Coordinate access, timing and details</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+        </Pressable>
       </ScrollView>
 
       {/* Sticky actions — depend on the job's current state */}
