@@ -4,7 +4,8 @@ import {
   LogLevel,
 } from '@microsoft/signalr';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect } from 'react';
+import { useRouter } from 'expo-router';
+import { useCallback, useEffect } from 'react';
 
 import { tokenStorage } from '@/lib/auth/tokenStorage';
 import {
@@ -12,43 +13,45 @@ import {
   getConversations,
   getMessages,
   sendMessage,
+  startConversationForBooking,
+  startConversationWithArtisan,
 } from '@/lib/api/chat';
 import type { ChatMessage } from '@/lib/chat/types';
 import { config } from '@/lib/config';
 
 const HUB_URL = `${config.apiBaseUrl}/hubs/chat`;
-const messagesKey = (bookingId: string) => ['chat', bookingId] as const;
+const messagesKey = (conversationId: string) => ['chat', conversationId] as const;
 
 /** Append a message to a thread's cache, de-duplicating by id (the sender gets it
  *  from both the POST response and the hub broadcast). */
 function appendMessage(
   queryClient: ReturnType<typeof useQueryClient>,
-  bookingId: string,
+  conversationId: string,
   message: ChatMessage,
 ) {
-  queryClient.setQueryData<ChatMessage[]>(messagesKey(bookingId), (old) => {
+  queryClient.setQueryData<ChatMessage[]>(messagesKey(conversationId), (old) => {
     if (!old) return [message];
     if (old.some((m) => m.id === message.id)) return old;
     return [...old, message];
   });
 }
 
-/** A booking's conversation thread (oldest first). */
-export function useChatMessages(bookingId: string | undefined) {
+/** A conversation's thread (oldest first). */
+export function useChatMessages(conversationId: string | undefined) {
   return useQuery({
-    queryKey: messagesKey(bookingId ?? ''),
-    queryFn: () => getMessages(bookingId as string),
-    enabled: !!bookingId,
+    queryKey: messagesKey(conversationId ?? ''),
+    queryFn: () => getMessages(conversationId as string),
+    enabled: !!conversationId,
   });
 }
 
 /** Send a message; the persisted result is appended to the thread cache. */
-export function useSendMessage(bookingId: string) {
+export function useSendMessage(conversationId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (body: string) => sendMessage(bookingId, body),
+    mutationFn: (body: string) => sendMessage(conversationId, body),
     onSuccess: (message) => {
-      appendMessage(queryClient, bookingId, message);
+      appendMessage(queryClient, conversationId, message);
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
     },
   });
@@ -75,15 +78,71 @@ export function useChatUnreadCount(options?: { enabled?: boolean }) {
 }
 
 /**
- * Live delivery for an open thread. Connects to the chat hub, joins the booking's
- * group, and folds incoming `MessageReceived` events into the thread cache (deduped)
- * so new messages appear without a refetch. Torn down on unmount / id change.
+ * Imperative openers for the chat screen. Callers rarely hold a conversation id —
+ * they have an artisan (from browse) or a booking (from an active job). These resolve
+ * the pair's conversation (creating it if needed) and then navigate to the thread.
+ * Best-effort: a resolve failure is swallowed rather than throwing into a tap handler.
  */
-export function useChatRealtime(bookingId: string | undefined) {
+export function useOpenChat() {
+  const router = useRouter();
+
+  const openConversation = useCallback(
+    (conversationId: string, name?: string) => {
+      router.push({
+        pathname: '/chat/[id]',
+        params: { id: conversationId, ...(name ? { name } : {}) },
+      });
+    },
+    [router],
+  );
+
+  const openWithArtisan = useCallback(
+    async (artisanId: string, name?: string) => {
+      try {
+        const ref = await startConversationWithArtisan(artisanId);
+        // Pass artisanId so the thread shows a "Book" CTA — this is a customer-side,
+        // pre-booking conversation where nudging toward a real booking matters most.
+        router.push({
+          pathname: '/chat/[id]',
+          params: {
+            id: ref.id,
+            name: name ?? ref.counterpartyName,
+            artisanId: ref.artisanId,
+          },
+        });
+      } catch {
+        // best-effort — the artisan profile / card action just no-ops on failure
+      }
+    },
+    [router],
+  );
+
+  const openForBooking = useCallback(
+    async (bookingId: string, name?: string) => {
+      try {
+        const ref = await startConversationForBooking(bookingId);
+        openConversation(ref.id, name ?? ref.counterpartyName);
+      } catch {
+        // best-effort
+      }
+    },
+    [openConversation],
+  );
+
+  return { openConversation, openWithArtisan, openForBooking };
+}
+
+/**
+ * Live delivery for an open thread. Connects to the chat hub, joins the
+ * conversation's group, and folds incoming `MessageReceived` events into the thread
+ * cache (deduped) so new messages appear without a refetch. Torn down on unmount /
+ * id change.
+ */
+export function useChatRealtime(conversationId: string | undefined) {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    if (!bookingId) return;
+    if (!conversationId) return;
 
     let cancelled = false;
     const conn: HubConnection = new HubConnectionBuilder()
@@ -96,7 +155,7 @@ export function useChatRealtime(bookingId: string | undefined) {
 
     conn.on('MessageReceived', (message: ChatMessage) => {
       if (cancelled) return;
-      appendMessage(queryClient, bookingId, message);
+      appendMessage(queryClient, conversationId, message);
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
       queryClient.invalidateQueries({ queryKey: ['chat-unread'] });
     });
@@ -104,19 +163,19 @@ export function useChatRealtime(bookingId: string | undefined) {
     const join = async () => {
       try {
         await conn.start();
-        if (!cancelled) await conn.invoke('JoinConversation', bookingId);
+        if (!cancelled) await conn.invoke('JoinConversation', conversationId);
       } catch {
         // best-effort — history + send still work over REST
       }
     };
     join();
     conn.onreconnected(() => {
-      conn.invoke('JoinConversation', bookingId).catch(() => {});
+      conn.invoke('JoinConversation', conversationId).catch(() => {});
     });
 
     return () => {
       cancelled = true;
       conn.stop().catch(() => {});
     };
-  }, [bookingId, queryClient]);
+  }, [conversationId, queryClient]);
 }

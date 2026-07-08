@@ -4,7 +4,7 @@ export type ChatSenderRole = 'Customer' | 'Artisan';
 
 export type ChatMessage = {
   id: string;
-  bookingId: string;
+  conversationId: string;
   senderUserId: string;
   senderRole: ChatSenderRole;
   body: string;
@@ -15,12 +15,18 @@ export type ChatMessage = {
 export type SendMessageRequest = { body: string };
 
 export type Conversation = {
-  bookingId: string;
-  artisanId: string | null;
+  id: string;
+  artisanId: string;
   counterpartyName: string;
-  serviceName: string;
-  bookingStatus: string;
   lastMessage: string;
   lastMessageAtUtc: string;
   unreadCount: number;
+};
+
+/** A pointer to a conversation returned by the resolve endpoints (may have no
+ *  messages yet — enough to open the thread). */
+export type ConversationRef = {
+  id: string;
+  artisanId: string;
+  counterpartyName: string;
 };

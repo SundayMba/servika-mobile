@@ -60,8 +60,10 @@ export default function BookingSuccess() {
     date?: string;
     time?: string;
     amount?: string;
+    open?: string;
   }>();
 
+  const isOpen = params.open === '1';
   const amount = params.amount ? Number(params.amount) : null;
   const { data: artisan } = useArtisan(params.artisanId || undefined);
   const avatar = artisan ? artisanAvatar(artisan.imageKey) : undefined;
@@ -85,10 +87,12 @@ export default function BookingSuccess() {
             <Ionicons name="checkmark" size={42} color={colors.white} />
           </View>
           <Text className="mt-5 text-[24px] font-bold text-gray-900">
-            Booking Confirmed!
+            {isOpen ? 'Request posted!' : 'Booking Confirmed!'}
           </Text>
           <Text className="mt-1 text-center text-[14px] text-gray-500">
-            Your request has been sent. The artisan will respond shortly.
+            {isOpen
+              ? 'We’re finding you a verified pro nearby. You’ll be notified the moment one accepts.'
+              : 'Your request has been sent. The artisan will respond shortly.'}
           </Text>
         </View>
 
@@ -159,29 +163,44 @@ export default function BookingSuccess() {
         <View className="flex-1" />
 
         <View className="gap-3 pb-2">
-          <Button
-            label="Track Booking"
-            onPress={() =>
-              router.replace({
-                pathname: '/active-booking/dashboard',
-                params: {
-                  bookingId: params.bookingId,
-                  artisanId: params.artisanId,
-                  serviceName: params.serviceName,
-                  artisanName: params.artisanName,
-                },
-              })
-            }
-          />
-          <Button
-            label="View Booking"
-            variant="outline"
-            onPress={() =>
-              params.bookingId
-                ? router.replace(`/booking/${params.bookingId}`)
-                : router.replace('/bookings')
-            }
-          />
+          {/* An open request has no artisan to track yet — go straight to the
+              request detail; a pre-selected booking can open the live dashboard. */}
+          {isOpen ? (
+            <Button
+              label="View Request"
+              onPress={() =>
+                params.bookingId
+                  ? router.replace(`/booking/${params.bookingId}`)
+                  : router.replace('/bookings')
+              }
+            />
+          ) : (
+            <>
+              <Button
+                label="Track Booking"
+                onPress={() =>
+                  router.replace({
+                    pathname: '/active-booking/dashboard',
+                    params: {
+                      bookingId: params.bookingId,
+                      artisanId: params.artisanId,
+                      serviceName: params.serviceName,
+                      artisanName: params.artisanName,
+                    },
+                  })
+                }
+              />
+              <Button
+                label="View Booking"
+                variant="outline"
+                onPress={() =>
+                  params.bookingId
+                    ? router.replace(`/booking/${params.bookingId}`)
+                    : router.replace('/bookings')
+                }
+              />
+            </>
+          )}
           <Pressable
             accessibilityRole="button"
             onPress={() => router.replace('/home')}

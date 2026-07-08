@@ -7,6 +7,7 @@
 /** The full booking state machine (only a subset is reachable in this slice). */
 export type BookingStatus =
   | 'Draft'
+  | 'Open'
   | 'Pending'
   | 'Accepted'
   | 'Rejected'

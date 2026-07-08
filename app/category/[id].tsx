@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -12,55 +12,57 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AuthPromptSheet } from '@/components/AuthPromptSheet';
 import { SearchSheet } from '@/components/SearchSheet';
 import { colors } from '@/constants/colors';
-import {
-  getCategoryServices,
-  SERVICE_FILTERS,
-  type ServiceListing,
-} from '@/constants/services-data';
-import { categoryImage } from '@/lib/catalogue/assets';
+import { useAuthGate } from '@/lib/auth/useAuthGate';
+import { artisanAvatar } from '@/lib/catalogue/assets';
 import { useCategories, useCategoryArtisans } from '@/lib/catalogue/hooks';
+import type { ArtisanSummary } from '@/lib/catalogue/types';
 
-function ServiceRow({
-  service,
+function ArtisanRow({
+  artisan,
   onPress,
 }: {
-  service: ServiceListing;
-  onPress?: () => void;
+  artisan: ArtisanSummary;
+  onPress: () => void;
 }) {
+  const avatar = artisanAvatar(artisan.imageKey);
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={service.title}
+      accessibilityLabel={`${artisan.fullName}, ${artisan.specialty}`}
       onPress={onPress}
       className="mb-3 flex-row items-center gap-3 rounded-2xl border border-gray-100/70 bg-white p-3 active:opacity-80"
     >
-      <View className="h-20 w-20 overflow-hidden rounded-xl bg-background">
-        {service.image ? (
-          <Image source={service.image} contentFit="cover" style={{ flex: 1 }} />
+      <View className="h-16 w-16 overflow-hidden rounded-xl bg-background">
+        {avatar ? (
+          <Image source={avatar} contentFit="cover" style={{ flex: 1 }} />
         ) : null}
       </View>
-
       <View className="flex-1">
-        <Text className="text-[15px] font-bold text-gray-900">
-          {service.title}
-        </Text>
+        <View className="flex-row items-center gap-1.5">
+          <Text className="text-[15px] font-bold text-gray-900">{artisan.fullName}</Text>
+          {artisan.isAvailable ? (
+            <View className="h-2 w-2 rounded-full bg-green-500" />
+          ) : null}
+        </View>
         <Text numberOfLines={1} className="mt-0.5 text-[12px] text-gray-500">
-          {service.description}
+          {artisan.specialty}
         </Text>
-        <Text className="mt-1 text-[13px] font-semibold text-primary">
-          From {service.priceFrom}
-        </Text>
-        <View className="mt-1 flex-row items-center gap-1">
-          <Ionicons name="star" size={12} color="#FBBF24" />
-          <Text className="text-[12px] font-semibold text-gray-700">
-            {service.rating.toFixed(1)}
-          </Text>
-          <Text className="text-[12px] text-gray-400">({service.reviews})</Text>
+        <View className="mt-1 flex-row items-center gap-3">
+          <View className="flex-row items-center gap-1">
+            <Ionicons name="star" size={12} color="#FBBF24" />
+            <Text className="text-[12px] font-semibold text-gray-700">
+              {artisan.rating.toFixed(1)}
+            </Text>
+          </View>
+          <View className="flex-row items-center gap-0.5">
+            <Ionicons name="location-outline" size={12} color={colors.textMuted} />
+            <Text className="text-[12px] text-gray-500">{artisan.distanceKm} km</Text>
+          </View>
         </View>
       </View>
-
       <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
     </Pressable>
   );
@@ -71,35 +73,11 @@ export default function CategoryListing() {
   const router = useRouter();
 
   const [searchVisible, setSearchVisible] = useState(false);
-  const [filter, setFilter] = useState<'All' | ServiceListing['type']>('All');
+  const { guard, promptVisible, hidePrompt } = useAuthGate();
 
   const { data: categories, isLoading } = useCategories();
   const category = categories?.find((c) => c.slug === id);
-  const artisansQuery = useCategoryArtisans(id);
-
-  const services = useMemo(
-    () =>
-      category
-        ? getCategoryServices({
-            slug: category.slug,
-            name: category.name,
-            image: categoryImage(category.slug),
-          })
-        : [],
-    [category],
-  );
-  const visible = useMemo(
-    () => (filter === 'All' ? services : services.filter((s) => s.type === filter)),
-    [services, filter],
-  );
-
-  // Tapping any service row opens an artisan that serves this category.
-  const goToArtisan = () => {
-    const artisanId = artisansQuery.data?.[0]?.id;
-    if (artisanId) {
-      router.push({ pathname: '/artisan/[id]', params: { id: artisanId } });
-    }
-  };
+  const { data: artisans, isLoading: loadingArtisans } = useCategoryArtisans(id);
 
   if (isLoading) {
     return (
@@ -137,9 +115,7 @@ export default function CategoryListing() {
         >
           <Ionicons name="chevron-back" size={22} color={colors.textPrimary} />
         </Pressable>
-        <Text className="text-[17px] font-bold text-gray-900">
-          {category.name} Services
-        </Text>
+        <Text className="text-[17px] font-bold text-gray-900">{category.name}</Text>
       </View>
 
       {/* Search */}
@@ -150,66 +126,89 @@ export default function CategoryListing() {
       >
         <Ionicons name="search-outline" size={20} color={colors.textMuted} />
         <Text className="flex-1 text-[14px] text-gray-400">
-          Search {category.name.toLowerCase()} services...
+          Search artisans &amp; services...
         </Text>
-        <Ionicons name="options-outline" size={18} color={colors.primary} />
       </Pressable>
 
-      {/* Filter chips */}
-      <View>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 20, gap: 8 }}
-        >
-          {SERVICE_FILTERS.map((f) => {
-            const active = filter === f.key;
-            return (
-              <Pressable
-                key={f.key}
-                accessibilityRole="button"
-                accessibilityState={{ selected: active }}
-                onPress={() => setFilter(f.key)}
-                className={
-                  active
-                    ? 'flex-row items-center gap-1.5 rounded-full bg-primary px-4 py-2'
-                    : 'flex-row items-center gap-1.5 rounded-full border border-gray-200 bg-white px-4 py-2'
-                }
-              >
-                <Ionicons
-                  name={f.icon}
-                  size={15}
-                  color={active ? colors.white : colors.textMuted}
-                />
-                <Text
-                  className={
-                    active
-                      ? 'text-[13px] font-semibold text-white'
-                      : 'text-[13px] font-medium text-gray-600'
-                  }
-                >
-                  {f.key}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
-      </View>
-
-      {/* Listing */}
+      {/* Artisan listing */}
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ padding: 20, paddingTop: 16 }}
+        contentContainerStyle={{ padding: 20, paddingTop: 12 }}
       >
-        {visible.map((service) => (
-          <ServiceRow key={service.id} service={service} onPress={goToArtisan} />
-        ))}
+        {/* Post an open request — matched with the first available pro. */}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Post an open ${category.name} request`}
+          onPress={() =>
+            guard(() =>
+              router.push({
+                pathname: '/booking/request',
+                params: { categorySlug: id, open: '1', service: category.name },
+              }),
+            )
+          }
+          className="mb-4 flex-row items-center gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-4 active:opacity-80"
+        >
+          <View className="h-11 w-11 items-center justify-center rounded-full bg-primary/10">
+            <Ionicons name="megaphone-outline" size={22} color={colors.primary} />
+          </View>
+          <View className="flex-1">
+            <Text className="text-[14px] font-bold text-gray-900">
+              Not sure who to pick?
+            </Text>
+            <Text className="text-[12px] leading-4 text-gray-500">
+              Post a request — the first available {category.name.toLowerCase()} pro takes it.
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.primary} />
+        </Pressable>
+
+        <Text className="mb-3 text-[13px] font-semibold text-gray-500">
+          {loadingArtisans
+            ? 'Finding artisans…'
+            : `${artisans?.length ?? 0} artisan${(artisans?.length ?? 0) === 1 ? '' : 's'} available`}
+        </Text>
+
+        {loadingArtisans ? (
+          <ActivityIndicator color={colors.primary} className="mt-6" />
+        ) : !artisans?.length ? (
+          <View className="mt-10 items-center px-8">
+            <Ionicons name="people-outline" size={44} color={colors.textMuted} />
+            <Text className="mt-3 text-center text-[15px] font-semibold text-gray-800">
+              No artisans yet
+            </Text>
+            <Text className="mt-1 text-center text-[13px] leading-5 text-gray-500">
+              We&apos;re onboarding {category.name.toLowerCase()} pros in your area. Check back soon.
+            </Text>
+          </View>
+        ) : (
+          artisans.map((artisan) => (
+            <ArtisanRow
+              key={artisan.id}
+              artisan={artisan}
+              onPress={() =>
+                router.push({ pathname: '/artisan/[id]', params: { id: artisan.id } })
+              }
+            />
+          ))
+        )}
       </ScrollView>
 
       {/* Search (open to guests) */}
-      <SearchSheet
-        visible={searchVisible}
-        onClose={() => setSearchVisible(false)}
+      <SearchSheet visible={searchVisible} onClose={() => setSearchVisible(false)} />
+      <AuthPromptSheet
+        visible={promptVisible}
+        onClose={hidePrompt}
+        title="Sign up to continue"
+        message="Create an account to post a request and get matched with a pro."
+        onSignUp={() => {
+          hidePrompt();
+          router.push('/register');
+        }}
+        onLogin={() => {
+          hidePrompt();
+          router.push('/login');
+        }}
       />
     </SafeAreaView>
   );

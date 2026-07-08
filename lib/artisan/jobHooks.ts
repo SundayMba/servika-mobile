@@ -2,8 +2,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import {
   advanceArtisanJob,
+  claimOpenJob,
   getArtisanJob,
   getArtisanJobs,
+  getOpenJobs,
   submitJobCompletion,
   type ArtisanAction,
 } from '@/lib/api/artisanJobs';
@@ -29,6 +31,30 @@ export function useArtisanJob(id: string | undefined) {
     queryKey: ['artisan-job', id],
     queryFn: () => getArtisanJob(id as string),
     enabled: !!id,
+  });
+}
+
+/** Open (unassigned) requests the artisan can claim — polled a little more eagerly
+ *  since jobs get taken by others. */
+export function useOpenJobs() {
+  return useQuery({
+    queryKey: ['artisan-open-jobs'],
+    queryFn: getOpenJobs,
+    staleTime: 15_000,
+    refetchInterval: 30_000,
+  });
+}
+
+/** Claim an open request. Refreshes the open pool + the artisan's assigned jobs. */
+export function useClaimOpenJob() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => claimOpenJob(id),
+    onSuccess: (job) => {
+      queryClient.invalidateQueries({ queryKey: ['artisan-open-jobs'] });
+      queryClient.invalidateQueries({ queryKey: ['artisan-jobs'] });
+      queryClient.setQueryData(['artisan-job', job.id], job);
+    },
   });
 }
 

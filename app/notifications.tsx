@@ -32,6 +32,10 @@ function iconFor(type: NotificationType): {
       return { name: 'card', color: '#059669', tint: '#D1FAE5' };
     case 'System':
       return { name: 'information-circle', color: '#2563EB', tint: '#DBEAFE' };
+    case 'Chat':
+      return { name: 'chatbubble-ellipses', color: '#16A34A', tint: '#DCFCE7' };
+    case 'OpenJob':
+      return { name: 'megaphone', color: colors.primary, tint: '#FFEDD5' };
     case 'Booking':
     default:
       return { name: 'briefcase', color: colors.primary, tint: '#FFEDD5' };
@@ -61,6 +65,16 @@ export default function Notifications() {
 
   const onPressItem = (n: AppNotification) => {
     if (!n.isRead) markRead.mutate(n.id);
+    // Chat notifications deep-link to the conversation thread (both roles).
+    if (n.conversationId) {
+      router.push({ pathname: '/chat/[id]', params: { id: n.conversationId } });
+      return;
+    }
+    // Open-job broadcasts (artisan) open the available-jobs pool, not a specific job.
+    if (n.type === 'OpenJob') {
+      router.push('/pro/available-jobs');
+      return;
+    }
     if (!n.bookingId) return;
     // Artisans open the job in their Pro surface; customers open the booking.
     if (isArtisan) {
@@ -166,7 +180,7 @@ export default function Notifications() {
                     {timeAgo(n.createdAt)}
                   </Text>
                 </View>
-                {n.bookingId ? (
+                {n.bookingId || n.conversationId || n.type === 'OpenJob' ? (
                   <Ionicons
                     name="chevron-forward"
                     size={16}

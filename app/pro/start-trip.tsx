@@ -9,6 +9,7 @@ import { LiveMap } from '@/components/tracking/LiveMap';
 import { ProHeader } from '@/components/artisan/parts';
 import { colors } from '@/constants/colors';
 import { useAdvanceArtisanJob, useArtisanJob } from '@/lib/artisan/jobHooks';
+import { useOpenChat } from '@/lib/chat/hooks';
 import {
   bearing,
   destinationPoint,
@@ -32,6 +33,7 @@ const LAGOS: LatLng = { latitude: 6.4541, longitude: 3.3947 };
 export default function StartTrip() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { openForBooking } = useOpenChat();
   const { data: job, isLoading } = useArtisanJob(id);
   const advance = useAdvanceArtisanJob();
 
@@ -182,9 +184,9 @@ export default function StartTrip() {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Message customer"
-            onPress={() =>
-              id ? router.push({ pathname: '/chat/[id]', params: { id, name: 'Customer' } }) : undefined
-            }
+            onPress={() => {
+              if (id) openForBooking(id, 'Customer');
+            }}
             className="h-10 w-10 items-center justify-center rounded-full bg-primary/10"
           >
             <Ionicons name="chatbubble-ellipses" size={18} color={colors.primary} />

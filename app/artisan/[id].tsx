@@ -13,6 +13,7 @@ import { AuthPromptSheet } from '@/components/AuthPromptSheet';
 import { Button } from '@/components/ui/Button';
 import { colors } from '@/constants/colors';
 import { useAuthGate } from '@/lib/auth/useAuthGate';
+import { useIsFavorite, useToggleFavorite } from '@/lib/favorites/hooks';
 import {
   artisanAvatar,
   artisanCover,
@@ -20,6 +21,7 @@ import {
   galleryImages,
 } from '@/lib/catalogue/assets';
 import { useArtisan } from '@/lib/catalogue/hooks';
+import { useOpenChat } from '@/lib/chat/hooks';
 import { timeAgo, useArtisanReviews } from '@/lib/reviews/hooks';
 
 /** A small inline icon + label stat used in the identity row. */
@@ -65,10 +67,13 @@ export default function ArtisanProfile() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  const { guard, promptVisible, hidePrompt } = useAuthGate();
+  const { isAuthenticated, guard, promptVisible, hidePrompt } = useAuthGate();
+  const { openWithArtisan } = useOpenChat();
   const [aboutExpanded, setAboutExpanded] = useState(false);
 
   const { data: artisan, isLoading, isError } = useArtisan(id);
+  const isFavorite = useIsFavorite(id, isAuthenticated);
+  const toggleFavorite = useToggleFavorite();
   const { data: reviews } = useArtisanReviews(id);
 
   if (isLoading) {
@@ -388,8 +393,22 @@ export default function ArtisanProfile() {
         >
           <Ionicons name="chevron-back" size={22} color={colors.textPrimary} />
         </Pressable>
-        {/* Spacer keeps the back button left-aligned (no dead "more options" menu). */}
-        <View className="h-10 w-10" />
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={isFavorite ? 'Remove from saved' : 'Save artisan'}
+          hitSlop={8}
+          disabled={toggleFavorite.isPending}
+          onPress={() =>
+            guard(() => toggleFavorite.mutate({ artisanId: id, favorited: isFavorite }))
+          }
+          className="h-10 w-10 items-center justify-center rounded-full bg-white/90"
+        >
+          <Ionicons
+            name={isFavorite ? 'heart' : 'heart-outline'}
+            size={20}
+            color={isFavorite ? '#EF4444' : colors.textPrimary}
+          />
+        </Pressable>
       </View>
 
       {/* Sticky bottom action bar */}
@@ -407,7 +426,7 @@ export default function ArtisanProfile() {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Chat"
-          onPress={() => guard(() => router.push('/messages'))}
+          onPress={() => guard(() => openWithArtisan(id, artisan.fullName))}
           className="h-14 w-14 items-center justify-center rounded-2xl border border-gray-200 bg-white"
         >
           <Ionicons

@@ -118,7 +118,7 @@ function DisputeCard({ dispute }: { dispute: Dispute }) {
 export default function BookingDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { data: booking, isLoading, isError } = useBooking(id);
+  const { data: booking, isLoading, isError, refetch } = useBooking(id);
   const { mutate: cancel, isPending: cancelling } = useCancelBooking();
   // Only look for a review once the job is done (avoids a 404 on other statuses).
   const { data: myReview } = useBookingReview(
@@ -179,9 +179,18 @@ export default function BookingDetailScreen() {
         </View>
       ) : isError || !booking ? (
         <View className="flex-1 items-center justify-center px-8">
-          <Text className="text-center text-[14px] text-gray-500">
-            We couldn’t load this booking. Pull back and try again.
+          <Ionicons name="alert-circle-outline" size={40} color={colors.textMuted} />
+          <Text className="mt-3 text-center text-[14px] text-gray-500">
+            We couldn’t load this booking.
           </Text>
+          <View className="mt-5 w-full gap-2.5">
+            <Button label="Try again" onPress={() => refetch()} />
+            <Button
+              label="Back to bookings"
+              variant="outline"
+              onPress={() => (router.canGoBack() ? router.back() : router.replace('/bookings'))}
+            />
+          </View>
         </View>
       ) : (
         <ScrollView

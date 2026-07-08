@@ -10,9 +10,9 @@ import { BottomSheet } from '@/components/BottomSheet';
 import { Button } from '@/components/ui/Button';
 import { LiveMap, type NearbyMarker } from '@/components/tracking/LiveMap';
 import { colors } from '@/constants/colors';
-import { MOCK_ARTISAN } from '@/lib/active-booking/mock';
 import { useArtisan, useNearbyArtisans } from '@/lib/catalogue/hooks';
 import { useBooking } from '@/lib/booking/hooks';
+import { useOpenChat } from '@/lib/chat/hooks';
 import {
   destinationPoint,
   distanceKm,
@@ -65,10 +65,13 @@ export default function LiveTracking() {
   const { data: nearbyArtisans } = useNearbyArtisans();
   const { location, state } = useLiveTracking(bookingId);
 
-  const name = artisan?.fullName || params.name || MOCK_ARTISAN.name;
-  const specialty = artisan?.specialty || MOCK_ARTISAN.specialty;
-  const imageKey = artisan?.imageKey || MOCK_ARTISAN.imageKey;
-  const chatParams = { id: bookingId || 'demo', name };
+  const name = artisan?.fullName || params.name || 'Your artisan';
+  const { openForBooking } = useOpenChat();
+  const openChat = () => {
+    if (bookingId) openForBooking(bookingId, name);
+  };
+  const specialty = artisan?.specialty || 'Artisan';
+  const imageKey = artisan?.imageKey || '';
 
   // Destination = the job address (falls back to a city centre if uncaptured).
   const destination: LatLng = useMemo(
@@ -171,8 +174,8 @@ export default function LiveTracking() {
         <ArtisanRow
           name={name}
           specialty={specialty}
-          rating={artisan?.rating ?? MOCK_ARTISAN.rating}
-          jobsCount={artisan?.jobsCount ?? MOCK_ARTISAN.jobsCount}
+          rating={artisan?.rating ?? 0}
+          jobsCount={artisan?.jobsCount ?? ''}
           imageKey={imageKey}
           right={
             eta != null ? (
@@ -190,7 +193,7 @@ export default function LiveTracking() {
           <ActionPill
             icon="chatbubble-ellipses"
             label="Message"
-            onPress={() => router.push({ pathname: '/chat/[id]', params: chatParams })}
+            onPress={openChat}
           />
           <ActionPill icon="information-circle" label="Details" onPress={() => setSheet(true)} />
         </View>
@@ -203,8 +206,8 @@ export default function LiveTracking() {
           <ArtisanRow
             name={name}
             specialty={specialty}
-            rating={artisan?.rating ?? MOCK_ARTISAN.rating}
-            jobsCount={artisan?.jobsCount ?? MOCK_ARTISAN.jobsCount}
+            rating={artisan?.rating ?? 0}
+            jobsCount={artisan?.jobsCount ?? ''}
             imageKey={imageKey}
           />
         </View>
@@ -229,7 +232,7 @@ export default function LiveTracking() {
             label="Open Chat"
             onPress={() => {
               setSheet(false);
-              router.push({ pathname: '/chat/[id]', params: chatParams });
+              openChat();
             }}
           />
         </View>

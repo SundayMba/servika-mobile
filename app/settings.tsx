@@ -2,11 +2,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
-import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { Alert, Linking, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { colors } from '@/constants/colors';
 import { useAuth } from '@/lib/auth/AuthContext';
+
+const SUPPORT_EMAIL = 'support@servika.com';
+const openSupport = () =>
+  Linking.openURL(`mailto:${SUPPORT_EMAIL}?subject=Servika%20Support`).catch(() => {});
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -82,11 +86,8 @@ function MenuSection({
 
 export default function Settings() {
   const router = useRouter();
-  const { user, signOut } = useAuth();
+  const { signOut } = useAuth();
   const [loggingOut, setLoggingOut] = useState(false);
-
-  const comingSoon = (label: string) =>
-    Alert.alert(label, 'Coming soon.', [{ text: 'OK' }]);
 
   const handleLogout = () => {
     Alert.alert('Log out', 'Are you sure you want to log out?', [
@@ -133,57 +134,36 @@ export default function Settings() {
           <MenuRow
             icon="person-outline"
             label="Edit profile"
-            onPress={() => comingSoon('Edit profile')}
+            onPress={() => router.push('/edit-profile')}
           />
-          <MenuRow
-            icon="call-outline"
-            label="Phone number"
-            badge={user?.phoneNumber ? 'Unverified' : 'Add'}
-            badgeTone="warning"
-            onPress={() => comingSoon('Verify phone number')}
-          />
-          <MenuRow
-            icon="lock-closed-outline"
-            label="Change password"
-            onPress={() => comingSoon('Change password')}
-            last
-          />
-        </MenuSection>
-
-        <MenuSection title="Activity">
           <MenuRow
             icon="calendar-outline"
             label="My bookings"
             onPress={() => router.push('/bookings')}
           />
           <MenuRow
-            icon="heart-outline"
-            label="Saved artisans"
-            onPress={() => comingSoon('Saved artisans')}
+            icon="notifications-outline"
+            label="Notifications"
+            onPress={() => router.push('/notifications')}
           />
           <MenuRow
-            icon="card-outline"
-            label="Payment methods"
-            onPress={() => comingSoon('Payment methods')}
+            icon="lock-closed-outline"
+            label="Change password"
+            onPress={() => router.push('/forgot-password')}
             last
           />
         </MenuSection>
 
-        <MenuSection title="Preferences & support">
-          <MenuRow
-            icon="notifications-outline"
-            label="Notifications"
-            onPress={() => comingSoon('Notifications')}
-          />
+        <MenuSection title="Support">
           <MenuRow
             icon="help-circle-outline"
             label="Help & support"
-            onPress={() => comingSoon('Help & support')}
+            onPress={openSupport}
           />
           <MenuRow
             icon="information-circle-outline"
             label="About Servika"
-            onPress={() => comingSoon('About Servika')}
+            onPress={() => Linking.openURL('https://servika.com').catch(() => {})}
             last
           />
         </MenuSection>

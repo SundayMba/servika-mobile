@@ -14,40 +14,27 @@ import { useCreateBooking } from '@/lib/booking/hooks';
 import type { CreateBookingRequest, Urgency } from '@/lib/booking/types';
 import { formatNaira } from '@/lib/catalogue/assets';
 
-type MethodId = 'card' | 'bank' | 'mobile' | 'cash';
+type MethodId = 'online' | 'cash';
 
 const METHODS: { id: MethodId; title: string; subtitle: string }[] = [
-  { id: 'card', title: 'Card', subtitle: 'Visa, Mastercard, Verve' },
-  { id: 'bank', title: 'Bank Transfer', subtitle: 'Pay from your bank' },
-  { id: 'mobile', title: 'Mobile Money', subtitle: 'Opay, PalmPay, Moniepoint' },
-  { id: 'cash', title: 'Cash on Service', subtitle: 'Pay after the job is done' },
+  { id: 'online', title: 'Pay online', subtitle: 'Card, bank transfer or mobile money' },
+  { id: 'cash', title: 'Cash on service', subtitle: 'Pay after the job is done' },
 ];
 
-/** Small brand hint shown at the right of a method row (matches the mockup). */
+/** Brand hints shown on the online option (the real method is chosen on the gateway). */
 function MethodBrand({ id }: { id: MethodId }) {
-  if (id === 'card') {
-    return (
-      <View className="flex-row items-center gap-1.5">
-        <View className="rounded bg-[#1A1F71] px-1.5 py-0.5">
-          <Text className="text-[9px] font-bold italic text-white">VISA</Text>
-        </View>
-        <View className="flex-row items-center">
-          <View className="h-4 w-4 rounded-full bg-[#EB001B]" />
-          <View className="-ml-1.5 h-4 w-4 rounded-full bg-[#F79E1B] opacity-90" />
-        </View>
+  if (id !== 'online') return null;
+  return (
+    <View className="flex-row items-center gap-1.5">
+      <View className="rounded bg-[#1A1F71] px-1.5 py-0.5">
+        <Text className="text-[9px] font-bold italic text-white">VISA</Text>
       </View>
-    );
-  }
-  if (id === 'mobile') {
-    return (
-      <View className="flex-row items-center gap-1">
-        <View className="h-2.5 w-2.5 rounded-full bg-[#1FC77B]" />
-        <View className="h-2.5 w-2.5 rounded-full bg-[#6C5CE7]" />
-        <View className="h-2.5 w-2.5 rounded-full bg-[#0A6CFF]" />
+      <View className="flex-row items-center">
+        <View className="h-4 w-4 rounded-full bg-[#EB001B]" />
+        <View className="-ml-1.5 h-4 w-4 rounded-full bg-[#F79E1B] opacity-90" />
       </View>
-    );
-  }
-  return null;
+    </View>
+  );
 }
 
 export default function BookingPayment() {
@@ -68,7 +55,7 @@ export default function BookingPayment() {
     amount?: string;
   }>();
 
-  const [method, setMethod] = useState<MethodId>('card');
+  const [method, setMethod] = useState<MethodId>('online');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const { mutateAsync: createBooking } = useCreateBooking();
@@ -104,7 +91,7 @@ export default function BookingPayment() {
       //    checkout. The final result arrives asynchronously via the webhook, so
       //    we proceed to the success screen once the user returns. "Cash on
       //    Service" skips the gateway (paid in person after the job).
-      if (method !== 'cash') {
+      if (method === 'online') {
         const init = await initializePayment(booking.id);
         if (init.authorizationUrl && /^https?:/i.test(init.authorizationUrl)) {
           await WebBrowser.openBrowserAsync(init.authorizationUrl);

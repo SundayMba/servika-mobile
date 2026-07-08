@@ -7,6 +7,7 @@ import type {
   OtpType,
   RegisterRequest,
   RegisterResponse,
+  User,
   VerifyOtpResponse,
 } from '@/lib/auth/types';
 
@@ -39,6 +40,14 @@ export async function login(body: LoginRequest): Promise<LoginResponse> {
 }
 
 /** Revokes the refresh token server-side. Idempotent — safe to call anytime. */
+export async function updateProfile(body: {
+  fullName: string;
+  phoneNumber: string;
+}): Promise<User> {
+  const { data } = await apiClient.patch<User>(`${BASE}/me`, body);
+  return data;
+}
+
 export async function logout(refreshToken: string): Promise<void> {
   await apiClient.post(`${BASE}/logout`, { refreshToken });
 }

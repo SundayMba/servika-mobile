@@ -6,7 +6,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { JobRequestCard } from '@/components/artisan/parts';
 import { colors } from '@/constants/colors';
-import { useAdvanceArtisanJob, useArtisanJobs } from '@/lib/artisan/jobHooks';
+import { useAdvanceArtisanJob, useArtisanJobs, useOpenJobs } from '@/lib/artisan/jobHooks';
 import { bookingToCard, groupArtisanJobs, nextRouteForJob } from '@/lib/artisan/jobDisplay';
 import type { BookingSummary } from '@/lib/booking/types';
 
@@ -20,8 +20,10 @@ export default function ProJobs() {
 
   // One fetch of all assigned jobs; grouped client-side into the three tabs.
   const { data, isLoading, isError, refetch, isRefetching } = useArtisanJobs();
+  const { data: openJobs } = useOpenJobs();
   const advance = useAdvanceArtisanJob();
   const groups = useMemo(() => groupArtisanJobs(data), [data]);
+  const openCount = openJobs?.length ?? 0;
 
   const lists: Record<TabKey, BookingSummary[]> = {
     new: groups.new,
@@ -56,6 +58,31 @@ export default function ProJobs() {
           <Ionicons name="notifications-outline" size={20} color={colors.textPrimary} />
         </Pressable>
       </View>
+
+      {/* Open-jobs pool — first-to-accept requests in the artisan's categories. */}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Available jobs"
+        onPress={() => router.push('/pro/available-jobs')}
+        className="mx-5 mb-1 flex-row items-center gap-3 rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 active:opacity-80"
+      >
+        <View className="h-9 w-9 items-center justify-center rounded-full bg-primary/10">
+          <Ionicons name="megaphone-outline" size={18} color={colors.primary} />
+        </View>
+        <View className="flex-1">
+          <Text className="text-[14px] font-bold text-gray-900">Available jobs</Text>
+          <Text className="text-[12px] text-gray-500">
+            {openCount > 0 ? `${openCount} open near you — accept before others` : 'Open requests you can accept'}
+          </Text>
+        </View>
+        {openCount > 0 ? (
+          <View className="h-6 min-w-[24px] items-center justify-center rounded-full bg-primary px-2">
+            <Text className="text-[12px] font-bold text-white">{openCount}</Text>
+          </View>
+        ) : (
+          <Ionicons name="chevron-forward" size={18} color={colors.primary} />
+        )}
+      </Pressable>
 
       {/* Segmented tabs */}
       <View className="flex-row gap-6 border-b border-gray-100 px-5">

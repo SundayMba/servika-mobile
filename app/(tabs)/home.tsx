@@ -47,6 +47,7 @@ import { useBookings } from '@/lib/booking/hooks';
 import type { BookingStatus } from '@/lib/booking/types';
 import { artisanAvatar, categoryImage } from '@/lib/catalogue/assets';
 import { useCategories, useNearbyArtisans } from '@/lib/catalogue/hooks';
+import { useOpenChat } from '@/lib/chat/hooks';
 import {
   setSelectedArea,
   useSelectedArea,
@@ -219,6 +220,7 @@ export default function Home() {
   const [refreshing, setRefreshing] = useState(false);
   const { user } = useAuth();
   const { isAuthenticated, guard, promptVisible, hidePrompt } = useAuthGate();
+  const { openWithArtisan } = useOpenChat();
 
   // Greet the signed-in user by first name; guests see "Guest".
   const firstName = user?.fullName.trim().split(/\s+/)[0] || 'Guest';
@@ -497,7 +499,9 @@ export default function Home() {
                         }),
                       )
                     }
-                    onChat={() => guard(() => router.push('/messages'))}
+                    onChat={() =>
+                      guard(() => openWithArtisan(artisan.id, artisan.fullName))
+                    }
                     chatLocked={!isAuthenticated}
                   />
                 ))}

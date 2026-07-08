@@ -156,9 +156,11 @@ export default function Profile() {
     onPress: () => void;
   }[] = [
     { key: 'bookings', icon: 'calendar', label: 'Bookings', tint: '#3B82F6', onPress: () => router.push('/bookings') },
+    { key: 'saved', icon: 'heart', label: 'Saved', tint: '#EC4899', onPress: () => router.push('/saved') },
     { key: 'messages', icon: 'chatbubbles', label: 'Messages', tint: '#22C55E', onPress: () => router.push('/messages') },
     { key: 'notifications', icon: 'notifications', label: 'Notifications', tint: '#EF4444', badge: hasUnread, onPress: () => router.push('/notifications') },
     { key: 'invite', icon: 'gift', label: 'Invite & Earn', tint: '#EC4899', onPress: () => router.push('/refer') },
+    { key: 'payments', icon: 'wallet', label: 'Payments', tint: '#F97316', onPress: () => router.push('/wallet') },
     { key: 'settings', icon: 'settings', label: 'Settings', tint: '#64748B', onPress: () => router.push('/settings') },
     { key: 'help', icon: 'help-buoy', label: 'Help & Support', tint: '#14B8A6', onPress: openSupport },
   ];
@@ -222,6 +224,17 @@ export default function Profile() {
                 {user.email}
               </Text>
             </View>
+
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Edit profile"
+              hitSlop={8}
+              onPress={() => router.push('/edit-profile')}
+              className="flex-row items-center gap-1"
+            >
+              <Ionicons name="create-outline" size={14} color={colors.primary} />
+              <Text className="text-[12px] font-semibold text-primary">Edit</Text>
+            </Pressable>
           </View>
 
           <View className="mt-5 flex-row border-t border-gray-100 pt-4">

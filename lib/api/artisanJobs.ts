@@ -34,6 +34,18 @@ export async function getArtisanJob(id: string): Promise<BookingDetail> {
   return data;
 }
 
+/** Open (unassigned) requests in the artisan's categories that they can claim. */
+export async function getOpenJobs(): Promise<BookingSummary[]> {
+  const { data } = await apiClient.get<BookingSummary[]>(`${BASE}/open`);
+  return data;
+}
+
+/** Claim an open request (first-come-first-served). Returns the now-assigned job. */
+export async function claimOpenJob(id: string): Promise<BookingDetail> {
+  const { data } = await apiClient.post<BookingDetail>(`${BASE}/${id}/claim`);
+  return data;
+}
+
 /** Advance a job through the state machine. Returns the updated job. */
 export async function advanceArtisanJob(
   id: string,

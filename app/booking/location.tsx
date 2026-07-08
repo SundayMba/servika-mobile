@@ -21,10 +21,12 @@ import { colors } from '@/constants/colors';
 
 export default function BookingLocation() {
   const router = useRouter();
-  const { service, artisanId, description, date, time, urgency, photos } =
+  const { service, artisanId, categorySlug, open, description, date, time, urgency, photos } =
     useLocalSearchParams<{
       service?: string;
       artisanId?: string;
+      categorySlug?: string;
+      open?: string;
       description?: string;
       date?: string;
       time?: string;
@@ -33,18 +35,15 @@ export default function BookingLocation() {
     }>();
 
   const [instructions, setInstructions] = useState('');
-  const [addressLabel, setAddressLabel] = useState<'Home' | 'Work'>('Home');
-  const [addressText, setAddressText] = useState(
-    '12 Admiralty Way, Lekki Phase 1, Lagos, Nigeria',
-  );
+  const [addressText, setAddressText] = useState('');
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(
     null,
   );
-  const [locationError, setLocationError] = useState<string | null>(null);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
 
+  const canConfirm = addressText.trim().length > 0;
+
   const handleUseCurrentLocation = async () => {
-    setLocationError(null);
     setIsLoadingLocation(true);
 
     try {
@@ -74,7 +73,6 @@ export default function BookingLocation() {
             .join(', ')
         : `${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}`;
 
-      setAddressLabel('Home');
       setAddressText(formattedAddress);
       setCoords({
         lat: position.coords.latitude,
@@ -85,24 +83,9 @@ export default function BookingLocation() {
         error instanceof Error
           ? error.message
           : 'Unable to retrieve your current location.';
-      setLocationError(message);
       Alert.alert('Location Error', message);
     } finally {
       setIsLoadingLocation(false);
-    }
-  };
-
-  const handleChangeAddress = () => {
-    // Saved addresses are mock copy without coordinates — drop any GPS fix.
-    setCoords(null);
-    if (addressLabel === 'Home') {
-      setAddressLabel('Work');
-      setAddressText(
-        '10B Adeola Odeku Street, Victoria Island, Lagos, Nigeria',
-      );
-    } else {
-      setAddressLabel('Home');
-      setAddressText('12 Admiralty Way, Lekki Phase 1, Lagos, Nigeria');
     }
   };
 
@@ -112,6 +95,8 @@ export default function BookingLocation() {
       params: {
         service,
         artisanId,
+        categorySlug,
+        open,
         description,
         date,
         time,
@@ -169,47 +154,46 @@ export default function BookingLocation() {
             paddingBottom: 24,
           }}
         >
-          {/* Map placeholder */}
-          <View className="h-56 overflow-hidden rounded-2xl border border-gray-100 bg-gray-100">
-            <View className="flex-1 items-center justify-center">
-              <Ionicons name="location" size={44} color={colors.primary} />
-            </View>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Use my current location"
-              accessibilityState={{ busy: isLoadingLocation }}
-              onPress={handleUseCurrentLocation}
-              style={{
-                shadowColor: '#0F172A',
-                shadowOpacity: 0.1,
-                shadowRadius: 8,
-                shadowOffset: { width: 0, height: 2 },
-                elevation: 4,
-              }}
-              className="absolute bottom-3 right-3 h-11 w-11 items-center justify-center rounded-full bg-white"
-            >
-              <Ionicons name="locate" size={20} color={colors.primary} />
-            </Pressable>
-          </View>
-
-          {/* Saved address */}
-          <View className="mt-4 flex-row items-center rounded-2xl border border-gray-100 bg-white p-4">
+          {/* Use current location */}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Use my current location"
+            accessibilityState={{ busy: isLoadingLocation }}
+            onPress={handleUseCurrentLocation}
+            disabled={isLoadingLocation}
+            className="flex-row items-center gap-3 rounded-2xl border border-primary/30 bg-primary/5 p-4 active:opacity-80"
+          >
             <View className="h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-              <Ionicons name="home-outline" size={18} color={colors.primary} />
+              <Ionicons name="locate" size={20} color={colors.primary} />
             </View>
-            <View className="ml-3 flex-1">
-              <Text className="text-[14px] font-bold text-gray-900">
-                {addressLabel}
+            <View className="flex-1">
+              <Text className="text-[14px] font-bold text-primary">
+                {isLoadingLocation ? 'Getting your location…' : 'Use my current location'}
               </Text>
-              <Text className="mt-0.5 text-[12px] leading-4 text-gray-500">
-                {addressText}
+              <Text className="mt-0.5 text-[12px] text-gray-500">
+                We&apos;ll fill in your address automatically.
               </Text>
             </View>
-            <Pressable hitSlop={8} onPress={handleChangeAddress}>
-              <Text className="text-[13px] font-semibold text-primary">
-                Change
-              </Text>
-            </Pressable>
+            {coords ? <Ionicons name="checkmark-circle" size={20} color="#22C55E" /> : null}
+          </Pressable>
+
+          {/* Service address (editable) */}
+          <View className="mt-4">
+            <Text className="mb-1.5 text-[13px] font-semibold text-gray-700">
+              Service address
+            </Text>
+            <TextInput
+              value={addressText}
+              onChangeText={(t) => {
+                setAddressText(t);
+                setCoords(null); // typed address no longer matches the GPS fix
+              }}
+              placeholder="Enter the address the artisan should come to"
+              placeholderTextColor={colors.textMuted}
+              multiline
+              textAlignVertical="top"
+              className="min-h-[72px] rounded-2xl border border-gray-200 bg-white px-4 py-3 text-[15px] text-gray-900"
+            />
           </View>
 
           {/* Delivery instructions */}
@@ -228,7 +212,7 @@ export default function BookingLocation() {
 
           {/* Confirm */}
           <View className="mt-7">
-            <Button label="Confirm Location" onPress={handleConfirm} />
+            <Button label="Confirm Location" disabled={!canConfirm} onPress={handleConfirm} />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

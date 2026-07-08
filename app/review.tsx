@@ -17,7 +17,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArtisanRow } from '@/components/active-booking/parts';
 import { Button } from '@/components/ui/Button';
 import { colors } from '@/constants/colors';
-import { MOCK_ARTISAN } from '@/lib/active-booking/mock';
 import { authErrorMessage } from '@/lib/api/auth';
 import { useArtisan } from '@/lib/catalogue/hooks';
 import { useSubmitReview } from '@/lib/reviews/hooks';
@@ -58,13 +57,13 @@ export default function ServiceReview() {
   }>();
 
   // Prefer the real artisan profile when we have its id; fall back to the name
-  // passed in from the booking (and the mock avatar) while it loads / if absent.
+  // passed in from the booking while it loads / if absent.
   const { data: artisan } = useArtisan(params.artisanId);
-  const name = artisan?.fullName || params.name || MOCK_ARTISAN.name;
-  const specialty = artisan?.specialty || MOCK_ARTISAN.specialty;
-  const rating = artisan?.rating ?? MOCK_ARTISAN.rating;
-  const jobsCount = artisan?.jobsCount || MOCK_ARTISAN.jobsCount;
-  const imageKey = artisan?.imageKey || MOCK_ARTISAN.imageKey;
+  const name = artisan?.fullName || params.name || 'Your artisan';
+  const specialty = artisan?.specialty || 'Artisan';
+  const rating = artisan?.rating ?? 0;
+  const jobsCount = artisan?.jobsCount || '';
+  const imageKey = artisan?.imageKey || '';
 
   const [overall, setOverall] = useState(5);
   const [text, setText] = useState('');

@@ -20,11 +20,13 @@ import type { BookingStatus, BookingSummary } from '@/lib/booking/types';
 type TabId = 'active' | 'completed' | 'cancelled';
 
 const ACTIVE: BookingStatus[] = [
+  'Open',
   'Pending',
   'Accepted',
   'OnMyWay',
   'Arrived',
   'InProgress',
+  'AwaitingConfirmation',
 ];
 const CANCELLED: BookingStatus[] = ['Cancelled', 'Rejected', 'Expired', 'Disputed'];
 

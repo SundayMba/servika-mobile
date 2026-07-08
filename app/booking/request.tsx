@@ -19,6 +19,12 @@ import { Button } from '@/components/ui/Button';
 import { colors } from '@/constants/colors';
 import { formatDate } from '@/lib/booking/display';
 
+const TIME_SLOTS = [
+  'Morning (8am - 12pm)',
+  'Afternoon (12pm - 4pm)',
+  'Evening (4pm - 8pm)',
+];
+
 function FieldLabel({ children }: { children: string }) {
   return (
     <Text className="mb-1.5 text-[13px] font-semibold text-gray-700">
@@ -94,9 +100,11 @@ function UrgencyOption({
 
 export default function BookingRequest() {
   const router = useRouter();
-  const { service, artisanId } = useLocalSearchParams<{
+  const { service, artisanId, categorySlug, open } = useLocalSearchParams<{
     service?: string;
     artisanId?: string;
+    categorySlug?: string;
+    open?: string;
   }>();
 
   const [description, setDescription] = useState('');
@@ -104,13 +112,17 @@ export default function BookingRequest() {
   const [date, setDate] = useState<string | undefined>(undefined);
   const [time, setTime] = useState<string | undefined>(undefined);
   const [urgency, setUrgency] = useState<'standard' | 'urgent'>('standard');
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   const serviceName = service ?? 'Service Request';
   const canContinue = description.trim().length > 0 && !!date && !!time;
 
-  // Lightweight stand-in for a real date picker (a later polish): pick tomorrow.
-  const handlePickDate = () => {
-    setDate(new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString());
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const onChangeDate = (event: DateTimePickerEvent, selected?: Date) => {
+    setShowDatePicker(false);
+    if (event.type === 'set' && selected) setDate(selected.toISOString());
   };
 
   const handleContinue = () => {
@@ -119,6 +131,8 @@ export default function BookingRequest() {
       params: {
         service: serviceName,
         artisanId,
+        categorySlug,
+        open,
         description: description.trim(),
         date,
         time,
@@ -193,18 +207,46 @@ export default function BookingRequest() {
               value={date ? formatDate(date) : undefined}
               placeholder="Select date"
               icon="calendar-outline"
-              onPress={handlePickDate}
+              onPress={() => setShowDatePicker(true)}
             />
+            {showDatePicker ? (
+              <DateTimePicker
+                value={date ? new Date(date) : today}
+                mode="date"
+                minimumDate={today}
+                onChange={onChangeDate}
+              />
+            ) : null}
           </View>
 
           {/* Preferred time */}
           <View className="mt-4">
             <FieldLabel>Preferred time</FieldLabel>
-            <SelectField
-              value={time}
-              placeholder="Select time"
-              onPress={() => setTime('Morning (8am - 12pm)')}
-            />
+            <View className="gap-2.5">
+              {TIME_SLOTS.map((slot) => {
+                const selected = time === slot;
+                return (
+                  <Pressable
+                    key={slot}
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected }}
+                    onPress={() => setTime(slot)}
+                    className={
+                      selected
+                        ? 'h-13 flex-row items-center gap-2.5 rounded-2xl border-2 border-primary bg-primary/5 px-4 py-3'
+                        : 'h-13 flex-row items-center gap-2.5 rounded-2xl border border-gray-200 bg-white px-4 py-3'
+                    }
+                  >
+                    <Ionicons
+                      name={selected ? 'radio-button-on' : 'radio-button-off'}
+                      size={18}
+                      color={selected ? colors.primary : colors.textMuted}
+                    />
+                    <Text className="text-[15px] font-medium text-gray-900">{slot}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
           </View>
 
           {/* Urgency */}

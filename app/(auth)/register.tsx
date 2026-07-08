@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useRef, useState } from 'react';
 import {
   KeyboardAvoidingView,
+  Linking,
   Platform,
   ScrollView,
   Text,
@@ -16,7 +17,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { SocialAuthButtons } from '@/components/ui/SocialAuthButtons';
 import { VerifyEmailSheet } from '@/components/VerifyEmailSheet';
 import { colors } from '@/constants/colors';
 import { authErrorMessage, register } from '@/lib/api/auth';
@@ -193,15 +193,21 @@ export default function Register() {
             />
             <Text className="text-center text-[12px] leading-4 text-gray-500">
               By continuing, you agree to our{' '}
-              <Text className="font-semibold text-primary">Terms</Text> and{' '}
-              <Text className="font-semibold text-primary">Privacy Policy</Text>
+              <Text
+                className="font-semibold text-primary"
+                onPress={() => Linking.openURL('https://servika.com/terms').catch(() => {})}
+              >
+                Terms
+              </Text>{' '}
+              and{' '}
+              <Text
+                className="font-semibold text-primary"
+                onPress={() => Linking.openURL('https://servika.com/privacy').catch(() => {})}
+              >
+                Privacy Policy
+              </Text>
               .
             </Text>
-          </View>
-
-          {/* Social sign-up (visual placeholders) */}
-          <View className="my-6">
-            <SocialAuthButtons />
           </View>
 
           {/* Footer */}

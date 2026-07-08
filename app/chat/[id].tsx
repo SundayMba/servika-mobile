@@ -40,14 +40,18 @@ function messageTime(iso: string) {
 export default function ChatScreen() {
   const router = useRouter();
   const { user } = useAuth();
-  const params = useLocalSearchParams<{ id?: string; name?: string }>();
-  // The `id` route param is the booking id — a conversation is per-booking.
-  const bookingId = params.id && params.id !== 'demo' ? params.id : undefined;
+  const params = useLocalSearchParams<{ id?: string; name?: string; artisanId?: string }>();
+  // The `id` route param is the conversation id (customer↔artisan thread).
+  const conversationId = params.id && params.id !== 'demo' ? params.id : undefined;
   const name = params.name || 'Chat';
+  // Present only on a customer-side, pre-booking thread → show the "Book" CTA.
+  const artisanId = params.artisanId || undefined;
 
-  const { data: messages, isLoading } = useChatMessages(bookingId);
-  const sendMessage = useSendMessage(bookingId ?? '');
-  useChatRealtime(bookingId);
+  const [showSafety, setShowSafety] = useState(true);
+
+  const { data: messages, isLoading } = useChatMessages(conversationId);
+  const sendMessage = useSendMessage(conversationId ?? '');
+  useChatRealtime(conversationId);
 
   const [draft, setDraft] = useState('');
   const scrollRef = useRef<ScrollView>(null);
@@ -60,7 +64,7 @@ export default function ChatScreen() {
 
   const send = () => {
     const text = draft.trim();
-    if (!text || !bookingId || sendMessage.isPending) return;
+    if (!text || !conversationId || sendMessage.isPending) return;
     setDraft('');
     sendMessage.mutate(text, {
       onError: () => setDraft(text), // restore the draft so nothing is lost
@@ -85,18 +89,36 @@ export default function ChatScreen() {
         </View>
         <View className="ml-2 flex-1">
           <Text className="text-[15px] font-bold text-gray-900">{name}</Text>
-          <Text className="text-[11px] text-gray-400">Booking chat</Text>
+          <Text className="text-[11px] text-gray-400">Servika chat</Text>
         </View>
-        {bookingId ? (
+        {artisanId ? (
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Book ${name}`}
             onPress={() =>
-              router.push({ pathname: '/booking/[id]', params: { id: bookingId } })
+              router.push({ pathname: '/artisan/[id]', params: { id: artisanId } })
             }
+            className="flex-row items-center gap-1 rounded-full bg-primary px-3.5 py-2"
           >
-            <Text className="text-[12px] font-semibold text-primary">View Booking</Text>
+            <Ionicons name="calendar" size={14} color={colors.white} />
+            <Text className="text-[12px] font-bold text-white">Book</Text>
           </Pressable>
         ) : null}
       </View>
+
+      {/* Anti-disintermediation nudge: keep the job (and its protection) on Servika. */}
+      {showSafety ? (
+        <View className="mx-4 mt-2 flex-row items-start gap-2 rounded-2xl bg-primary/5 px-3 py-2.5">
+          <Ionicons name="shield-checkmark" size={16} color={colors.primary} />
+          <Text className="flex-1 text-[11px] leading-4 text-gray-600">
+            Keep payments and coordination on Servika — you&apos;re covered by escrow,
+            reviews and dispute support. Phone numbers and emails are hidden in chat.
+          </Text>
+          <Pressable hitSlop={8} onPress={() => setShowSafety(false)}>
+            <Ionicons name="close" size={15} color={colors.textMuted} />
+          </Pressable>
+        </View>
+      ) : null}
 
       <KeyboardAvoidingView
         className="flex-1"
@@ -163,13 +185,13 @@ export default function ChatScreen() {
             className="h-11 flex-1 rounded-full bg-gray-100 px-4 text-[15px] text-gray-900"
             onSubmitEditing={send}
             returnKeyType="send"
-            editable={!!bookingId}
+            editable={!!conversationId}
           />
           <Pressable
             onPress={send}
-            disabled={!bookingId || sendMessage.isPending}
+            disabled={!conversationId || sendMessage.isPending}
             className="h-11 w-11 items-center justify-center rounded-full bg-primary"
-            style={!bookingId || sendMessage.isPending ? { opacity: 0.5 } : undefined}
+            style={!conversationId || sendMessage.isPending ? { opacity: 0.5 } : undefined}
           >
             <Ionicons name="send" size={18} color={colors.white} />
           </Pressable>

@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -31,9 +31,17 @@ export default function ForgotPassword() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [resendIn, setResendIn] = useState(0);
 
   const passwordRef = useRef<TextInput>(null);
   const confirmRef = useRef<TextInput>(null);
+
+  // 60s resend cooldown (matches the backend throttle) so rapid taps can't 429.
+  useEffect(() => {
+    if (resendIn <= 0) return;
+    const t = setTimeout(() => setResendIn((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resendIn]);
 
   // Step 1 — start the reset. The server never reveals whether the account
   // exists, so we always advance to the code-entry step on success.
@@ -50,6 +58,7 @@ export default function ForgotPassword() {
       await forgotPassword(emailOrPhone);
       setNotice('We sent a reset code. Enter it below with your new password.');
       setStep('reset');
+      setResendIn(60);
     } catch (e) {
       setError(authErrorMessage(e));
     } finally {
@@ -90,8 +99,10 @@ export default function ForgotPassword() {
   };
 
   const handleResend = async () => {
+    if (resendIn > 0) return;
     setError(null);
     setNotice(null);
+    setResendIn(60);
     try {
       await forgotPassword(identifier.trim());
       setNotice('A new reset code is on its way.');
@@ -231,8 +242,10 @@ export default function ForgotPassword() {
               <Text className="text-[14px] text-gray-500">
                 Didn’t get a code?
               </Text>
-              <TouchableOpacity hitSlop={8} onPress={handleResend}>
-                <Text className="text-[14px] font-bold text-primary">Resend</Text>
+              <TouchableOpacity hitSlop={8} onPress={handleResend} disabled={resendIn > 0}>
+                <Text className={`text-[14px] font-bold ${resendIn > 0 ? 'text-gray-400' : 'text-primary'}`}>
+                  {resendIn > 0 ? `Resend in ${resendIn}s` : 'Resend'}
+                </Text>
               </TouchableOpacity>
             </View>
           ) : (

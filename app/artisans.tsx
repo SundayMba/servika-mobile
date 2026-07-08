@@ -13,6 +13,7 @@ import { useAuthGate } from '@/lib/auth/useAuthGate';
 import { artisanAvatar } from '@/lib/catalogue/assets';
 import type { ArtisanSummary } from '@/lib/catalogue/types';
 import { useNearbyArtisans } from '@/lib/catalogue/hooks';
+import { useOpenChat } from '@/lib/chat/hooks';
 
 /** Full-width artisan row for the vertical listing (the carousel card is compact). */
 function ArtisanRow({
@@ -140,6 +141,7 @@ export default function ArtisansList() {
   const [searchVisible, setSearchVisible] = useState(false);
 
   const { isAuthenticated, guard, promptVisible, hidePrompt } = useAuthGate();
+  const { openWithArtisan } = useOpenChat();
   const artisansQuery = useNearbyArtisans();
   const artisans = artisansQuery.data ?? [];
 
@@ -205,7 +207,9 @@ export default function ArtisansList() {
                   }),
                 )
               }
-              onChat={() => guard(() => router.push('/messages'))}
+              onChat={() =>
+                guard(() => openWithArtisan(artisan.id, artisan.fullName))
+              }
             />
           ))}
         </ScrollView>

@@ -2,13 +2,17 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BookingSteps } from '@/components/booking/BookingSteps';
 import { Button } from '@/components/ui/Button';
 import { colors } from '@/constants/colors';
+import { authErrorMessage } from '@/lib/api/auth';
 import { formatDate } from '@/lib/booking/display';
+import { useCreateBooking } from '@/lib/booking/hooks';
+import type { CreateBookingRequest, Urgency } from '@/lib/booking/types';
 import { artisanAvatar, formatNaira } from '@/lib/catalogue/assets';
 import { useArtisan } from '@/lib/catalogue/hooks';
 
@@ -45,6 +49,8 @@ export default function BookingSummary() {
   const params = useLocalSearchParams<{
     service?: string;
     artisanId?: string;
+    categorySlug?: string;
+    open?: string;
     description?: string;
     date?: string;
     time?: string;
@@ -56,12 +62,16 @@ export default function BookingSummary() {
     photos?: string;
   }>();
 
+  // Open request: no artisan chosen — any matching artisan can claim it, and there's
+  // no up-front payment (the price is quoted after inspection). We post it here.
+  const isOpen = params.open === '1';
+
   const { data: artisan, isLoading: artisanLoading } = useArtisan(
-    params.artisanId,
+    isOpen ? undefined : params.artisanId,
   );
 
   const serviceName = params.service ?? 'Service Request';
-  const categorySlug = artisan?.categorySlugs?.[0];
+  const categorySlug = isOpen ? params.categorySlug : artisan?.categorySlugs?.[0];
   const inspectionFee = artisan?.inspectionFeeNaira;
   const photoCount = (() => {
     try {
@@ -71,20 +81,63 @@ export default function BookingSummary() {
     }
   })();
 
-  const canProceed = !!categorySlug && !!params.addressText && !artisanLoading;
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const { mutateAsync: createBooking } = useCreateBooking();
 
-  const handleProceed = () => {
+  const canProceed =
+    !!categorySlug && !!params.addressText && (isOpen || !artisanLoading);
+
+  const handleProceed = async () => {
     if (!categorySlug) return;
-    router.push({
-      pathname: '/booking/payment',
-      params: {
-        ...params,
+
+    // Pre-selected artisan → continue to the payment step (call-out fee / escrow).
+    if (!isOpen) {
+      router.push({
+        pathname: '/booking/payment',
+        params: {
+          ...params,
+          categorySlug,
+          serviceName,
+          artisanName: artisan?.fullName ?? '',
+          amount: inspectionFee != null ? String(inspectionFee) : '',
+        },
+      });
+      return;
+    }
+
+    // Open request → post it now (no artisan, no payment) and go to success.
+    setErrorMsg(null);
+    setSubmitting(true);
+    try {
+      const body: CreateBookingRequest = {
         categorySlug,
-        serviceName,
-        artisanName: artisan?.fullName ?? '',
-        amount: inspectionFee != null ? String(inspectionFee) : '',
-      },
-    });
+        artisanId: null,
+        description: params.description ?? '',
+        preferredDate: params.date ?? new Date().toISOString(),
+        preferredTimeSlot: params.time ?? '',
+        urgency: (params.urgency === 'urgent' ? 'urgent' : 'standard') as Urgency,
+        addressText: params.addressText ?? '',
+        locationLat: params.lat ? Number(params.lat) : null,
+        locationLng: params.lng ? Number(params.lng) : null,
+        locationInstructions: params.instructions || null,
+      };
+      const booking = await createBooking(body);
+      router.replace({
+        pathname: '/booking/success',
+        params: {
+          bookingId: booking.id,
+          serviceName: booking.serviceName,
+          date: booking.preferredDate,
+          time: booking.preferredTimeSlot,
+          open: '1',
+        },
+      });
+    } catch (err) {
+      setErrorMsg(authErrorMessage(err, 'Could not post your request.'));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const avatar = artisan ? artisanAvatar(artisan.imageKey) : undefined;
@@ -121,6 +174,22 @@ export default function BookingSummary() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 24 }}
       >
+        {/* Open request banner (no artisan chosen) */}
+        {isOpen ? (
+          <View className="flex-row items-center rounded-2xl border border-primary/20 bg-primary/5 p-4">
+            <View className="h-11 w-11 items-center justify-center rounded-full bg-primary/10">
+              <Ionicons name="megaphone-outline" size={22} color={colors.primary} />
+            </View>
+            <View className="ml-3 flex-1">
+              <Text className="text-[15px] font-bold text-gray-900">Open request</Text>
+              <Text className="text-[12px] leading-4 text-gray-500">
+                We&apos;ll match you with a verified {serviceName.toLowerCase()} pro nearby — the
+                first to accept takes the job.
+              </Text>
+            </View>
+          </View>
+        ) : null}
+
         {/* Artisan */}
         {artisan ? (
           <View className="flex-row items-center rounded-2xl border border-gray-100 bg-white p-4">
@@ -195,23 +264,30 @@ export default function BookingSummary() {
 
         {/* Pricing */}
         <Section title="Pricing">
-          {inspectionFee != null ? (
+          {!isOpen && inspectionFee != null ? (
             <Row
               label="Call-out / inspection fee"
               value={formatNaira(inspectionFee)}
             />
           ) : null}
           <Text className="mt-1 text-[12px] leading-4 text-gray-500">
-            Final price is quoted after the artisan inspects the job. You only pay
-            the call-out fee now.
+            {isOpen
+              ? 'No payment now. The artisan quotes the price after inspecting the job, and you pay securely through Servika.'
+              : 'Final price is quoted after the artisan inspects the job. You only pay the call-out fee now.'}
           </Text>
         </Section>
+
+        {errorMsg ? (
+          <View className="mt-4 rounded-2xl border border-red-100 bg-red-50 p-3">
+            <Text className="text-[13px] text-red-600">{errorMsg}</Text>
+          </View>
+        ) : null}
 
         {/* Proceed */}
         <View className="mt-6">
           <Button
-            label="Proceed to Payment"
-            loading={artisanLoading}
+            label={isOpen ? 'Post Request' : 'Proceed to Payment'}
+            loading={submitting || (!isOpen && artisanLoading)}
             disabled={!canProceed}
             onPress={handleProceed}
           />

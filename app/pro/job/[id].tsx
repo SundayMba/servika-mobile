@@ -10,6 +10,7 @@ import { colors } from '@/constants/colors';
 import { formatNaira } from '@/lib/artisan/mock';
 import { useAdvanceArtisanJob, useArtisanJob } from '@/lib/artisan/jobHooks';
 import { statusStyle } from '@/lib/booking/display';
+import { useOpenChat } from '@/lib/chat/hooks';
 
 /**
  * Job details / accept screen (06-job-details-accept), wired to the live job.
@@ -22,6 +23,7 @@ export default function JobDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data: job, isLoading } = useArtisanJob(id);
   const advance = useAdvanceArtisanJob();
+  const { openForBooking } = useOpenChat();
 
   if (isLoading || !job) {
     return (
@@ -96,12 +98,7 @@ export default function JobDetail() {
 
         <Pressable
           accessibilityRole="button"
-          onPress={() =>
-            router.push({
-              pathname: '/chat/[id]',
-              params: { id: job.id, name: 'Customer' },
-            })
-          }
+          onPress={() => openForBooking(job.id, 'Customer')}
           className="mt-6 flex-row items-center gap-3 rounded-2xl border border-gray-100 bg-white p-4 active:bg-gray-50"
         >
           <View className="h-10 w-10 items-center justify-center rounded-full bg-primary/10">

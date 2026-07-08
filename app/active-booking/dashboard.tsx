@@ -12,6 +12,7 @@ import { TRACK_STEPS } from '@/lib/active-booking/mock';
 import { statusStyle, isEnRoute, formatDate } from '@/lib/booking/display';
 import { useBooking, useCancelBooking } from '@/lib/booking/hooks';
 import { useArtisan } from '@/lib/catalogue/hooks';
+import { useOpenChat } from '@/lib/chat/hooks';
 import { authErrorMessage } from '@/lib/api/auth';
 
 // Booking status → index in TRACK_STEPS (Request Sent, Accepted, On My Way, Arrived, Job Started).
@@ -54,6 +55,11 @@ export default function ActiveBookingDashboard() {
     artisanId,
     name: artisanName,
     serviceName,
+  };
+
+  const { openForBooking } = useOpenChat();
+  const openChat = () => {
+    if (bookingId) openForBooking(bookingId, artisanName);
   };
 
   // Route by real status (once): en route → jump straight to the live map;
@@ -188,7 +194,7 @@ export default function ActiveBookingDashboard() {
             imageKey={artisan?.imageKey ?? ''}
             right={
               <Pressable
-                onPress={() => router.push({ pathname: '/chat/[id]', params: linkParams })}
+                onPress={openChat}
                 className="h-10 w-10 items-center justify-center rounded-full bg-primary/10"
               >
                 <Ionicons name="chatbubble-ellipses" size={18} color={colors.primary} />
@@ -225,7 +231,7 @@ export default function ActiveBookingDashboard() {
           <View className="flex-1">
             <Button
               label="Message"
-              onPress={() => router.push({ pathname: '/chat/[id]', params: linkParams })}
+              onPress={openChat}
             />
           </View>
           <View className="flex-1">

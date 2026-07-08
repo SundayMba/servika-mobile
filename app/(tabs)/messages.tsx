@@ -55,7 +55,7 @@ export default function Messages() {
         <Empty
           icon="chatbubbles-outline"
           title="No conversations yet"
-          body="Once you book an artisan, you can chat with them here."
+          body="Message an artisan from their profile to start a conversation."
         />
       ) : (
         <ScrollView
@@ -66,12 +66,12 @@ export default function Messages() {
         >
           {data.map((c) => (
             <ConversationRow
-              key={c.bookingId}
+              key={c.id}
               conversation={c}
               onPress={() =>
                 router.push({
                   pathname: '/chat/[id]',
-                  params: { id: c.bookingId, name: c.counterpartyName },
+                  params: { id: c.id, name: c.counterpartyName },
                 })
               }
             />
@@ -122,9 +122,6 @@ function ConversationRow({
             </View>
           ) : null}
         </View>
-        <Text className="mt-0.5 text-[11px] text-gray-400" numberOfLines={1}>
-          {c.serviceName}
-        </Text>
       </View>
     </Pressable>
   );

@@ -25,6 +25,8 @@ interface AuthContextValue {
   user: User | null;
   /** Persist tokens + profile from a register/login response and sign in. */
   signIn: (auth: AuthResponse) => Promise<void>;
+  /** Update the cached profile after an edit (keeps the app + storage in sync). */
+  updateUser: (user: User) => Promise<void>;
   /** Clear the session (tokens + cached profile) and sign out. */
   signOut: () => Promise<void>;
 }
@@ -79,6 +81,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStatus('authenticated');
   }, []);
 
+  const updateUser = useCallback(async (next: User) => {
+    await tokenStorage.setUser(next);
+    setUser(next);
+  }, []);
+
   const signOut = useCallback(async () => {
     // Unregister this device's push token first — the endpoint needs the session.
     await unregisterForPush();
@@ -96,8 +103,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<AuthContextValue>(
-    () => ({ status, user, signIn, signOut }),
-    [status, user, signIn, signOut],
+    () => ({ status, user, signIn, updateUser, signOut }),
+    [status, user, signIn, updateUser, signOut],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

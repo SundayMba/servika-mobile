@@ -15,7 +15,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { SocialAuthButtons } from '@/components/ui/SocialAuthButtons';
 import { VerifyEmailSheet } from '@/components/VerifyEmailSheet';
 import { authErrorMessage, login } from '@/lib/api/auth';
 import { useAuth } from '@/lib/auth/AuthContext';
@@ -155,10 +154,6 @@ export default function Login() {
             />
           </View>
 
-          {/* Social sign-in (visual placeholders) */}
-          <View className="my-6">
-            <SocialAuthButtons />
-          </View>
 
           {/* Footer */}
           <View className="flex-row items-center justify-center gap-1">

@@ -10,6 +10,7 @@ type ChipStyle = { label: string; bg: string; text: string };
 
 const STATUS_STYLES: Record<BookingStatus, ChipStyle> = {
   Draft: { label: 'Draft', bg: 'bg-gray-100', text: 'text-gray-600' },
+  Open: { label: 'Finding an artisan', bg: 'bg-amber-100', text: 'text-amber-700' },
   Pending: { label: 'Pending', bg: 'bg-amber-100', text: 'text-amber-700' },
   Accepted: { label: 'Accepted', bg: 'bg-blue-100', text: 'text-blue-700' },
   Rejected: { label: 'Rejected', bg: 'bg-gray-100', text: 'text-gray-600' },
@@ -29,7 +30,7 @@ export function statusStyle(status: BookingStatus): ChipStyle {
 
 /** A booking can still be cancelled by the customer only in these states. */
 export function canCancel(status: BookingStatus): boolean {
-  return status === 'Pending' || status === 'Accepted';
+  return status === 'Open' || status === 'Pending' || status === 'Accepted';
 }
 
 /** The job is live — the customer can open the tracking map/dashboard. */
