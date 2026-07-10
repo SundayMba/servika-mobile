@@ -27,6 +27,10 @@ export interface ArtisanSummary {
   distanceKm: number;
   isAvailable: boolean;
   accent: string;
+  /** Real position for the Explore map pin; null for artisans who haven't
+   * shared a location yet (they appear in lists but not on the map). */
+  latitude: number | null;
+  longitude: number | null;
 }
 
 export interface ArtisanDetail extends ArtisanSummary {

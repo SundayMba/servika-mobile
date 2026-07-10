@@ -24,13 +24,15 @@ import type { LatLng } from '@/lib/tracking/geo';
  * Service-area picker. Three ways to set your area:
  *  1. **Use my current location** — GPS + reverse geocode (expo-location).
  *  2. **Search** — Google Places autocomplete (or native geocoding fallback).
- *  3. **Popular areas** — curated Lagos quick-picks.
+ *  3. **Popular areas** — curated quick-picks: Lagos districts + major cities
+ *     across Nigeria (the marketplace is nationwide, not Lagos-only).
  *
  * Local state only for now (no persisted saved-addresses backend yet).
  */
-// Popular Lagos areas with approximate centre coordinates, so a quick-pick sets
-// both the label and the coords that drive proximity sorting.
-export const LAGOS_AREAS: { label: string; coords: LatLng }[] = [
+// Popular areas with approximate centre coordinates, so a quick-pick sets
+// both the label and the coords that drive proximity sorting. Lagos districts
+// first (launch city), then major cities across the country.
+export const POPULAR_AREAS: { label: string; coords: LatLng }[] = [
   { label: 'Lekki, Lagos', coords: { latitude: 6.4478, longitude: 3.4723 } },
   { label: 'Victoria Island, Lagos', coords: { latitude: 6.4281, longitude: 3.4219 } },
   { label: 'Ikoyi, Lagos', coords: { latitude: 6.4529, longitude: 3.4347 } },
@@ -38,8 +40,15 @@ export const LAGOS_AREAS: { label: string; coords: LatLng }[] = [
   { label: 'Yaba, Lagos', coords: { latitude: 6.5095, longitude: 3.3711 } },
   { label: 'Surulere, Lagos', coords: { latitude: 6.4999, longitude: 3.3543 } },
   { label: 'Ajah, Lagos', coords: { latitude: 6.4698, longitude: 3.5852 } },
-  { label: 'Gbagada, Lagos', coords: { latitude: 6.5486, longitude: 3.3897 } },
-  { label: 'Maryland, Lagos', coords: { latitude: 6.5719, longitude: 3.3672 } },
+  { label: 'Abuja (FCT)', coords: { latitude: 9.0765, longitude: 7.3986 } },
+  { label: 'Port Harcourt, Rivers', coords: { latitude: 4.8156, longitude: 7.0498 } },
+  { label: 'Ibadan, Oyo', coords: { latitude: 7.3775, longitude: 3.947 } },
+  { label: 'Kano, Kano', coords: { latitude: 12.0022, longitude: 8.592 } },
+  { label: 'Enugu, Enugu', coords: { latitude: 6.4584, longitude: 7.5464 } },
+  { label: 'Benin City, Edo', coords: { latitude: 6.335, longitude: 5.6037 } },
+  { label: 'Kaduna, Kaduna', coords: { latitude: 10.5105, longitude: 7.4165 } },
+  { label: 'Owerri, Imo', coords: { latitude: 5.4836, longitude: 7.0333 } },
+  { label: 'Uyo, Akwa Ibom', coords: { latitude: 5.0377, longitude: 7.9128 } },
 ];
 
 export function LocationSheet({
@@ -262,7 +271,7 @@ export function LocationSheet({
             <Text className="mb-1 mt-1 px-2 text-[12px] font-semibold text-gray-400">
               POPULAR AREAS
             </Text>
-            {LAGOS_AREAS.map(({ label, coords }) => {
+            {POPULAR_AREAS.map(({ label, coords }) => {
               const active = label === selected;
               return (
                 <Pressable

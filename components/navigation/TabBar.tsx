@@ -21,13 +21,14 @@ type TabMeta = {
 
 /**
  * Per-route presentation for the bottom tab bar. Keyed by the route name
- * (the file name inside app/(tabs)). The `categories` route is rendered as
- * the raised center button rather than a normal tab.
+ * (the file name inside app/(tabs)). The `explore` route — the Uber-style
+ * nearby-artisans map — is rendered as the raised center button rather than
+ * a normal tab. (Categories moved to a plain stack screen at /categories.)
  */
 const TABS: Record<string, TabMeta> = {
   home: { label: 'Home', icon: 'home-outline', iconActive: 'home' },
   bookings: { label: 'Bookings', icon: 'calendar-outline', iconActive: 'calendar' },
-  categories: { label: 'Categories', icon: 'grid-outline', iconActive: 'grid' },
+  explore: { label: 'Explore', icon: 'map-outline', iconActive: 'map' },
   messages: {
     label: 'Messages',
     icon: 'chatbubble-ellipses-outline',
@@ -94,8 +95,8 @@ export function TabBar({
           }
         };
 
-        // The center "Categories" tab renders as a raised circular button.
-        if (route.name === 'categories') {
+        // The center "Explore" (map) tab renders as a raised circular button.
+        if (route.name === 'explore') {
           return (
             <CenterButton
               key={route.key}

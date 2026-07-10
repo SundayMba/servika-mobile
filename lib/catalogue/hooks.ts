@@ -31,6 +31,25 @@ export function useNearbyArtisans(coords?: LatLng | null) {
   });
 }
 
+/**
+ * Explore map: artisans near the given coordinates, optionally narrowed to a
+ * category. Same rounding trick as `useNearbyArtisans` so panning the selected
+ * area refetches without churning on every GPS jitter.
+ */
+export function useExploreArtisans(
+  categorySlug: string | null,
+  coords?: LatLng | null,
+) {
+  const key = coords
+    ? { lat: Math.round(coords.latitude * 1000) / 1000, lng: Math.round(coords.longitude * 1000) / 1000 }
+    : null;
+  return useQuery({
+    queryKey: ['artisans', 'explore', categorySlug ?? 'all', key],
+    queryFn: () => getArtisans(categorySlug ?? undefined, coords),
+    staleTime: 60_000,
+  });
+}
+
 /** Artisans serving a given category slug. */
 export function useCategoryArtisans(categorySlug: string | undefined) {
   return useQuery({

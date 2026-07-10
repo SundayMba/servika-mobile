@@ -9,7 +9,12 @@
       "distribution": "internal"
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://api.servika.com.ng",
+        "EXPO_PUBLIC_GOOGLE_MAPS_ANDROID_KEY": "AIzaSyD8BKCPZB4S8sMv951Njnm3RE1IVooT4oo",
+        "EXPO_PUBLIC_GOOGLE_PLACES_KEY": "AIzaSyATZcUs1wH-ptAyDDgENMhTPCezJrgUqE4"
+      }
     },
     "production": {
       "autoIncrement": true

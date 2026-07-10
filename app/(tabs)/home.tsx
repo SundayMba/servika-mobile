@@ -214,6 +214,9 @@ export default function Home() {
 
   const [searchVisible, setSearchVisible] = useState(false);
   const [locationVisible, setLocationVisible] = useState(false);
+  // True while the user is dragging or the scroll is coasting — the hero's
+  // typewriter/conveyor pauses so its JS ticks don't fight the scroll.
+  const [scrolling, setScrolling] = useState(false);
   // Service area — shared store so the map picker can hand its result back.
   const area = useSelectedArea();
   const areaCoords = useSelectedCoords();
@@ -343,6 +346,10 @@ export default function Home() {
       <ScrollView
         showsVerticalScrollIndicator={false}
         style={{ backgroundColor: colors.primary }}
+        onScrollBeginDrag={() => setScrolling(true)}
+        onMomentumScrollBegin={() => setScrolling(true)}
+        onScrollEndDrag={() => setScrolling(false)}
+        onMomentumScrollEnd={() => setScrolling(false)}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -358,6 +365,7 @@ export default function Home() {
           <HeroCarousel
             bare
             height={182}
+            paused={scrolling}
             onGetHelp={() => router.push('/categories')}
           />
         </View>

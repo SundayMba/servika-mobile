@@ -9,22 +9,17 @@ import {
   Text,
   View,
 } from 'react-native';
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { SearchSheet } from '@/components/SearchSheet';
 import { colors } from '@/constants/colors';
-import {
-  categoryIcon,
-  categoryImage,
-} from '@/lib/catalogue/assets';
+import { categoryIcon, categoryImage } from '@/lib/catalogue/assets';
 import { useCategories } from '@/lib/catalogue/hooks';
 import type { Category } from '@/lib/catalogue/types';
 
-// Height of the custom bottom tab bar (excluding the safe-area inset).
-const TAB_BAR_HEIGHT = 60;
+// All service categories. A plain stack screen (no bottom tab bar) — reached
+// from Home's "View all" and the SOS card; the tab bar's center slot now
+// belongs to the Explore map.
 
 function CategoryCard({
   category,
@@ -71,9 +66,7 @@ function CategoryCard({
 }
 
 export default function Categories() {
-  const insets = useSafeAreaInsets();
   const router = useRouter();
-  const bottomPadding = TAB_BAR_HEIGHT + Math.max(insets.bottom, 12) + 16;
 
   const [searchVisible, setSearchVisible] = useState(false);
 
@@ -83,26 +76,34 @@ export default function Categories() {
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       {/* Header */}
       <View className="flex-row items-center justify-between px-5 pb-3 pt-2">
-        <Text className="text-[26px] font-bold text-gray-900">Categories</Text>
-        <View className="flex-row items-center gap-2">
+        <View className="flex-row items-center gap-3">
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Search"
-            onPress={() => setSearchVisible(true)}
+            accessibilityLabel="Go back"
+            onPress={() => router.back()}
             className="h-10 w-10 items-center justify-center rounded-full bg-white"
           >
-            <Ionicons
-              name="search-outline"
-              size={20}
-              color={colors.textPrimary}
-            />
+            <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
           </Pressable>
+          <Text className="text-[26px] font-bold text-gray-900">Categories</Text>
         </View>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Search"
+          onPress={() => setSearchVisible(true)}
+          className="h-10 w-10 items-center justify-center rounded-full bg-white"
+        >
+          <Ionicons
+            name="search-outline"
+            size={20}
+            color={colors.textPrimary}
+          />
+        </Pressable>
       </View>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: bottomPadding }}
+        contentContainerStyle={{ paddingBottom: 24 }}
       >
         {isLoading ? (
           <View className="items-center justify-center py-16">

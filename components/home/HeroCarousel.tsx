@@ -22,6 +22,7 @@ export function HeroCarousel({
   onGetHelp,
   bare = false,
   height = HERO_HEIGHT,
+  paused = false,
 }: {
   onGetHelp?: () => void;
   /** When true, drop the rounded orange card so the hero sits flush on an
@@ -29,6 +30,9 @@ export function HeroCarousel({
   bare?: boolean;
   /** Override the hero height (default 210). Thinner reads sleeker on the canopy. */
   height?: number;
+  /** Freeze the typewriter/conveyor (e.g. while the parent scrolls) — its
+   *  ~14–26 setState ticks per second otherwise compete with the scroll. */
+  paused?: boolean;
 }) {
   const len = WORKING_ARTISANS.length;
   const [step, setStep] = useState(0); // monotonic counter — only ever increments
@@ -43,6 +47,7 @@ export function HeroCarousel({
 
   // ── Typewriter state machine (also the carousel clock) ──
   useEffect(() => {
+    if (paused) return; // frozen mid-word; the effect re-runs on unpause
     const full = WORKING_ARTISANS[index].service;
     let timer: ReturnType<typeof setTimeout>;
 
@@ -68,7 +73,7 @@ export function HeroCarousel({
     }
 
     return () => clearTimeout(timer);
-  }, [phase, sub, index]);
+  }, [phase, sub, index, paused]);
 
   // ── Glide the slide position toward the current step (left → right) ──
   useEffect(() => {
@@ -133,6 +138,11 @@ export function HeroCarousel({
         style={{ position: 'absolute', right: -8, top: 0, bottom: 0, width: '56%', overflow: 'hidden' }}
       >
         {WORKING_ARTISANS.map((artisan, i) => {
+          // Only the two active layers stay mounted — the parked ones would
+          // hold big decoded textures for nothing (expo-image's memory cache
+          // makes the remount on their next turn effectively free).
+          if (i !== entering && !(step > 0 && i === leaving)) return null;
+
           // Default: parked just off the right edge (fully clipped, hidden).
           let translateX: Animated.AnimatedInterpolation<number> | number = boxW;
           let opacity = 0;
