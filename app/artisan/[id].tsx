@@ -15,8 +15,8 @@ import { colors } from '@/constants/colors';
 import { useAuthGate } from '@/lib/auth/useAuthGate';
 import { useIsFavorite, useToggleFavorite } from '@/lib/favorites/hooks';
 import {
-  artisanAvatar,
-  artisanCover,
+  artisanCoverSource,
+  artisanPhotoSource,
   formatNaira,
   galleryImages,
 } from '@/lib/catalogue/assets';
@@ -97,9 +97,22 @@ export default function ArtisanProfile() {
     );
   }
 
-  const cover = artisanCover(artisan.imageKey);
-  const avatar = artisanAvatar(artisan.imageKey);
+  // Two separate uploads: the cover (them at work) tops the profile; the
+  // profile photo is the round avatar. Each falls back through the other /
+  // bundled seed art / the initials placeholders below.
+  const cover = artisanCoverSource(
+    artisan.coverPhotoUrl,
+    artisan.photoUrl,
+    artisan.imageKey,
+  );
+  const avatar = artisanPhotoSource(artisan.photoUrl, artisan.imageKey);
   const gallery = galleryImages(artisan.galleryKeys);
+  const initials = artisan.fullName
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((p) => p[0])
+    .join('')
+    .toUpperCase();
 
   return (
     <View className="flex-1 bg-white">
@@ -109,14 +122,24 @@ export default function ArtisanProfile() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 40 }}
       >
-        {/* Cover photo */}
+        {/* Cover photo — spans up through the status bar */}
         <View className="h-72 w-full bg-background">
-          <Image
-            source={cover}
-            contentFit="cover"
-            contentPosition="top"
-            style={{ flex: 1 }}
-          />
+          {cover ? (
+            <Image
+              source={cover}
+              contentFit="cover"
+              contentPosition="top"
+              style={{ flex: 1 }}
+            />
+          ) : (
+            // No photo yet — a branded navy cover so the header buttons and
+            // the curve below still read correctly.
+            <View className="flex-1 items-center justify-center bg-[#0F172A]">
+              <Text className="text-[72px] font-extrabold text-white/10">
+                {initials}
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* White sheet with the avatar overlapping the cover */}
@@ -134,12 +157,26 @@ export default function ArtisanProfile() {
               className="rounded-full border-4 border-white bg-white"
             >
               <View className="h-28 w-28 overflow-hidden rounded-full bg-background">
-                <Image
-                  source={avatar}
-                  contentFit="cover"
-                  contentPosition="top"
-                  style={{ flex: 1 }}
-                />
+                {avatar ? (
+                  <Image
+                    source={avatar}
+                    contentFit="cover"
+                    contentPosition="top"
+                    style={{ flex: 1 }}
+                  />
+                ) : (
+                  <View
+                    className="flex-1 items-center justify-center"
+                    style={{ backgroundColor: `${artisan.accent}22` }}
+                  >
+                    <Text
+                      className="text-[36px] font-extrabold"
+                      style={{ color: artisan.accent }}
+                    >
+                      {initials}
+                    </Text>
+                  </View>
+                )}
               </View>
             </View>
             <View className="mt-3 flex-row items-center gap-1.5">

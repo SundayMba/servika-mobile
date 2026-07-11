@@ -11,6 +11,7 @@ import {
 } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   RefreshControl,
   ScrollView,
   Text,
@@ -34,7 +35,6 @@ import { ActiveBookingCarousel } from '@/components/home/ActiveBookingCarousel';
 import { ArtisanCard } from '@/components/home/ArtisanCard';
 import { HeroCarousel } from '@/components/home/HeroCarousel';
 import { LocationSheet } from '@/components/home/LocationSheet';
-import { ReferralCard } from '@/components/home/ReferralCard';
 import { ServiceTile } from '@/components/home/ServiceTile';
 import {
   ArtisanCarouselSkeleton,
@@ -45,7 +45,7 @@ import { useAuth } from '@/lib/auth/AuthContext';
 import { useAuthGate } from '@/lib/auth/useAuthGate';
 import { useBookings } from '@/lib/booking/hooks';
 import type { BookingStatus } from '@/lib/booking/types';
-import { artisanAvatar, categoryImage } from '@/lib/catalogue/assets';
+import { artisanPhotoSource, categoryImage } from '@/lib/catalogue/assets';
 import { useCategories, useNearbyArtisans } from '@/lib/catalogue/hooks';
 import { useOpenChat } from '@/lib/chat/hooks';
 import {
@@ -406,16 +406,6 @@ export default function Home() {
             <PromoBanner />
           </Animated.View>
 
-          {/* ── Refer & earn — launch growth mechanic (₦500 per artisan) ── */}
-          <Animated.View
-            entering={FadeInDown.delay(110).duration(450)}
-            className="mb-4 px-5"
-          >
-            <ReferralCard
-              onPress={() => guard(() => router.push('/refer'))}
-            />
-          </Animated.View>
-
           {/* ── Popular Services (wrapped in a white card) ── */}
           <Animated.View
             entering={FadeInDown.delay(140).duration(450)}
@@ -488,7 +478,7 @@ export default function Home() {
                       available: artisan.isAvailable,
                       rating: artisan.rating,
                       distanceKm: artisan.distanceKm,
-                      avatar: artisanAvatar(artisan.imageKey),
+                      avatar: artisanPhotoSource(artisan.photoUrl, artisan.imageKey),
                     }}
                     onPress={() =>
                       router.push({
@@ -611,7 +601,14 @@ export default function Home() {
               activeOpacity={0.9}
               accessibilityRole="button"
               accessibilityLabel="Earn as an artisan on Servika Pro"
-              onPress={() => router.push('/pro/onboarding')}
+              // The artisan surface is the separate Servika Pro app now; until
+              // it's on the stores, this card explains where to earn.
+              onPress={() =>
+                Alert.alert(
+                  'Servika Pro',
+                  'Artisans work from the Servika Pro app — get verified, receive jobs near you and cash out your earnings. Coming to the app stores soon.',
+                )
+              }
               style={{
                 backgroundColor: '#0F172A',
                 shadowColor: '#0F172A',

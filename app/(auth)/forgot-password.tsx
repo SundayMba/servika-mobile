@@ -3,15 +3,14 @@ import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
 import {
-  KeyboardAvoidingView,
-  Platform,
   ScrollView,
   Text,
   type TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -22,6 +21,7 @@ type Step = 'request' | 'reset';
 
 export default function ForgotPassword() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   const [step, setStep] = useState<Step>('request');
   const [identifier, setIdentifier] = useState('');
@@ -112,42 +112,60 @@ export default function ForgotPassword() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={['top', 'bottom']}>
-      <StatusBar style="dark" />
+    <View className="flex-1 bg-primary">
+      <StatusBar style="light" />
 
-      {/* Back */}
-      <View className="h-12 justify-center px-5">
+      {/* ── Brand-orange canopy (same language as login/register) ── */}
+      <View
+        style={{ paddingTop: insets.top + 12 }}
+        className="overflow-hidden bg-primary px-6 pb-14"
+      >
+        {/* Soft decorative circles */}
+        <View
+          pointerEvents="none"
+          className="absolute -right-12 -top-12 h-44 w-44 rounded-full bg-white/10"
+        />
+        <View
+          pointerEvents="none"
+          className="absolute -left-16 top-20 h-36 w-36 rounded-full bg-white/10"
+        />
+
+        {/* Back */}
         <TouchableOpacity
           accessibilityRole="button"
           accessibilityLabel="Go back"
           hitSlop={8}
           onPress={() => router.back()}
-          className="h-10 w-10 items-center justify-center rounded-full bg-gray-50"
+          className="h-10 w-10 items-center justify-center rounded-full bg-white/20"
         >
-          <Ionicons name="chevron-back" size={22} color={colors.textPrimary} />
+          <Ionicons name="chevron-back" size={22} color="#FFFFFF" />
         </TouchableOpacity>
+
+        <Text className="mt-5 text-[27px] font-bold text-white">
+          {step === 'request' ? 'Forgot password?' : 'Reset password'}
+        </Text>
+        <Text className="mt-1.5 text-[14px] leading-5 text-white/85">
+          {step === 'request'
+            ? 'Enter your email or phone and we’ll send you a reset code.'
+            : 'Enter the code we sent and choose a new password.'}
+        </Text>
       </View>
 
+      {/* ── White sheet curving up into the orange ── */}
       <KeyboardAvoidingView
-        className="flex-1"
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        className="-mt-7 flex-1"
+        behavior="padding"
       >
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
-          className="px-6"
-        >
-          {/* Heading */}
-          <Text className="text-center text-[26px] font-bold text-gray-900">
-            {step === 'request' ? 'Forgot password?' : 'Reset password'}
-          </Text>
-          <Text className="mb-7 mt-2 text-center text-[14px] leading-5 text-gray-500">
-            {step === 'request'
-              ? 'Enter your email or phone and we’ll send you a reset code.'
-              : 'Enter the code we sent and choose a new password.'}
-          </Text>
-
+        <View className="flex-1 overflow-hidden rounded-t-[32px] bg-white">
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{
+              paddingHorizontal: 24,
+              paddingTop: 28,
+              paddingBottom: Math.max(insets.bottom, 16) + 16,
+            }}
+          >
           {notice ? (
             <View className="mb-4 flex-row items-start gap-2 rounded-2xl border border-blue-100 bg-blue-50/60 px-4 py-3">
               <Ionicons
@@ -258,8 +276,9 @@ export default function ForgotPassword() {
               </TouchableOpacity>
             </View>
           )}
-        </ScrollView>
+          </ScrollView>
+        </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }

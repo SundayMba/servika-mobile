@@ -13,7 +13,7 @@ import { authErrorMessage } from '@/lib/api/auth';
 import { formatDate } from '@/lib/booking/display';
 import { useCreateBooking } from '@/lib/booking/hooks';
 import type { CreateBookingRequest, Urgency } from '@/lib/booking/types';
-import { artisanAvatar, formatNaira } from '@/lib/catalogue/assets';
+import { artisanPhotoSource, formatNaira } from '@/lib/catalogue/assets';
 import { useArtisan } from '@/lib/catalogue/hooks';
 
 function Section({
@@ -140,10 +140,10 @@ export default function BookingSummary() {
     }
   };
 
-  const avatar = artisan ? artisanAvatar(artisan.imageKey) : undefined;
+  const avatar = artisan ? artisanPhotoSource(artisan.photoUrl, artisan.imageKey) : undefined;
 
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-background" edges={['top', 'bottom']}>
       <StatusBar style="dark" />
 
       {/* Header */}

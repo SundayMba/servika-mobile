@@ -8,7 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '@/constants/colors';
 import { authErrorMessage } from '@/lib/api/auth';
 import { useCompleteBooking, useJobCompletion } from '@/lib/booking/hooks';
-import { artisanAvatar } from '@/lib/catalogue/assets';
+import { artisanPhotoSource } from '@/lib/catalogue/assets';
 import { useArtisan } from '@/lib/catalogue/hooks';
 
 /**
@@ -34,7 +34,7 @@ export default function ServiceCompletion() {
   const name = artisan?.fullName || params.name || 'Your artisan';
   const specialty = artisan?.specialty || 'Artisan';
   const serviceName = params.serviceName || 'your job';
-  const avatar = artisanAvatar(artisan?.imageKey ?? '');
+  const avatar = artisanPhotoSource(artisan?.photoUrl, artisan?.imageKey);
   const alreadyCompleted = completion?.status === 'Completed';
 
   const goRate = () =>
@@ -60,7 +60,7 @@ export default function ServiceCompletion() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-background" edges={['top', 'bottom']}>
       <StatusBar style="dark" />
 
       <View className="flex-row items-center justify-center px-5 py-2">

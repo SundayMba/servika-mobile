@@ -109,7 +109,7 @@ export default function Settings() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-background" edges={['top', 'bottom']}>
       <StatusBar style="dark" />
 
       {/* Header */}
@@ -167,20 +167,6 @@ export default function Settings() {
             last
           />
         </MenuSection>
-
-        {/* Dev-only: preview the artisan ("Servika Pro") app without an artisan
-            account. In production, role-based routing (app/index.tsx) sends real
-            Artisan accounts straight to /pro/dashboard instead. */}
-        {__DEV__ ? (
-          <MenuSection title="Developer">
-            <MenuRow
-              icon="construct-outline"
-              label="Open Artisan App (Pro)"
-              onPress={() => router.push('/pro/onboarding')}
-              last
-            />
-          </MenuSection>
-        ) : null}
 
         <Pressable
           accessibilityRole="button"

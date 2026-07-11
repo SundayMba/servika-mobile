@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { AuthPromptSheet } from '@/components/AuthPromptSheet';
 import { TabBar } from '@/components/navigation/TabBar';
 import { useAuth } from '@/lib/auth/AuthContext';
+import { useNotificationsRealtime } from '@/lib/notifications/realtime';
 
 // Tabs a guest can't open without an account. Home and Explore stay open
 // so guests can keep browsing; once signed in, everything unlocks.
@@ -17,6 +18,9 @@ export default function TabsLayout() {
   const { status } = useAuth();
   const isAuthenticated = status === 'authenticated';
   const [authPromptVisible, setAuthPromptVisible] = useState(false);
+  // Live notifications while in the app — booking updates, payments, chat
+  // nudges land instantly (no polling wait).
+  useNotificationsRealtime();
 
   return (
     <>

@@ -20,7 +20,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SearchSheet } from '@/components/SearchSheet';
 import { LocationSheet } from '@/components/home/LocationSheet';
 import { colors } from '@/constants/colors';
-import { artisanAvatar } from '@/lib/catalogue/assets';
+import { artisanPhotoSource } from '@/lib/catalogue/assets';
 import { useCategories, useExploreArtisans } from '@/lib/catalogue/hooks';
 import type { ArtisanSummary } from '@/lib/catalogue/types';
 import {
@@ -154,7 +154,7 @@ function ArtisanRow({
   /** Centre the map on this artisan's pin (only offered when they have one). */
   onLocate?: () => void;
 }) {
-  const avatar = artisanAvatar(artisan.imageKey);
+  const avatar = artisanPhotoSource(artisan.photoUrl, artisan.imageKey);
   return (
     <Pressable
       accessibilityRole="button"
@@ -490,9 +490,9 @@ export default function Explore() {
         >
           <View className="flex-row items-center gap-3">
             <View className="h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-primary">
-              {artisanAvatar(selected.imageKey) ? (
+              {artisanPhotoSource(selected.photoUrl, selected.imageKey) ? (
                 <Image
-                  source={artisanAvatar(selected.imageKey)}
+                  source={artisanPhotoSource(selected.photoUrl, selected.imageKey)}
                   style={{ height: '100%', width: '100%' }}
                 />
               ) : (

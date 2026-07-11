@@ -99,7 +99,7 @@ export default function ActiveBookingDashboard() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-background" edges={['top', 'bottom']}>
       <StatusBar style="dark" />
 
       {/* Header */}
@@ -192,6 +192,7 @@ export default function ActiveBookingDashboard() {
             rating={artisan?.rating ?? 0}
             jobsCount={artisan?.jobsCount ?? ''}
             imageKey={artisan?.imageKey ?? ''}
+            photoUrl={artisan?.photoUrl}
             right={
               <Pressable
                 onPress={openChat}

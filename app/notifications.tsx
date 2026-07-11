@@ -49,9 +49,8 @@ function iconFor(type: NotificationType): {
  */
 export default function Notifications() {
   const router = useRouter();
-  const { status, user } = useAuth();
+  const { status } = useAuth();
   const isAuthenticated = status === 'authenticated';
-  const isArtisan = user?.role === 'Artisan';
 
   const query = useNotifications({ enabled: isAuthenticated });
   const markRead = useMarkNotificationRead();
@@ -70,18 +69,11 @@ export default function Notifications() {
       router.push({ pathname: '/chat/[id]', params: { id: n.conversationId } });
       return;
     }
-    // Open-job broadcasts (artisan) open the available-jobs pool, not a specific job.
-    if (n.type === 'OpenJob') {
-      router.push('/pro/available-jobs');
-      return;
-    }
+    // Open-job broadcasts target artisans — their pool lives in the Servika Pro
+    // app now, so here the tap just marks it read.
+    if (n.type === 'OpenJob') return;
     if (!n.bookingId) return;
-    // Artisans open the job in their Pro surface; customers open the booking.
-    if (isArtisan) {
-      router.push({ pathname: '/pro/job/[id]', params: { id: n.bookingId } });
-      return;
-    }
-    // Customer booking updates open the active-booking dashboard, which jumps
+    // Booking updates open the active-booking dashboard, which jumps
     // straight to the live map when the artisan is en route (and to the detail once
     // done). Payment/other notifications open the booking detail.
     if (n.type === 'Booking') {
@@ -95,7 +87,7 @@ export default function Notifications() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-background" edges={['top', 'bottom']}>
       <StatusBar style="dark" />
 
       {/* Header */}

@@ -3,16 +3,16 @@ import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useRef, useState } from 'react';
 import {
-  KeyboardAvoidingView,
-  Platform,
   ScrollView,
   Text,
   type TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { GoogleAuthButton } from '@/components/GoogleAuthButton';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { VerifyEmailSheet } from '@/components/VerifyEmailSheet';
@@ -21,6 +21,7 @@ import { useAuth } from '@/lib/auth/AuthContext';
 
 export default function Login() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { signIn } = useAuth();
 
   const [identifier, setIdentifier] = useState('');
@@ -60,116 +61,132 @@ export default function Login() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={['top', 'bottom']}>
-      <StatusBar style="dark" />
-      <KeyboardAvoidingView
-        className="flex-1"
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
-          className="px-6"
-        >
-          {/* Hero */}
-          <View className="mb-6 h-44 overflow-hidden rounded-3xl bg-background">
-            <Image
-              source={require('@assets/images/artisans/working/plumber_fixing_sink_pipes_with_wrench.png')}
-              contentFit="cover"
-              contentPosition="top"
-              style={{ flex: 1 }}
-            />
-          </View>
+    <View className="flex-1 bg-primary">
+      <StatusBar style="light" />
 
-          {/* Brand */}
-          <View className="mb-5 flex-row items-center justify-center gap-2">
+      {/* ── Brand-orange canopy: spans through the status bar, the white sheet
+          below curves up over it (same language as Home) ── */}
+      <View
+        style={{ paddingTop: insets.top + 18 }}
+        className="overflow-hidden bg-primary px-6 pb-14"
+      >
+        {/* Soft decorative circles */}
+        <View
+          pointerEvents="none"
+          className="absolute -right-12 -top-12 h-44 w-44 rounded-full bg-white/10"
+        />
+        <View
+          pointerEvents="none"
+          className="absolute -left-16 top-20 h-36 w-36 rounded-full bg-white/10"
+        />
+
+        <View className="flex-row items-center gap-2.5">
+          <View className="h-11 w-11 items-center justify-center rounded-2xl bg-white">
             <Image
               source={require('@assets/images/logo/app-icon.png')}
-              style={{ height: 28, width: 28 }}
+              style={{ height: 30, width: 30 }}
               contentFit="contain"
             />
-            <Text className="text-[18px] font-bold text-gray-900">Servika</Text>
           </View>
+          <Text className="text-[17px] font-bold text-white">Servika</Text>
+        </View>
 
-          {/* Heading */}
-          <Text className="text-center text-[26px] font-bold text-gray-900">
-            Welcome back 👋
-          </Text>
-          <Text className="mb-7 mt-2 text-center text-[14px] leading-5 text-gray-500">
-            Sign in to continue with Servika.
-          </Text>
+        <Text className="mt-6 text-[27px] font-bold text-white">
+          Welcome back 👋
+        </Text>
+        <Text className="mt-1.5 text-[14px] leading-5 text-white/85">
+          Sign in to continue with Servika.
+        </Text>
+      </View>
 
-          {/* Form */}
-          <View className="gap-4">
-            <Input
-              label="Email or phone"
-              icon="mail-outline"
-              placeholder="Enter your email or phone"
-              value={identifier}
-              onChangeText={setIdentifier}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              returnKeyType="next"
-              onSubmitEditing={() => passwordRef.current?.focus()}
-            />
-            <View>
+      {/* ── White sheet curving up into the orange ── */}
+      <KeyboardAvoidingView
+        className="-mt-7 flex-1"
+        behavior="padding"
+      >
+        <View className="flex-1 overflow-hidden rounded-t-[32px] bg-white">
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{
+              paddingHorizontal: 24,
+              paddingTop: 28,
+              paddingBottom: Math.max(insets.bottom, 16) + 16,
+            }}
+          >
+            {/* Form */}
+            <View className="gap-4">
               <Input
-                ref={passwordRef}
-                label="Password"
-                icon="lock-closed-outline"
-                placeholder="Enter your password"
-                value={password}
-                onChangeText={setPassword}
-                password
+                label="Email or phone"
+                icon="mail-outline"
+                placeholder="Enter your email or phone"
+                value={identifier}
+                onChangeText={setIdentifier}
+                keyboardType="email-address"
                 autoCapitalize="none"
-                returnKeyType="done"
-                onSubmitEditing={handleSignIn}
+                returnKeyType="next"
+                onSubmitEditing={() => passwordRef.current?.focus()}
               />
+              <View>
+                <Input
+                  ref={passwordRef}
+                  label="Password"
+                  icon="lock-closed-outline"
+                  placeholder="Enter your password"
+                  value={password}
+                  onChangeText={setPassword}
+                  password
+                  autoCapitalize="none"
+                  returnKeyType="done"
+                  onSubmitEditing={handleSignIn}
+                />
+                <TouchableOpacity
+                  hitSlop={8}
+                  className="mt-2 self-end"
+                  onPress={() => router.push('/forgot-password')}
+                >
+                  <Text className="text-[13px] font-semibold text-primary">
+                    Forgot Password?
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Error */}
+            {error ? (
+              <Text className="mt-4 text-center text-[13px] font-medium text-red-500">
+                {error}
+              </Text>
+            ) : null}
+
+            {/* Submit */}
+            <View className="mt-5">
+              <Button
+                label="Sign in"
+                onPress={handleSignIn}
+                loading={submitting}
+              />
+            </View>
+
+            {/* Google sign-in (renders only when the OAuth client id is configured) */}
+            <GoogleAuthButton />
+
+            {/* Footer */}
+            <View className="mt-7 flex-row items-center justify-center gap-1">
+              <Text className="text-[14px] text-gray-500">
+                Don&apos;t have an account?
+              </Text>
               <TouchableOpacity
                 hitSlop={8}
-                className="mt-2 self-end"
-                onPress={() => router.push('/forgot-password')}
+                onPress={() => router.replace('/register')}
               >
-                <Text className="text-[13px] font-semibold text-primary">
-                  Forgot Password?
+                <Text className="text-[14px] font-bold text-primary">
+                  Create account
                 </Text>
               </TouchableOpacity>
             </View>
-          </View>
-
-          {/* Error */}
-          {error ? (
-            <Text className="mt-4 text-center text-[13px] font-medium text-red-500">
-              {error}
-            </Text>
-          ) : null}
-
-          {/* Submit */}
-          <View className="mt-5">
-            <Button
-              label="Sign in"
-              onPress={handleSignIn}
-              loading={submitting}
-            />
-          </View>
-
-
-          {/* Footer */}
-          <View className="flex-row items-center justify-center gap-1">
-            <Text className="text-[14px] text-gray-500">
-              Don&apos;t have an account?
-            </Text>
-            <TouchableOpacity
-              hitSlop={8}
-              onPress={() => router.replace('/register')}
-            >
-              <Text className="text-[14px] font-bold text-primary">
-                Create account
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
+          </ScrollView>
+        </View>
       </KeyboardAvoidingView>
 
       {/* Unverified account → finish email verification, then home. */}
@@ -182,6 +199,6 @@ export default function Login() {
           router.replace('/home');
         }}
       />
-    </SafeAreaView>
+    </View>
   );
 }

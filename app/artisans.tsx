@@ -10,7 +10,7 @@ import { AuthPromptSheet } from '@/components/AuthPromptSheet';
 import { SearchSheet } from '@/components/SearchSheet';
 import { colors } from '@/constants/colors';
 import { useAuthGate } from '@/lib/auth/useAuthGate';
-import { artisanAvatar } from '@/lib/catalogue/assets';
+import { artisanPhotoSource } from '@/lib/catalogue/assets';
 import type { ArtisanSummary } from '@/lib/catalogue/types';
 import { useNearbyArtisans } from '@/lib/catalogue/hooks';
 import { useOpenChat } from '@/lib/chat/hooks';
@@ -46,7 +46,7 @@ function ArtisanRow({
       <View className="flex-row gap-3">
         <View className="h-20 w-20 overflow-hidden rounded-xl bg-background">
           <Image
-            source={artisanAvatar(artisan.imageKey)}
+            source={artisanPhotoSource(artisan.photoUrl, artisan.imageKey)}
             contentFit="cover"
             contentPosition="top"
             style={{ flex: 1 }}
@@ -146,7 +146,7 @@ export default function ArtisansList() {
   const artisans = artisansQuery.data ?? [];
 
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-background" edges={['top', 'bottom']}>
       <StatusBar style="dark" />
 
       {/* Header */}

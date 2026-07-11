@@ -73,7 +73,7 @@ export default function Categories() {
   const { data: categories, isLoading, isError } = useCategories();
 
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-background" edges={['top', 'bottom']}>
       {/* Header */}
       <View className="flex-row items-center justify-between px-5 pb-3 pt-2">
         <View className="flex-row items-center gap-3">

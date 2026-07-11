@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { Fragment } from 'react';
 import { Text, View } from 'react-native';
 
 import { colors } from '@/constants/colors';
@@ -6,14 +7,14 @@ import { colors } from '@/constants/colors';
 const STEPS = ['Details', 'Location', 'Confirm'];
 
 /**
- * Three-step progress header for the booking flow.
+ * Three-step progress header for the booking flow, centered as a group.
  * `current` is 1-based (1 = Details, 2 = Location, 3 = Confirm).
  */
 export function BookingSteps({ current }: { current: number }) {
   const currentStep = Math.max(1, Math.min(current, STEPS.length));
 
   return (
-    <View className="flex-row items-start px-2">
+    <View className="flex-row items-start justify-center">
       {STEPS.map((label, index) => {
         const step = index + 1;
         const done = step < currentStep;
@@ -21,8 +22,8 @@ export function BookingSteps({ current }: { current: number }) {
         const isLast = index === STEPS.length - 1;
 
         return (
-          <View key={label} className="flex-1 flex-row items-start">
-            <View className="items-center" style={{ width: 56 }}>
+          <Fragment key={label}>
+            <View className="items-center" style={{ width: 64 }}>
               <View
                 className={
                   active || done
@@ -55,16 +56,15 @@ export function BookingSteps({ current }: { current: number }) {
               </Text>
             </View>
 
+            {/* Fixed-width connectors keep the whole group symmetric/centred. */}
             {!isLast ? (
               <View
                 className={
-                  done
-                    ? 'mt-3.5 h-0.5 flex-1 bg-primary'
-                    : 'mt-3.5 h-0.5 flex-1 bg-gray-200'
+                  done ? 'mt-3.5 h-0.5 w-9 bg-primary' : 'mt-3.5 h-0.5 w-9 bg-gray-200'
                 }
               />
             ) : null}
-          </View>
+          </Fragment>
         );
       })}
     </View>

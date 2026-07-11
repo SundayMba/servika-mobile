@@ -6,7 +6,7 @@ import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 
 import { BottomSheet } from '@/components/BottomSheet';
 import { colors } from '@/constants/colors';
-import { artisanAvatar } from '@/lib/catalogue/assets';
+import { artisanPhotoSource } from '@/lib/catalogue/assets';
 import { useCategories, useNearbyArtisans } from '@/lib/catalogue/hooks';
 
 type SearchSheetProps = {
@@ -149,7 +149,7 @@ export function SearchSheet({ visible, onClose }: SearchSheetProps) {
               >
                 <View className="h-10 w-10 overflow-hidden rounded-full bg-background">
                   <Image
-                    source={artisanAvatar(a.imageKey)}
+                    source={artisanPhotoSource(a.photoUrl, a.imageKey)}
                     contentFit="cover"
                     contentPosition="top"
                     style={{ flex: 1 }}

@@ -4,7 +4,7 @@ import { Text, View } from 'react-native';
 import Svg, { Circle, Line, Path, Rect } from 'react-native-svg';
 
 import { colors } from '@/constants/colors';
-import { artisanAvatar } from '@/lib/catalogue/assets';
+import { artisanPhotoSource } from '@/lib/catalogue/assets';
 
 /**
  * Stylised map placeholder for the tracking screens. There's no map SDK yet
@@ -14,12 +14,14 @@ import { artisanAvatar } from '@/lib/catalogue/assets';
  */
 export function MapPlaceholder({
   imageKey,
+  photoUrl,
   arrived = false,
 }: {
   imageKey: string;
+  photoUrl?: string | null;
   arrived?: boolean;
 }) {
-  const avatar = artisanAvatar(imageKey);
+  const avatar = artisanPhotoSource(photoUrl, imageKey);
   return (
     <View className="flex-1 overflow-hidden">
       <Svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">
@@ -139,6 +141,7 @@ export function ArtisanRow({
   rating,
   jobsCount,
   imageKey,
+  photoUrl,
   right,
 }: {
   name: string;
@@ -146,9 +149,10 @@ export function ArtisanRow({
   rating: number;
   jobsCount: string;
   imageKey: string;
+  photoUrl?: string | null;
   right?: React.ReactNode;
 }) {
-  const avatar = artisanAvatar(imageKey);
+  const avatar = artisanPhotoSource(photoUrl, imageKey);
   return (
     <View className="flex-row items-center">
       {avatar ? (

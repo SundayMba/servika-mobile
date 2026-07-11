@@ -1,5 +1,6 @@
 import { type ReactNode, useEffect, useRef, useState } from 'react';
-import { KeyboardAvoidingView, Modal, Platform, Pressable, View } from 'react-native';
+import { Modal, Pressable, View } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import Animated, {
   Easing,
   runOnJS,
@@ -131,7 +132,7 @@ export function BottomSheet({
             size itself) but stays `box-none` so taps in the gap above the sheet
             still reach the backdrop and dismiss. */}
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          behavior="padding"
           pointerEvents={fill ? 'box-none' : undefined}
           style={fill ? { flex: 1, justifyContent: 'flex-end' } : undefined}
         >

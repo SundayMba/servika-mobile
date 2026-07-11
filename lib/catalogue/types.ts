@@ -31,9 +31,16 @@ export interface ArtisanSummary {
    * shared a location yet (they appear in lists but not on the map). */
   latitude: number | null;
   longitude: number | null;
+  /** API path of the artisan's uploaded photo (relative, e.g.
+   * "/api/v1/artisans/{id}/photo"), or null — fall back to the bundled
+   * `imageKey` art, then to an initials placeholder. */
+  photoUrl: string | null;
 }
 
 export interface ArtisanDetail extends ArtisanSummary {
+  /** API path of the artisan's uploaded cover photo (a shot of them at work),
+   * or null — fall back to the profile photo, then bundled art. */
+  coverPhotoUrl: string | null;
   experienceYears: number;
   location: string;
   responseTime: string;

@@ -2,6 +2,7 @@ import '@/global.css';
 import { Stack } from 'expo-router';
 import * as ExpoSplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SplashScreen } from '../components/SplashScreen';
 import { colors } from '@/constants/colors';
 import { QueryProvider } from '@/lib/query/QueryProvider';
@@ -38,6 +39,7 @@ export default function RootLayout() {
   }
 
   return (
+    <KeyboardProvider>
     <QueryProvider>
       <AuthProvider>
         <Stack
@@ -61,5 +63,6 @@ export default function RootLayout() {
         <ApiStatusBadge />
       </AuthProvider>
     </QueryProvider>
+    </KeyboardProvider>
   );
 }

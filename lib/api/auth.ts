@@ -39,6 +39,16 @@ export async function login(body: LoginRequest): Promise<LoginResponse> {
   return data;
 }
 
+/**
+ * Sign in (or sign up) with Google. Takes the ID token from the native Google
+ * sign-in flow; the server verifies it with Google and returns a full session —
+ * no OTP step (Google already verified the email).
+ */
+export async function googleLogin(idToken: string): Promise<AuthResponse> {
+  const { data } = await apiClient.post<AuthResponse>(`${BASE}/google`, { idToken });
+  return data;
+}
+
 /** Revokes the refresh token server-side. Idempotent — safe to call anytime. */
 export async function updateProfile(body: {
   fullName: string;

@@ -2,15 +2,12 @@ import * as Notifications from 'expo-notifications';
 import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
 
-import { tokenStorage } from '@/lib/auth/tokenStorage';
-
 /**
  * Opens the relevant screen when a push notification is tapped — both when the app
  * is already running and on a cold start launched from a notification. Notification
  * `data` carries `conversationId` (chat) or `bookingId` (booking/payment), set by the
- * backend push dispatcher. Chat opens the thread; otherwise artisans are sent to their
- * Pro job screen and customers to the booking. (Runs above the auth context, so the
- * role comes from the cached session in secure storage.)
+ * backend push dispatcher. Chat opens the thread; anything booking-shaped opens the
+ * booking detail (the artisan surface is the separate Servika Pro app).
  */
 export function useNotificationObserver() {
   const router = useRouter();
@@ -32,14 +29,7 @@ export function useNotificationObserver() {
       const bookingId = data?.bookingId;
       if (typeof bookingId !== 'string' || bookingId.length === 0) return;
       if (!mounted) return;
-
-      const user = await tokenStorage.getUser();
-      if (!mounted) return;
-      if (user?.role === 'Artisan') {
-        router.push({ pathname: '/pro/job/[id]', params: { id: bookingId } });
-      } else {
-        router.push({ pathname: '/booking/[id]', params: { id: bookingId } });
-      }
+      router.push({ pathname: '/booking/[id]', params: { id: bookingId } });
     };
 
     // Cold start: app launched by tapping a notification.

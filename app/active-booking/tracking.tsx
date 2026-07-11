@@ -125,7 +125,7 @@ export default function LiveTracking() {
   })();
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-100" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-gray-100" edges={['top', 'bottom']}>
       <StatusBar style="dark" />
 
       {/* Top bar */}
@@ -177,6 +177,7 @@ export default function LiveTracking() {
           rating={artisan?.rating ?? 0}
           jobsCount={artisan?.jobsCount ?? ''}
           imageKey={imageKey}
+          photoUrl={artisan?.photoUrl}
           right={
             eta != null ? (
               <View className="items-end">
@@ -209,6 +210,7 @@ export default function LiveTracking() {
             rating={artisan?.rating ?? 0}
             jobsCount={artisan?.jobsCount ?? ''}
             imageKey={imageKey}
+            photoUrl={artisan?.photoUrl}
           />
         </View>
         <View className="mt-4 flex-row gap-3">

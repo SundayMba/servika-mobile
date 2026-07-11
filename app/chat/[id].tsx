@@ -4,7 +4,6 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  KeyboardAvoidingView,
   Platform,
   Pressable,
   ScrollView,
@@ -12,7 +11,11 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 
 import { colors } from '@/constants/colors';
 import { useAuth } from '@/lib/auth/AuthContext';
@@ -39,6 +42,7 @@ function messageTime(iso: string) {
 
 export default function ChatScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const params = useLocalSearchParams<{ id?: string; name?: string; artisanId?: string }>();
   // The `id` route param is the conversation id (customer↔artisan thread).
@@ -122,7 +126,7 @@ export default function ChatScreen() {
 
       <KeyboardAvoidingView
         className="flex-1"
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior="padding"
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
         {isLoading ? (
@@ -175,8 +179,11 @@ export default function ChatScreen() {
           </ScrollView>
         )}
 
-        {/* Input */}
-        <View className="flex-row items-center gap-2 border-t border-gray-100 px-4 py-2">
+        {/* Input — bottom-inset so the Android gesture bar never covers it. */}
+        <View
+          style={{ paddingBottom: Math.max(insets.bottom, 8) }}
+          className="flex-row items-center gap-2 border-t border-gray-100 px-4 pt-2"
+        >
           <TextInput
             value={draft}
             onChangeText={setDraft}

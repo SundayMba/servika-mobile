@@ -1,6 +1,8 @@
 import type { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { ImageSourcePropType } from 'react-native';
 
+import { config } from '@/lib/config';
+
 /**
  * Bundled-artwork resolvers for the catalogue. The API sends stable string keys
  * (category `slug`, artisan `imageKey`, gallery keys) and the client maps them to
@@ -68,6 +70,36 @@ export function artisanAvatar(imageKey: string): ImageSourcePropType | undefined
 
 export function artisanCover(imageKey: string): ImageSourcePropType | undefined {
   return ARTISAN_COVERS[imageKey] ?? ARTISAN_AVATARS[imageKey];
+}
+
+/**
+ * Resolves an artisan's display image. The photo they uploaded from the Pro app
+ * (served by the API at `photoUrl`) wins; otherwise the bundled `imageKey` art
+ * (seed-era artisans); undefined → the caller renders its initials placeholder.
+ * The same photo doubles as avatar and profile cover.
+ */
+export function artisanPhotoSource(
+  photoUrl: string | null | undefined,
+  imageKey?: string,
+  cover = false,
+): ImageSourcePropType | undefined {
+  if (photoUrl) return { uri: `${config.apiBaseUrl}${photoUrl}` };
+  if (!imageKey) return undefined;
+  return cover ? artisanCover(imageKey) : artisanAvatar(imageKey);
+}
+
+/**
+ * Resolves the profile-header cover image. The dedicated cover photo (them at
+ * work) wins; then the profile photo; then bundled art; undefined → the screen
+ * renders its branded initials cover.
+ */
+export function artisanCoverSource(
+  coverPhotoUrl: string | null | undefined,
+  photoUrl: string | null | undefined,
+  imageKey?: string,
+): ImageSourcePropType | undefined {
+  if (coverPhotoUrl) return { uri: `${config.apiBaseUrl}${coverPhotoUrl}` };
+  return artisanPhotoSource(photoUrl, imageKey, true);
 }
 
 export function galleryImages(keys: string[]): ImageSourcePropType[] {

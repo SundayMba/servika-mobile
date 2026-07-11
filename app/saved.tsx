@@ -7,12 +7,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { colors } from '@/constants/colors';
 import { useAuth } from '@/lib/auth/AuthContext';
-import { artisanAvatar } from '@/lib/catalogue/assets';
+import { artisanPhotoSource } from '@/lib/catalogue/assets';
 import type { ArtisanSummary } from '@/lib/catalogue/types';
 import { useFavorites } from '@/lib/favorites/hooks';
 
 function SavedRow({ artisan, onPress }: { artisan: ArtisanSummary; onPress: () => void }) {
-  const avatar = artisanAvatar(artisan.imageKey);
+  const avatar = artisanPhotoSource(artisan.photoUrl, artisan.imageKey);
   return (
     <Pressable
       accessibilityRole="button"
@@ -47,7 +47,7 @@ export default function SavedArtisans() {
   const { data, isLoading } = useFavorites({ enabled: signedIn });
 
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-background" edges={['top', 'bottom']}>
       <StatusBar style="dark" />
 
       {/* Header */}

@@ -16,7 +16,7 @@ import { AuthPromptSheet } from '@/components/AuthPromptSheet';
 import { SearchSheet } from '@/components/SearchSheet';
 import { colors } from '@/constants/colors';
 import { useAuthGate } from '@/lib/auth/useAuthGate';
-import { artisanAvatar } from '@/lib/catalogue/assets';
+import { artisanPhotoSource } from '@/lib/catalogue/assets';
 import { useCategories, useCategoryArtisans } from '@/lib/catalogue/hooks';
 import type { ArtisanSummary } from '@/lib/catalogue/types';
 
@@ -27,7 +27,7 @@ function ArtisanRow({
   artisan: ArtisanSummary;
   onPress: () => void;
 }) {
-  const avatar = artisanAvatar(artisan.imageKey);
+  const avatar = artisanPhotoSource(artisan.photoUrl, artisan.imageKey);
   return (
     <Pressable
       accessibilityRole="button"
@@ -101,7 +101,7 @@ export default function CategoryListing() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-background" edges={['top', 'bottom']}>
       <StatusBar style="dark" />
 
       {/* Header */}
