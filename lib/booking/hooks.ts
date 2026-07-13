@@ -1,10 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import {
+  acceptBid,
   cancelBooking,
   completeBooking,
   createBooking,
   getBooking,
+  getBookingBids,
   getBookings,
   getJobCompletion,
 } from '@/lib/api/bookings';
@@ -72,5 +74,32 @@ export function useJobCompletion(id: string | undefined) {
     queryKey: ['job-completion', id],
     queryFn: () => getJobCompletion(id as string),
     enabled: !!id,
+  });
+}
+
+/** The bids on an open RemoteQuote request (polled — offers trickle in). */
+export function useBookingBids(
+  bookingId: string | undefined,
+  options?: { enabled?: boolean },
+) {
+  return useQuery({
+    queryKey: ['booking-bids', bookingId],
+    queryFn: () => getBookingBids(bookingId as string),
+    enabled: (options?.enabled ?? true) && !!bookingId,
+    refetchInterval: 30_000,
+  });
+}
+
+/** Accept a bid → the booking becomes Accepted with that artisan. */
+export function useAcceptBid() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ bookingId, bidId }: { bookingId: string; bidId: string }) =>
+      acceptBid(bookingId, bidId),
+    onSuccess: (booking) => {
+      queryClient.setQueryData(['booking', booking.id], booking);
+      queryClient.invalidateQueries({ queryKey: ['bookings'] });
+      queryClient.invalidateQueries({ queryKey: ['booking-bids', booking.id] });
+    },
   });
 }

@@ -11,6 +11,7 @@ import { colors } from '@/constants/colors';
 import { authErrorMessage } from '@/lib/api/auth';
 import { initializePayment } from '@/lib/api/payments';
 import { useCreateBooking } from '@/lib/booking/hooks';
+import { bookingMedia } from '@/lib/booking/mediaStore';
 import type { CreateBookingRequest, Urgency } from '@/lib/booking/types';
 import { formatNaira } from '@/lib/catalogue/assets';
 
@@ -85,7 +86,12 @@ export default function BookingPayment() {
     setSubmitting(true);
     try {
       // 1. File the booking (created in Pending).
-      const booking = await createBooking(body);
+      const booking = await createBooking({
+        ...body,
+        mediaBase64: bookingMedia.get().photosBase64,
+        videoBase64: bookingMedia.get().videoBase64,
+      });
+      bookingMedia.reset();
 
       // 2. For gateway methods, start the escrow payment and open the hosted
       //    checkout. The final result arrives asynchronously via the webhook, so

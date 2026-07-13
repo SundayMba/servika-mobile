@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import {
@@ -13,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/ui/Button';
 import { colors } from '@/constants/colors';
+import { config } from '@/lib/config';
 import { authErrorMessage } from '@/lib/api/auth';
 import {
   canCancel,
@@ -23,8 +25,13 @@ import {
   isTrackable,
   statusStyle,
 } from '@/lib/booking/display';
-import { useBooking, useCancelBooking } from '@/lib/booking/hooks';
-import type { BookingStatus } from '@/lib/booking/types';
+import {
+  useAcceptBid,
+  useBooking,
+  useBookingBids,
+  useCancelBooking,
+} from '@/lib/booking/hooks';
+import type { Bid, BookingStatus } from '@/lib/booking/types';
 import { formatNaira } from '@/lib/catalogue/assets';
 import { useBookingDispute } from '@/lib/disputes/hooks';
 import type { Dispute } from '@/lib/disputes/types';
@@ -130,6 +137,35 @@ export default function BookingDetailScreen() {
     booking?.status === 'Completed' ||
     booking?.status === 'Cancelled';
   const { data: dispute } = useBookingDispute(disputable ? id : undefined);
+  // Price offers — only relevant while an open bidding request awaits a pick.
+  const acceptingBids =
+    booking?.status === 'Open' && booking.assessmentMode === 'RemoteQuote';
+  const { data: bids } = useBookingBids(id, { enabled: !!acceptingBids });
+  const acceptBidMutation = useAcceptBid();
+
+  const confirmAcceptBid = (bid: Bid) => {
+    Alert.alert(
+      'Accept this offer?',
+      `${bid.artisanName} will do the job for ${formatNaira(bid.amountNaira)}.`,
+      [
+        { text: 'Not yet', style: 'cancel' },
+        {
+          text: 'Accept offer',
+          onPress: () =>
+            acceptBidMutation.mutate(
+              { bookingId: id, bidId: bid.id },
+              {
+                onError: (err) =>
+                  Alert.alert(
+                    'Could not accept',
+                    authErrorMessage(err, 'Please try again.'),
+                  ),
+              },
+            ),
+        },
+      ],
+    );
+  };
 
   const confirmCancel = () => {
     Alert.alert(
@@ -207,6 +243,103 @@ export default function BookingDetailScreen() {
             <Text className="mt-1 text-[13px] text-gray-500">
               with {booking.artisanName}
             </Text>
+          ) : null}
+
+          {acceptingBids ? (
+            <View className="mt-6">
+              <Text className="mb-2 text-[15px] font-bold text-gray-900">
+                Price offers{bids?.length ? ` (${bids.length})` : ''}
+              </Text>
+              {!bids || bids.length === 0 ? (
+                <View className="items-center rounded-2xl border border-gray-100 bg-white px-4 py-7">
+                  <Ionicons name="pricetags-outline" size={26} color={colors.textMuted} />
+                  <Text className="mt-2 text-[13px] font-semibold text-gray-700">
+                    Waiting for offers
+                  </Text>
+                  <Text className="mt-0.5 text-center text-[12px] leading-4 text-gray-400">
+                    Artisans are reviewing your photos — offers usually arrive
+                    within a few hours. We&apos;ll notify you.
+                  </Text>
+                </View>
+              ) : (
+                bids.map((bid) => (
+                  <View
+                    key={bid.id}
+                    className="mb-3 rounded-2xl border border-gray-100 bg-white p-4"
+                  >
+                    <View className="flex-row items-center">
+                      <View className="h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-primary/10">
+                        {bid.photoUrl ? (
+                          <Image
+                            source={{ uri: `${config.apiBaseUrl}${bid.photoUrl}` }}
+                            style={{ width: 44, height: 44 }}
+                            contentFit="cover"
+                          />
+                        ) : (
+                          <Text className="text-[15px] font-bold text-primary">
+                            {bid.artisanName.trim().charAt(0).toUpperCase()}
+                          </Text>
+                        )}
+                      </View>
+                      <View className="ml-3 flex-1">
+                        <View className="flex-row items-center gap-1.5">
+                          <Text className="text-[14px] font-bold text-gray-900">
+                            {bid.artisanName}
+                          </Text>
+                          {bid.hasCertificate ? (
+                            <Ionicons name="ribbon" size={14} color={colors.primary} />
+                          ) : null}
+                        </View>
+                        <View className="mt-0.5 flex-row items-center gap-1">
+                          <Ionicons name="star" size={12} color="#FBBF24" />
+                          <Text className="text-[12px] text-gray-500">
+                            {bid.rating.toFixed(1)} ({bid.reviewCount} reviews)
+                          </Text>
+                        </View>
+                      </View>
+                      <Text className="text-[17px] font-extrabold text-primary">
+                        {formatNaira(bid.amountNaira)}
+                      </Text>
+                    </View>
+                    {bid.materialsNote ? (
+                      <View className="mt-2.5 rounded-xl bg-background px-3 py-2">
+                        <Text className="text-[12px] leading-4 text-gray-600">
+                          <Text className="font-semibold">Needs: </Text>
+                          {bid.materialsNote}
+                        </Text>
+                      </View>
+                    ) : null}
+                    <View className="mt-3 flex-row gap-2.5">
+                      <Pressable
+                        accessibilityRole="button"
+                        onPress={() =>
+                          router.push({
+                            pathname: '/artisan/[id]',
+                            params: { id: bid.artisanId },
+                          })
+                        }
+                        className="h-11 flex-1 items-center justify-center rounded-xl border border-gray-200 active:opacity-70"
+                      >
+                        <Text className="text-[13px] font-semibold text-gray-700">
+                          View profile
+                        </Text>
+                      </Pressable>
+                      <Pressable
+                        accessibilityRole="button"
+                        disabled={acceptBidMutation.isPending}
+                        onPress={() => confirmAcceptBid(bid)}
+                        className="h-11 flex-1 items-center justify-center rounded-xl bg-primary active:opacity-80"
+                        style={acceptBidMutation.isPending ? { opacity: 0.6 } : undefined}
+                      >
+                        <Text className="text-[13px] font-bold text-white">
+                          Accept offer
+                        </Text>
+                      </Pressable>
+                    </View>
+                  </View>
+                ))
+              )}
+            </View>
           ) : null}
 
           <Section title="Job">

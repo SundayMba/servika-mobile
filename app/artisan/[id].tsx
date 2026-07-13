@@ -12,6 +12,7 @@ import {
 import { AuthPromptSheet } from '@/components/AuthPromptSheet';
 import { Button } from '@/components/ui/Button';
 import { colors } from '@/constants/colors';
+import { config } from '@/lib/config';
 import { useAuthGate } from '@/lib/auth/useAuthGate';
 import { useIsFavorite, useToggleFavorite } from '@/lib/favorites/hooks';
 import {
@@ -106,7 +107,11 @@ export default function ArtisanProfile() {
     artisan.imageKey,
   );
   const avatar = artisanPhotoSource(artisan.photoUrl, artisan.imageKey);
-  const gallery = galleryImages(artisan.galleryKeys);
+  // Uploaded work-evidence photos win; seed artisans fall back to bundled art.
+  const gallery =
+    artisan.galleryUrls.length > 0
+      ? artisan.galleryUrls.map((u) => ({ uri: `${config.apiBaseUrl}${u}` }))
+      : galleryImages(artisan.galleryKeys);
   const initials = artisan.fullName
     .split(/\s+/)
     .slice(0, 2)
@@ -217,7 +222,10 @@ export default function ArtisanProfile() {
                 label={`${artisan.experienceYears}+ years exp.`}
               />
               <View className="h-3.5 w-px bg-gray-200" />
-              <InfoStat icon="shield-checkmark-outline" label="Verified" />
+              <InfoStat
+                icon={artisan.hasCertificate ? 'ribbon-outline' : 'shield-checkmark-outline'}
+                label={artisan.hasCertificate ? 'Certified' : 'Verified'}
+              />
             </View>
           </View>
 
@@ -387,7 +395,8 @@ export default function ArtisanProfile() {
             )}
           </View>
 
-          {/* Work gallery */}
+          {/* Work gallery — hidden until there's something to show */}
+          {gallery.length === 0 ? null : (
           <View className="mt-7">
             <View className="mb-3 px-5">
               <Text className="text-[16px] font-bold text-gray-900">
@@ -413,6 +422,7 @@ export default function ArtisanProfile() {
               ))}
             </ScrollView>
           </View>
+          )}
         </View>
       </ScrollView>
 

@@ -12,6 +12,7 @@ import { colors } from '@/constants/colors';
 import { authErrorMessage } from '@/lib/api/auth';
 import { formatDate } from '@/lib/booking/display';
 import { useCreateBooking } from '@/lib/booking/hooks';
+import { bookingMedia } from '@/lib/booking/mediaStore';
 import type { CreateBookingRequest, Urgency } from '@/lib/booking/types';
 import { artisanPhotoSource, formatNaira } from '@/lib/catalogue/assets';
 import { useArtisan } from '@/lib/catalogue/hooks';
@@ -121,8 +122,14 @@ export default function BookingSummary() {
         locationLat: params.lat ? Number(params.lat) : null,
         locationLng: params.lng ? Number(params.lng) : null,
         locationInstructions: params.instructions || null,
+        // Job media + pricing mode from the photos step (module store — the
+        // base64 blobs are too big for route params).
+        assessmentMode: bookingMedia.get().assessment,
+        mediaBase64: bookingMedia.get().photosBase64,
+        videoBase64: bookingMedia.get().videoBase64,
       };
       const booking = await createBooking(body);
+      bookingMedia.reset();
       router.replace({
         pathname: '/booking/success',
         params: {
@@ -131,6 +138,7 @@ export default function BookingSummary() {
           date: booking.preferredDate,
           time: booking.preferredTimeSlot,
           open: '1',
+          mode: booking.assessmentMode,
         },
       });
     } catch (err) {

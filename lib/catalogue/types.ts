@@ -35,12 +35,18 @@ export interface ArtisanSummary {
    * "/api/v1/artisans/{id}/photo"), or null — fall back to the bundled
    * `imageKey` art, then to an initials placeholder. */
   photoUrl: string | null;
+  /** True when the artisan uploaded a work certificate (trust badge; also
+   * boosts their ranking while ratings accumulate). */
+  hasCertificate: boolean;
 }
 
 export interface ArtisanDetail extends ArtisanSummary {
   /** API path of the artisan's uploaded cover photo (a shot of them at work),
    * or null — fall back to the profile photo, then bundled art. */
   coverPhotoUrl: string | null;
+  /** API paths of the artisan's uploaded work-evidence photos, newest first.
+   * Empty → fall back to the bundled `galleryKeys` art. */
+  galleryUrls: string[];
   experienceYears: number;
   location: string;
   responseTime: string;

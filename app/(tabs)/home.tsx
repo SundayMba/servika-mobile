@@ -1,10 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import {
   useCallback,
-  useEffect,
   useMemo,
   useState,
   type ComponentProps,
@@ -18,15 +16,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import Animated, {
-  Easing,
-  FadeInDown,
-  useAnimatedStyle,
-  useSharedValue,
-  withDelay,
-  withRepeat,
-  withTiming,
-} from 'react-native-reanimated';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AuthPromptSheet } from '@/components/AuthPromptSheet';
@@ -69,64 +59,6 @@ function timeGreeting(hour: number): string {
   if (hour < 12) return 'Good morning';
   if (hour < 17) return 'Good afternoon';
   return 'Good evening';
-}
-
-/** Launch-promo strip with a slow diagonal shine sweeping across it. */
-function PromoBanner() {
-  const [width, setWidth] = useState(0);
-  const x = useSharedValue(-140);
-  useEffect(() => {
-    if (!width) return;
-    x.value = -140;
-    // Wait, then sweep across; repeat forever (the reset happens off-screen).
-    x.value = withRepeat(
-      withDelay(
-        1600,
-        withTiming(width + 140, {
-          duration: 1000,
-          easing: Easing.inOut(Easing.ease),
-        }),
-      ),
-      -1,
-      false,
-    );
-  }, [width, x]);
-  const shine = useAnimatedStyle(() => ({
-    transform: [{ translateX: x.value }, { skewX: '-20deg' }],
-  }));
-  return (
-    <View
-      onLayout={(e) => setWidth(e.nativeEvent.layout.width)}
-      style={{
-        backgroundColor: '#FFF4EC',
-        borderWidth: 1,
-        borderColor: '#FFE0CC',
-        overflow: 'hidden',
-      }}
-      className="flex-row items-center gap-2.5 rounded-2xl px-4 py-3"
-    >
-      <Text className="text-[18px]">🎉</Text>
-      <View className="flex-1">
-        <Text className="text-[13px] font-bold text-gray-900">
-          0% service fees during launch
-        </Text>
-        <Text className="mt-0.5 text-[11px] text-gray-500">
-          Book any artisan — you only pay for the job.
-        </Text>
-      </View>
-      <Animated.View
-        pointerEvents="none"
-        style={[{ position: 'absolute', top: 0, bottom: 0, width: 70 }, shine]}
-      >
-        <LinearGradient
-          colors={['transparent', 'rgba(255,255,255,0.6)', 'transparent']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={{ flex: 1 }}
-        />
-      </Animated.View>
-    </View>
-  );
 }
 
 // Approx. height of the custom bottom tab bar (excluding the safe-area inset,
@@ -397,14 +329,6 @@ export default function Home() {
               />
             </Animated.View>
           ) : null}
-
-          {/* ── Launch promo — 0% commission window (PRD months 0–3) ── */}
-          <Animated.View
-            entering={FadeInDown.delay(80).duration(450)}
-            className="mb-4 px-5"
-          >
-            <PromoBanner />
-          </Animated.View>
 
           {/* ── Popular Services (wrapped in a white card) ── */}
           <Animated.View

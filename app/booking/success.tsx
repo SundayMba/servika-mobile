@@ -137,6 +137,7 @@ export default function BookingSuccess() {
     time?: string;
     amount?: string;
     open?: string;
+    mode?: string;
   }>();
 
   const isOpen = params.open === '1';
@@ -168,7 +169,9 @@ export default function BookingSuccess() {
           </Text>
           <Text className="mt-1.5 px-4 text-center text-[14px] leading-5 text-gray-500">
             {isOpen
-              ? 'We’re finding you a verified pro nearby. You’ll be notified the moment one accepts.'
+              ? params.mode === 'RemoteQuote'
+                ? 'Artisans are reviewing your photos and will send price offers. Compare them and pick your favourite.'
+                : 'We’re finding you a verified pro nearby. You’ll be notified the moment one accepts.'
               : 'Your request has been sent. The artisan will respond shortly.'}
           </Text>
         </View>

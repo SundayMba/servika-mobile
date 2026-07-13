@@ -50,6 +50,13 @@ export interface CreateBookingRequest {
   locationLat?: number | null;
   locationLng?: number | null;
   locationInstructions?: string | null;
+  /** "Inspection" (artisan checks in person — default) or "RemoteQuote"
+   * (artisans bid a price from the photos/video). Open requests only. */
+  assessmentMode?: 'Inspection' | 'RemoteQuote';
+  /** Job photos as base64 (max 4). Required context when bidding. */
+  mediaBase64?: string[];
+  /** A short job video clip as base64. Optional. */
+  videoBase64?: string | null;
 }
 
 /** A row in the customer's "My Bookings" history (GET /api/v1/bookings). */
@@ -64,6 +71,12 @@ export interface BookingSummary {
   urgency: string;
   amountNaira: number | null;
   createdAt: string;
+  /** "Inspection" or "RemoteQuote" (bidding). */
+  assessmentMode: 'Inspection' | 'RemoteQuote';
+  /** API paths of the customer's job photos. */
+  mediaUrls: string[];
+  /** API path of the customer's short job video, or null. */
+  videoUrl: string | null;
 }
 
 /** The full booking record (GET /api/v1/bookings/{id} and the create response). */
@@ -91,4 +104,25 @@ export interface BookingDetail {
   acceptedAtUtc: string | null;
   completedAtUtc: string | null;
   cancelledAtUtc: string | null;
+  assessmentMode: 'Inspection' | 'RemoteQuote';
+  mediaUrls: string[];
+  videoUrl: string | null;
+  /** Active bids while the request is open for offers; 0 otherwise. */
+  bidCount: number;
+}
+
+/** An artisan's price offer on an open RemoteQuote request. */
+export interface Bid {
+  id: string;
+  bookingId: string;
+  artisanId: string;
+  artisanName: string;
+  rating: number;
+  reviewCount: number;
+  hasCertificate: boolean;
+  photoUrl: string | null;
+  amountNaira: number;
+  materialsNote: string | null;
+  status: 'Active' | 'Accepted' | 'Closed';
+  createdAtUtc: string;
 }

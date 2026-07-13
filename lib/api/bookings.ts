@@ -1,5 +1,6 @@
 import { apiClient } from '@/lib/api/client';
 import type {
+  Bid,
   BookingDetail,
   BookingSummary,
   CreateBookingRequest,
@@ -51,5 +52,24 @@ export async function completeBooking(id: string): Promise<BookingDetail> {
 /** The artisan's proof-of-work (note + photo data URIs) for the customer to review. */
 export async function getJobCompletion(id: string): Promise<JobCompletion> {
   const { data } = await apiClient.get<JobCompletion>(`${BASE}/${id}/completion`);
+  return data;
+}
+
+/** The price offers on the customer's open request, cheapest first. */
+export async function getBookingBids(bookingId: string): Promise<Bid[]> {
+  const { data } = await apiClient.get<Bid[]>(
+    `/api/v1/bookings/${bookingId}/bids`,
+  );
+  return data;
+}
+
+/** Accept one bid — assigns that artisan at their offered price. */
+export async function acceptBid(
+  bookingId: string,
+  bidId: string,
+): Promise<BookingDetail> {
+  const { data } = await apiClient.post<BookingDetail>(
+    `/api/v1/bookings/${bookingId}/bids/${bidId}/accept`,
+  );
   return data;
 }
