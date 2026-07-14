@@ -26,16 +26,23 @@ export default function RootLayout() {
         console.warn(e);
       } finally {
         setAppReady(true);
-        await ExpoSplashScreen.hideAsync();
       }
     }
     prepare();
   }, []);
 
+  // While not ready, the NATIVE splash stays up (preventAutoHideAsync above).
+  // It is hidden only once the JS splash has painted (onReady) — the logo is
+  // identical and unmoved, so the swap is invisible and there's no blank flash.
   if (!appReady) return null;
 
   if (!splashDone) {
-    return <SplashScreen onFinish={() => setSplashDone(true)} />;
+    return (
+      <SplashScreen
+        onReady={() => ExpoSplashScreen.hideAsync()}
+        onFinish={() => setSplashDone(true)}
+      />
+    );
   }
 
   return (

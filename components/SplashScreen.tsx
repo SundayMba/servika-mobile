@@ -1,114 +1,95 @@
-import { colors } from '@/constants/colors';
 import { useEffect, useRef } from 'react';
-import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
+import { Animated, Dimensions, Easing, StyleSheet, Text } from 'react-native';
+
+import { colors } from '@/constants/colors';
 
 const LOGO = require('@assets/images/general-sizes/servika-orange-clean-logo-transparent-512x512.png');
 
-const LOGO_SIZE = 120;
+// Must match the native splash (app.json expo-splash-screen imageWidth) so the
+// native → JS handoff is invisible: the logo simply stays put and the brand
+// text appears beneath it. One perceived screen, no flash.
+const LOGO_SIZE = 80;
 
 interface Props {
-  /** Optional: fired once the in-app splash paints, for a seamless native-splash handoff. */
+  /** Fired on the first painted frame — the moment it's safe to hide the
+   * native splash without a blank flash in between. */
   onReady?: () => void;
   onFinish: () => void;
 }
 
-// NOTE: This screen is driven by the Animated API (opacity timelines), so its
-// styles live in StyleSheet rather than Tailwind — animated values must be fed
-// through the `style` prop, which Tailwind className cannot express.
+// Animated-API opacities can't be expressed with Tailwind classNames, so this
+// screen uses StyleSheet.
 export function SplashScreen({ onReady, onFinish }: Props) {
-  const contentOpacity = useRef(new Animated.Value(0)).current;
+  const textOpacity = useRef(new Animated.Value(0)).current;
   const screenOpacity = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    const t = setTimeout(() => {
-      onReady?.();
+    // Two frames in, this component has definitely painted over the native
+    // splash — the swap is seamless because the logo is identical and unmoved.
+    const raf = requestAnimationFrame(() =>
+      requestAnimationFrame(() => onReady?.()),
+    );
 
-      Animated.sequence([
-        Animated.timing(contentOpacity, {
-          toValue: 1,
-          duration: 400,
-          easing: Easing.out(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.delay(800),
-        Animated.timing(screenOpacity, {
-          toValue: 0,
-          duration: 350,
-          easing: Easing.in(Easing.ease),
-          useNativeDriver: true,
-        }),
-      ]).start(() => onFinish());
-    }, 0);
+    Animated.sequence([
+      // Only the text animates — the logo is at full opacity from frame one.
+      Animated.timing(textOpacity, {
+        toValue: 1,
+        duration: 250,
+        easing: Easing.out(Easing.ease),
+        useNativeDriver: true,
+      }),
+      Animated.delay(450),
+      Animated.timing(screenOpacity, {
+        toValue: 0,
+        duration: 220,
+        easing: Easing.in(Easing.ease),
+        useNativeDriver: true,
+      }),
+    ]).start(() => onFinish());
 
-    return () => clearTimeout(t);
-  }, [contentOpacity, screenOpacity, onReady, onFinish]);
+    return () => cancelAnimationFrame(raf);
+  }, [textOpacity, screenOpacity, onReady, onFinish]);
 
   return (
     <Animated.View style={[styles.container, { opacity: screenOpacity }]}>
-      <Animated.View
-        style={[styles.centerContent, { opacity: contentOpacity }]}
-      >
-        <Animated.Image
-          source={LOGO}
-          style={styles.logo}
-          resizeMode="contain"
-        />
+      <Animated.Image source={LOGO} style={styles.logo} resizeMode="contain" />
+      <Animated.View style={[styles.textBlock, { opacity: textOpacity }]}>
         <Text style={styles.brandName}>Servika</Text>
         <Text style={styles.tagline}>Trusted repairs near you</Text>
-      </Animated.View>
-
-      <Animated.View
-        style={[styles.dotsContainer, { opacity: contentOpacity }]}
-      >
-        <View style={[styles.dot, styles.dotActive]} />
-        <View style={styles.dot} />
-        <View style={styles.dot} />
       </Animated.View>
     </Animated.View>
   );
 }
 
+const { height: SCREEN_H } = Dimensions.get('window');
+
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  centerContent: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
   },
+  // Dead-centre of the screen — exactly where the native splash draws it.
   logo: {
+    position: 'absolute',
+    top: SCREEN_H / 2 - LOGO_SIZE / 2,
     width: LOGO_SIZE,
     height: LOGO_SIZE,
-    marginBottom: 20,
+  },
+  textBlock: {
+    position: 'absolute',
+    top: SCREEN_H / 2 + LOGO_SIZE / 2 + 18,
+    alignItems: 'center',
   },
   brandName: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#1a1a1a',
+    fontSize: 30,
+    fontWeight: '800',
+    color: colors.textPrimary,
     letterSpacing: 0.3,
-    marginBottom: 8,
   },
   tagline: {
+    marginTop: 6,
     fontSize: 14,
-    fontWeight: '400',
     color: colors.textMuted,
-    letterSpacing: 0.1,
-  },
-  dotsContainer: {
-    position: 'absolute',
-    bottom: 60,
-    flexDirection: 'row',
-    gap: 8,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.border,
-  },
-  dotActive: {
-    backgroundColor: colors.primary,
   },
 });
