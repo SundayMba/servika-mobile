@@ -118,3 +118,8 @@ export function authErrorMessage(
   }
   return fallback;
 }
+
+/** Permanently delete the signed-in account (app-store requirement). */
+export async function deleteAccount(): Promise<void> {
+  await apiClient.delete('/api/v1/auth/me');
+}

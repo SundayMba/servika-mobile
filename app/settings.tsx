@@ -5,10 +5,11 @@ import { useState } from 'react';
 import { Alert, Linking, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { authErrorMessage, deleteAccount } from '@/lib/api/auth';
 import { colors } from '@/constants/colors';
 import { useAuth } from '@/lib/auth/AuthContext';
 
-const SUPPORT_EMAIL = 'support@servika.com';
+const SUPPORT_EMAIL = 'support@servika.com.ng';
 const openSupport = () =>
   Linking.openURL(`mailto:${SUPPORT_EMAIL}?subject=Servika%20Support`).catch(() => {});
 
@@ -89,6 +90,38 @@ export default function Settings() {
   const { signOut } = useAuth();
   const [loggingOut, setLoggingOut] = useState(false);
 
+  // Play-store requirement: users must be able to delete their account.
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Delete account?',
+      'This permanently deletes your account, bookings and messages. It cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Continue',
+          style: 'destructive',
+          onPress: () =>
+            Alert.alert('Are you absolutely sure?', 'Your account will be gone forever.', [
+              { text: 'Keep my account', style: 'cancel' },
+              {
+                text: 'Delete forever',
+                style: 'destructive',
+                onPress: async () => {
+                  try {
+                    await deleteAccount();
+                    await signOut();
+                    router.replace('/home');
+                  } catch (e) {
+                    Alert.alert('Could not delete', authErrorMessage(e, 'Please try again.'));
+                  }
+                },
+              },
+            ]),
+        },
+      ],
+    );
+  };
+
   const handleLogout = () => {
     Alert.alert('Log out', 'Are you sure you want to log out?', [
       { text: 'Cancel', style: 'cancel' },
@@ -150,6 +183,11 @@ export default function Settings() {
             icon="lock-closed-outline"
             label="Change password"
             onPress={() => router.push('/forgot-password')}
+          />
+          <MenuRow
+            icon="trash-outline"
+            label="Delete account"
+            onPress={handleDeleteAccount}
             last
           />
         </MenuSection>
@@ -163,7 +201,7 @@ export default function Settings() {
           <MenuRow
             icon="information-circle-outline"
             label="About Servika"
-            onPress={() => Linking.openURL('https://servika.com').catch(() => {})}
+            onPress={() => Linking.openURL('https://servika.com.ng').catch(() => {})}
             last
           />
         </MenuSection>

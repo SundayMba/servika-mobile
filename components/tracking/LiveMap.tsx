@@ -16,7 +16,7 @@ import { regionFor, type LatLng } from '@/lib/tracking/geo';
 export type NearbyMarker = { id: string; position: LatLng };
 
 /**
- * The moving artisan marker — a vehicle "puck" like Uber/Bolt that glides
+ * The moving artisan marker — a human "puck" (many artisans walk/ride) that glides
  * smoothly between location pings instead of jumping. Each new position is
  * tweened over ~1s via an AnimatedRegion; the first fix snaps into place.
  */
@@ -53,12 +53,12 @@ function ArtisanPuck({ position }: { position: LatLng }) {
       <View className="items-center justify-center">
         {/* soft halo */}
         <View className="h-12 w-12 items-center justify-center rounded-full bg-primary/20">
-          {/* vehicle puck */}
+          {/* human puck */}
           <View
             className="h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-primary"
             style={shadow}
           >
-            <Ionicons name="car-sport" size={16} color={colors.white} />
+            <Ionicons name="walk" size={16} color={colors.white} />
           </View>
         </View>
       </View>
@@ -81,12 +81,16 @@ export function LiveMap({
   artisan,
   nearby = [],
   route,
+  showsUserLocation = false,
 }: {
   destination: LatLng;
   artisan: LatLng | null;
   nearby?: NearbyMarker[];
   /** Road-snapped route to draw. `approximate` (stub provider) renders dashed. */
   route?: { points: LatLng[]; approximate: boolean } | null;
+  /** Show the viewer's own blue dot — so a customer can walk to meet a
+   * stationary artisan (needs foreground location permission). */
+  showsUserLocation?: boolean;
 }) {
   const mapRef = useRef<MapView | null>(null);
 
@@ -113,6 +117,8 @@ export function LiveMap({
     <View className="flex-1">
       <MapView
         ref={mapRef}
+        showsUserLocation={showsUserLocation}
+        showsMyLocationButton={false}
         provider={PROVIDER_DEFAULT}
         style={{ flex: 1 }}
         userInterfaceStyle="dark"
@@ -163,7 +169,7 @@ export function LiveMap({
           />
         ) : null}
 
-        {/* Live artisan puck (smoothly animated, vehicle icon) */}
+        {/* Live artisan puck (smoothly animated, human icon) */}
         {artisan ? <ArtisanPuck position={artisan} /> : null}
       </MapView>
 

@@ -207,7 +207,7 @@ export default function Register() {
                 <Text
                   className="font-semibold text-primary"
                   onPress={() =>
-                    Linking.openURL('https://servika.com/terms').catch(() => {})
+                    Linking.openURL('https://servika.com.ng/terms').catch(() => {})
                   }
                 >
                   Terms
@@ -216,7 +216,7 @@ export default function Register() {
                 <Text
                   className="font-semibold text-primary"
                   onPress={() =>
-                    Linking.openURL('https://servika.com/privacy').catch(
+                    Linking.openURL('https://servika.com.ng/privacy').catch(
                       () => {},
                     )
                   }

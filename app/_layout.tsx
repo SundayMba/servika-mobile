@@ -1,7 +1,7 @@
 import '@/global.css';
 import { Stack } from 'expo-router';
 import * as ExpoSplashScreen from 'expo-splash-screen';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SplashScreen } from '../components/SplashScreen';
 import { colors } from '@/constants/colors';
@@ -13,37 +13,9 @@ import { useNotificationObserver } from '@/lib/push/useNotificationObserver';
 ExpoSplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const [appReady, setAppReady] = useState(false);
   const [splashDone, setSplashDone] = useState(false);
   // Deep-link a tapped push notification to its booking.
   useNotificationObserver();
-
-  useEffect(() => {
-    async function prepare() {
-      try {
-        // Load fonts or other async resources here
-      } catch (e) {
-        console.warn(e);
-      } finally {
-        setAppReady(true);
-      }
-    }
-    prepare();
-  }, []);
-
-  // While not ready, the NATIVE splash stays up (preventAutoHideAsync above).
-  // It is hidden only once the JS splash has painted (onReady) — the logo is
-  // identical and unmoved, so the swap is invisible and there's no blank flash.
-  if (!appReady) return null;
-
-  if (!splashDone) {
-    return (
-      <SplashScreen
-        onReady={() => ExpoSplashScreen.hideAsync()}
-        onFinish={() => setSplashDone(true)}
-      />
-    );
-  }
 
   return (
     <KeyboardProvider>
@@ -68,6 +40,15 @@ export default function RootLayout() {
         </Stack>
         {/* Dev-only API connectivity indicator (Slice 0 rails check). */}
         <ApiStatusBadge />
+        {/* Animated splash OVERLAYS the app while it boots beneath — its fade
+            reveals the real first screen (no blank window after the animation).
+            The native splash hides only once this has painted (onReady). */}
+        {!splashDone ? (
+          <SplashScreen
+            onReady={() => ExpoSplashScreen.hideAsync()}
+            onFinish={() => setSplashDone(true)}
+          />
+        ) : null}
       </AuthProvider>
     </QueryProvider>
     </KeyboardProvider>

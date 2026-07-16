@@ -35,10 +35,10 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/general-sizes/servika-orange-clean-logo-transparent-1024x1024.png",
-          "imageWidth": 80,
+          "image": "./assets/images/splash-blank.png",
+          "imageWidth": 100,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "backgroundColor": "#F97316"
         }
       ],
       "expo-secure-store",

@@ -38,11 +38,14 @@ export default function ReportIssue() {
     }
 
     if (!bookingId) {
-      // No booking in hand (mock scaffold) — keep the informational confirmation.
+      // A dispute must be tied to a booking — never pretend one was filed.
       Alert.alert(
-        'Issue submitted',
-        'Thank you. Our team will review it and take appropriate action.',
-        [{ text: 'Done', onPress: () => router.back() }],
+        'Open the booking first',
+        'To report an issue, open the booking it concerns and tap "Report an issue" there.',
+        [
+          { text: 'My bookings', onPress: () => router.replace('/bookings') },
+          { text: 'Close', style: 'cancel' },
+        ],
       );
       return;
     }

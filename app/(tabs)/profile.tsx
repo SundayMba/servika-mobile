@@ -13,7 +13,7 @@ import { useBookings } from '@/lib/booking/hooks';
 import { useUnreadCount } from '@/lib/notifications/hooks';
 
 /** Where "Contact support" / "Help" open. */
-const SUPPORT_EMAIL = 'support@servika.com';
+const SUPPORT_EMAIL = 'support@servika.com.ng';
 const openSupport = () =>
   Linking.openURL(`mailto:${SUPPORT_EMAIL}?subject=Servika%20Support`).catch(() => {});
 

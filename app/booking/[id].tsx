@@ -1,6 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as WebBrowser from 'expo-web-browser';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import {
   ActivityIndicator,
@@ -15,6 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/ui/Button';
 import { colors } from '@/constants/colors';
 import { config } from '@/lib/config';
+import { initializePayment } from '@/lib/api/payments';
 import { authErrorMessage } from '@/lib/api/auth';
 import {
   canCancel,
@@ -142,6 +145,24 @@ export default function BookingDetailScreen() {
     booking?.status === 'Open' && booking.assessmentMode === 'RemoteQuote';
   const { data: bids } = useBookingBids(id, { enabled: !!acceptingBids });
   const acceptBidMutation = useAcceptBid();
+
+  const [paying, setPaying] = useState(false);
+  const payNow = async () => {
+    if (!booking || paying) return;
+    setPaying(true);
+    try {
+      const init = await initializePayment(booking.id);
+      if (init.authorizationUrl && /^https?:/i.test(init.authorizationUrl)) {
+        await WebBrowser.openBrowserAsync(init.authorizationUrl);
+      }
+      // Settlement lands via the webhook — refetch to pick up the new state.
+      refetch();
+    } catch (err) {
+      Alert.alert('Payment failed', authErrorMessage(err, 'Please try again.'));
+    } finally {
+      setPaying(false);
+    }
+  };
 
   const confirmAcceptBid = (bid: Bid) => {
     Alert.alert(
@@ -388,6 +409,25 @@ export default function BookingDetailScreen() {
               </View>
             ) : booking.paymentState === 'Paid' ? (
               <Row label="Payment" value="Paid (held in escrow)" />
+            ) : booking.initialQuoteAmountNaira != null &&
+              ['Accepted', 'OnMyWay', 'Arrived', 'InProgress', 'AwaitingConfirmation', 'Completed'].includes(
+                booking.status,
+              ) ? (
+              // Unpaid with a known amount (e.g. an accepted bid) → pay into escrow.
+              <Pressable
+                accessibilityRole="button"
+                disabled={paying}
+                onPress={payNow}
+                className="mt-3 h-12 flex-row items-center justify-center gap-2 rounded-xl bg-primary active:opacity-80"
+                style={paying ? { opacity: 0.6 } : undefined}
+              >
+                <Ionicons name="lock-closed" size={16} color="#FFFFFF" />
+                <Text className="text-[14px] font-bold text-white">
+                  {paying
+                    ? 'Opening secure payment…'
+                    : `Pay ${formatNaira(booking.initialQuoteAmountNaira)} — held in escrow`}
+                </Text>
+              </Pressable>
             ) : (
               <Text className="mt-1 text-[12px] leading-4 text-gray-500">
                 Final price is quoted after the artisan inspects the job.

@@ -104,6 +104,8 @@ export interface BookingDetail {
   acceptedAtUtc: string | null;
   completedAtUtc: string | null;
   cancelledAtUtc: string | null;
+  /** When the artisan started the work — drives the live job timer. */
+  workStartedAtUtc: string | null;
   assessmentMode: 'Inspection' | 'RemoteQuote';
   mediaUrls: string[];
   videoUrl: string | null;

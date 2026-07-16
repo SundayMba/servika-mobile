@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import * as Location from 'expo-location';
 import { StatusBar } from 'expo-status-bar';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -56,6 +57,12 @@ export default function LiveTracking() {
   const params = useLocalSearchParams<{ id?: string; artisanId?: string; name?: string }>();
   const [sheet, setSheet] = useState(false);
 
+  // Foreground location permission (best-effort) so the customer's own blue
+  // dot shows — useful when THEY move to meet a stationary artisan.
+  useEffect(() => {
+    Location.requestForegroundPermissionsAsync().catch(() => {});
+  }, []);
+
   const bookingId = params.id && params.id !== 'demo' ? params.id : undefined;
   const { data: booking } = useBooking(bookingId);
   // Resolve the artisan from the param, or from the booking (e.g. when opened from
@@ -82,9 +89,17 @@ export default function LiveTracking() {
     [booking?.locationLat, booking?.locationLng],
   );
 
+  // Live position wins; before the first ping, fall back to the artisan's
+  // last-known/base location (their onboarding pin) so the map is never empty
+  // and the customer can even walk to meet a stationary artisan.
+  const basePos: LatLng | null =
+    artisan?.latitude != null && artisan?.longitude != null
+      ? { latitude: artisan.latitude, longitude: artisan.longitude }
+      : null;
+  const isLive = !!location;
   const artisanPos: LatLng | null = location
     ? { latitude: location.latitude, longitude: location.longitude }
-    : null;
+    : basePos;
 
   // Road-snapped route (backend proxy → Google when keyed, else straight stub).
   const { data: route } = useRoute(artisanPos, destination);
@@ -120,7 +135,13 @@ export default function LiveTracking() {
     if (state === 'ended') return { title: 'Artisan has arrived', sub: 'They’re at your location' };
     if (state === 'error') return { title: 'Live tracking unavailable', sub: 'We’ll keep your booking updated' };
     if (state === 'connecting') return { title: 'Connecting…', sub: 'Locating your artisan' };
-    if (!location) return { title: 'Artisan on the way', sub: 'Waiting for live location…' };
+    if (!location)
+      return {
+        title: 'Artisan on the way',
+        sub: basePos
+          ? `Last known position shown · ~${formatDistance(km ?? 0)} away`
+          : 'Waiting for live location…',
+      };
     return { title: 'Artisan on the way', sub: `ETA ${eta} min · ${formatDistance(km ?? 0)} away` };
   })();
 
@@ -166,7 +187,7 @@ export default function LiveTracking() {
           <Ionicons name="chevron-up" size={18} color={colors.textMuted} />
         </Pressable>
 
-        <LiveMap destination={destination} artisan={artisanPos} nearby={nearby} route={routeForMap} />
+        <LiveMap destination={destination} artisan={artisanPos} nearby={nearby} route={routeForMap} showsUserLocation />
       </View>
 
       {/* Bottom card */}
