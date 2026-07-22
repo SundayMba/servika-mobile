@@ -20,18 +20,31 @@ import { colors } from '@/constants/colors';
 
 export default function BookingLocation() {
   const router = useRouter();
-  const { service, artisanId, categorySlug, open, description, date, time, urgency, photos } =
-    useLocalSearchParams<{
-      service?: string;
-      artisanId?: string;
-      categorySlug?: string;
-      open?: string;
-      description?: string;
-      date?: string;
-      time?: string;
-      urgency?: string;
-      photos?: string;
-    }>();
+  const {
+    service,
+    artisanId,
+    categorySlug,
+    open,
+    artisanServiceId,
+    fixedPrice,
+    description,
+    date,
+    time,
+    urgency,
+    photos,
+  } = useLocalSearchParams<{
+    service?: string;
+    artisanId?: string;
+    categorySlug?: string;
+    open?: string;
+    artisanServiceId?: string;
+    fixedPrice?: string;
+    description?: string;
+    date?: string;
+    time?: string;
+    urgency?: string;
+    photos?: string;
+  }>();
 
   const [instructions, setInstructions] = useState('');
   const [addressText, setAddressText] = useState('');
@@ -96,6 +109,8 @@ export default function BookingLocation() {
         artisanId,
         categorySlug,
         open,
+        artisanServiceId,
+        fixedPrice,
         description,
         date,
         time,

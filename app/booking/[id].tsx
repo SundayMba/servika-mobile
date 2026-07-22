@@ -28,11 +28,14 @@ import {
   isTrackable,
   statusStyle,
 } from '@/lib/booking/display';
+import { BottomSheet } from '@/components/BottomSheet';
 import {
   useAcceptBid,
   useBooking,
   useBookingBids,
   useCancelBooking,
+  useChoosePaymentMethod,
+  useRebroadcast,
 } from '@/lib/booking/hooks';
 import type { Bid, BookingStatus } from '@/lib/booking/types';
 import { formatNaira } from '@/lib/catalogue/assets';
@@ -75,6 +78,40 @@ function Row({ label, value }: { label: string; value: string }) {
       </Text>
     </View>
   );
+}
+
+// ── Offer sorting ────────────────────────────────────────────────────
+// "Best match" mirrors the catalogue's RankScore (rating + certificate bonus),
+// tie-broken by price then proximity — so a certified 4.8★ artisan outranks an
+// uncertified 4.9★ one, and among equals the cheaper/closer offer wins.
+type OfferSort = 'best' | 'price' | 'rating' | 'nearest';
+
+const OFFER_SORTS: { key: OfferSort; label: string }[] = [
+  { key: 'best', label: 'Best match' },
+  { key: 'price', label: 'Lowest price' },
+  { key: 'rating', label: 'Top rated' },
+  { key: 'nearest', label: 'Nearest' },
+];
+
+function sortOffers(bids: Bid[], sort: OfferSort): Bid[] {
+  const score = (b: Bid) => b.rating + (b.hasCertificate ? 0.5 : 0);
+  const far = Number.POSITIVE_INFINITY;
+  return [...bids].sort((a, b) => {
+    switch (sort) {
+      case 'price':
+        return a.amountNaira - b.amountNaira || score(b) - score(a);
+      case 'rating':
+        return b.rating - a.rating || a.amountNaira - b.amountNaira;
+      case 'nearest':
+        return (a.distanceKm ?? far) - (b.distanceKm ?? far) || a.amountNaira - b.amountNaira;
+      default:
+        return (
+          score(b) - score(a) ||
+          a.amountNaira - b.amountNaira ||
+          (a.distanceKm ?? far) - (b.distanceKm ?? far)
+        );
+    }
+  });
 }
 
 const DISPUTE_STATUS: Record<
@@ -140,11 +177,37 @@ export default function BookingDetailScreen() {
     booking?.status === 'Completed' ||
     booking?.status === 'Cancelled';
   const { data: dispute } = useBookingDispute(disputable ? id : undefined);
-  // Price offers — only relevant while an open bidding request awaits a pick.
+  // Price offers — while an open bidding request awaits a pick, or a direct
+  // request awaits its artisan's quote (same machinery: offer → accept → pay).
+  // The artisan can quote pre-visit (Pending) or en-route/on-site (Accepted →
+  // Arrived, the inspect-first path), so the card lives until a price is agreed.
+  const isDirectPending = booking?.status === 'Pending' && !!booking.artisanId;
+  const isDirectAwaitingQuote =
+    !!booking?.artisanId &&
+    booking.paymentState !== 'Paid' &&
+    booking.initialQuoteAmountNaira == null &&
+    ['Pending', 'Accepted', 'OnMyWay', 'Arrived'].includes(booking.status);
   const acceptingBids =
-    booking?.status === 'Open' && booking.assessmentMode === 'RemoteQuote';
-  const { data: bids } = useBookingBids(id, { enabled: !!acceptingBids });
+    (booking?.status === 'Open' && booking.assessmentMode === 'RemoteQuote') ||
+    isDirectAwaitingQuote;
+  const { data: allBids } = useBookingBids(id, { enabled: !!acceptingBids });
+  const [offerSort, setOfferSort] = useState<OfferSort>('best');
+  const activeBids = allBids?.filter((b) => b.status === 'Active');
+  const bids = activeBids ? sortOffers(activeBids, offerSort) : undefined;
+  // Badge anchors: computed over the whole set so they don't move when sorting.
+  const cheapestId =
+    activeBids && activeBids.length > 1
+      ? [...activeBids].sort((a, b) => a.amountNaira - b.amountNaira)[0].id
+      : null;
+  const topRatedId =
+    activeBids && activeBids.length > 1
+      ? [...activeBids].sort((a, b) => b.rating - a.rating)[0].id
+      : null;
   const acceptBidMutation = useAcceptBid();
+  const choosePayment = useChoosePaymentMethod();
+  const rebroadcast = useRebroadcast();
+  // Opens after a quote is accepted: escrow (recommended) vs cash after service.
+  const [paySheetOpen, setPaySheetOpen] = useState(false);
 
   const [paying, setPaying] = useState(false);
   const payNow = async () => {
@@ -176,6 +239,8 @@ export default function BookingDetailScreen() {
             acceptBidMutation.mutate(
               { bookingId: id, bidId: bid.id },
               {
+                // Price agreed → straight to the payment moment.
+                onSuccess: () => setPaySheetOpen(true),
                 onError: (err) =>
                   Alert.alert(
                     'Could not accept',
@@ -183,6 +248,34 @@ export default function BookingDetailScreen() {
                   ),
               },
             ),
+        },
+      ],
+    );
+  };
+
+  const chooseCash = () =>
+    choosePayment.mutate(
+      { bookingId: id, method: 'cash' },
+      {
+        onSuccess: () => setPaySheetOpen(false),
+        onError: (err) =>
+          Alert.alert('Could not update', authErrorMessage(err, 'Please try again.')),
+      },
+    );
+
+  const confirmRebroadcast = () => {
+    Alert.alert(
+      'Ask other artisans?',
+      `Your request will be opened to all ${booking?.serviceName?.toLowerCase() ?? ''} artisans nearby — same details, nothing to re-type.`,
+      [
+        { text: 'Not yet', style: 'cancel' },
+        {
+          text: 'Ask other artisans',
+          onPress: () =>
+            rebroadcast.mutate(id, {
+              onError: (err) =>
+                Alert.alert('Could not re-post', authErrorMessage(err, 'Please try again.')),
+            }),
         },
       ],
     );
@@ -269,25 +362,93 @@ export default function BookingDetailScreen() {
           {acceptingBids ? (
             <View className="mt-6">
               <Text className="mb-2 text-[15px] font-bold text-gray-900">
-                Price offers{bids?.length ? ` (${bids.length})` : ''}
+                {isDirectAwaitingQuote
+                  ? bids?.length
+                    ? 'Quote received'
+                    : 'Waiting for a quote'
+                  : `Price offers${bids?.length ? ` (${bids.length})` : ''}`}
               </Text>
               {!bids || bids.length === 0 ? (
                 <View className="items-center rounded-2xl border border-gray-100 bg-white px-4 py-7">
                   <Ionicons name="pricetags-outline" size={26} color={colors.textMuted} />
                   <Text className="mt-2 text-[13px] font-semibold text-gray-700">
-                    Waiting for offers
+                    {isDirectAwaitingQuote ? 'No quote yet' : 'Waiting for offers'}
                   </Text>
                   <Text className="mt-0.5 text-center text-[12px] leading-4 text-gray-400">
-                    Artisans are reviewing your photos — offers usually arrive
-                    within a few hours. We&apos;ll notify you.
+                    {isDirectPending
+                      ? `${booking.artisanName ?? 'The artisan'} is reviewing your request — they'll send a price, or come inspect for free first. We'll notify you.`
+                      : isDirectAwaitingQuote
+                        ? `${booking.artisanName ?? 'The artisan'} is inspecting the job (free) and will send their price here. You only pay after you accept it.`
+                        : 'Artisans are reviewing your photos — offers usually arrive within a few hours. We’ll notify you.'}
                   </Text>
+                  {isDirectPending ? (
+                    <Pressable
+                      accessibilityRole="button"
+                      disabled={rebroadcast.isPending}
+                      onPress={confirmRebroadcast}
+                      className="mt-4 flex-row items-center gap-1.5 rounded-full border border-primary/30 bg-primary/5 px-4 py-2 active:opacity-70"
+                    >
+                      <Ionicons name="megaphone-outline" size={14} color={colors.primary} />
+                      <Text className="text-[12.5px] font-bold text-primary">
+                        {rebroadcast.isPending ? 'Opening up…' : 'Taking too long? Ask other artisans'}
+                      </Text>
+                    </Pressable>
+                  ) : null}
                 </View>
               ) : (
-                bids.map((bid) => (
+                <>
+                  {bids.length > 1 ? (
+                    <ScrollView
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                      className="mb-3"
+                      contentContainerStyle={{ gap: 8 }}
+                    >
+                      {OFFER_SORTS.filter(
+                        (s) => s.key !== 'nearest' || bids.some((b) => b.distanceKm != null),
+                      ).map((s) => (
+                        <Pressable
+                          key={s.key}
+                          accessibilityRole="button"
+                          onPress={() => setOfferSort(s.key)}
+                          className={`h-9 items-center justify-center rounded-full px-4 ${
+                            offerSort === s.key ? 'bg-primary' : 'border border-gray-200 bg-white'
+                          }`}
+                        >
+                          <Text
+                            className={`text-[12.5px] font-bold ${
+                              offerSort === s.key ? 'text-white' : 'text-gray-600'
+                            }`}
+                          >
+                            {s.label}
+                          </Text>
+                        </Pressable>
+                      ))}
+                    </ScrollView>
+                  ) : null}
+                  {bids.map((bid) => (
                   <View
                     key={bid.id}
                     className="mb-3 rounded-2xl border border-gray-100 bg-white p-4"
                   >
+                    {bid.id === cheapestId || bid.id === topRatedId ? (
+                      <View className="mb-2.5 flex-row gap-1.5">
+                        {bid.id === cheapestId ? (
+                          <View className="rounded-full bg-green-100 px-2.5 py-1">
+                            <Text className="text-[10.5px] font-bold text-green-700">
+                              💸 Lowest price
+                            </Text>
+                          </View>
+                        ) : null}
+                        {bid.id === topRatedId ? (
+                          <View className="rounded-full bg-amber-100 px-2.5 py-1">
+                            <Text className="text-[10.5px] font-bold text-amber-700">
+                              ⭐ Top rated
+                            </Text>
+                          </View>
+                        ) : null}
+                      </View>
+                    ) : null}
                     <View className="flex-row items-center">
                       <View className="h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-primary/10">
                         {bid.photoUrl ? (
@@ -315,6 +476,7 @@ export default function BookingDetailScreen() {
                           <Ionicons name="star" size={12} color="#FBBF24" />
                           <Text className="text-[12px] text-gray-500">
                             {bid.rating.toFixed(1)} ({bid.reviewCount} reviews)
+                            {bid.distanceKm != null ? ` · ${bid.distanceKm} km away` : ''}
                           </Text>
                         </View>
                       </View>
@@ -358,8 +520,41 @@ export default function BookingDetailScreen() {
                       </Pressable>
                     </View>
                   </View>
-                ))
+                  ))}
+                </>
               )}
+            </View>
+          ) : null}
+
+          {/* Direct request declined → offer the one-tap broadcast escape hatch */}
+          {booking.status === 'Rejected' && booking.artisanId ? (
+            <View className="mt-6 rounded-2xl border border-gray-100 bg-white p-4">
+              <View className="flex-row items-center gap-2.5">
+                <View className="h-10 w-10 items-center justify-center rounded-full bg-gray-100">
+                  <Ionicons name="close" size={20} color={colors.textMuted} />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-[14px] font-bold text-gray-900">
+                    {booking.artisanName ?? 'This artisan'} can&apos;t take this job
+                  </Text>
+                  <Text className="text-[12px] leading-4 text-gray-500">
+                    Don&apos;t start over — send the same request to every{' '}
+                    {booking.serviceName.toLowerCase()} artisan nearby.
+                  </Text>
+                </View>
+              </View>
+              <Pressable
+                accessibilityRole="button"
+                disabled={rebroadcast.isPending}
+                onPress={confirmRebroadcast}
+                className="mt-3 h-12 flex-row items-center justify-center gap-2 rounded-xl bg-primary active:opacity-80"
+                style={rebroadcast.isPending ? { opacity: 0.6 } : undefined}
+              >
+                <Ionicons name="megaphone-outline" size={16} color="#FFFFFF" />
+                <Text className="text-[14px] font-bold text-white">
+                  {rebroadcast.isPending ? 'Opening up…' : 'Ask other artisans instead'}
+                </Text>
+              </Pressable>
             </View>
           ) : null}
 
@@ -396,7 +591,7 @@ export default function BookingDetailScreen() {
           <Section title="Pricing">
             {booking.initialQuoteAmountNaira != null ? (
               <Row
-                label="Inspection / call-out fee"
+                label={booking.pricingModel === 'Fixed' ? 'Fixed price' : 'Agreed price'}
                 value={formatNaira(booking.initialQuoteAmountNaira)}
               />
             ) : null}
@@ -409,28 +604,83 @@ export default function BookingDetailScreen() {
               </View>
             ) : booking.paymentState === 'Paid' ? (
               <Row label="Payment" value="Paid (held in escrow)" />
+            ) : booking.paymentMethod === 'Cash' &&
+              booking.initialQuoteAmountNaira != null ? (
+              // Cash chosen — remind, and leave the door open to switch back.
+              <>
+                <View className="mt-2 flex-row items-center gap-2 rounded-xl bg-amber-50 px-3 py-2.5">
+                  <Ionicons name="cash-outline" size={16} color="#B45309" />
+                  <Text className="flex-1 text-[12px] font-semibold leading-4 text-amber-700">
+                    Cash on service — pay {formatNaira(booking.initialQuoteAmountNaira)} to{' '}
+                    {booking.artisanName ?? 'the artisan'} when the job is done.
+                    Cash jobs have limited dispute protection.
+                  </Text>
+                </View>
+                {!['InProgress', 'AwaitingConfirmation', 'Completed', 'Cancelled', 'Disputed'].includes(
+                  booking.status,
+                ) ? (
+                  <Pressable
+                    accessibilityRole="button"
+                    disabled={paying}
+                    onPress={payNow}
+                    className="mt-2.5 flex-row items-center justify-center gap-1.5 py-1.5"
+                  >
+                    <Ionicons name="lock-closed" size={13} color={colors.primary} />
+                    <Text className="text-[13px] font-bold text-primary">
+                      {paying ? 'Opening secure payment…' : 'Switch to secure online payment'}
+                    </Text>
+                  </Pressable>
+                ) : null}
+              </>
             ) : booking.initialQuoteAmountNaira != null &&
               ['Accepted', 'OnMyWay', 'Arrived', 'InProgress', 'AwaitingConfirmation', 'Completed'].includes(
                 booking.status,
               ) ? (
-              // Unpaid with a known amount (e.g. an accepted bid) → pay into escrow.
-              <Pressable
-                accessibilityRole="button"
-                disabled={paying}
-                onPress={payNow}
-                className="mt-3 h-12 flex-row items-center justify-center gap-2 rounded-xl bg-primary active:opacity-80"
-                style={paying ? { opacity: 0.6 } : undefined}
-              >
-                <Ionicons name="lock-closed" size={16} color="#FFFFFF" />
-                <Text className="text-[14px] font-bold text-white">
-                  {paying
-                    ? 'Opening secure payment…'
-                    : `Pay ${formatNaira(booking.initialQuoteAmountNaira)} — held in escrow`}
+              // Unpaid with an agreed price → pay into escrow (or fall back to cash).
+              <>
+                <Pressable
+                  accessibilityRole="button"
+                  disabled={paying}
+                  onPress={payNow}
+                  className="mt-3 h-12 flex-row items-center justify-center gap-2 rounded-xl bg-primary active:opacity-80"
+                  style={paying ? { opacity: 0.6 } : undefined}
+                >
+                  <Ionicons name="lock-closed" size={16} color="#FFFFFF" />
+                  <Text className="text-[14px] font-bold text-white">
+                    {paying
+                      ? 'Opening secure payment…'
+                      : `Pay ${formatNaira(booking.initialQuoteAmountNaira)} — held in escrow`}
+                  </Text>
+                </Pressable>
+                <Text className="mt-2 text-center text-[11.5px] leading-4 text-gray-400">
+                  Work starts once your payment is secured.
                 </Text>
-              </Pressable>
+                {!['InProgress', 'AwaitingConfirmation', 'Completed'].includes(booking.status) ? (
+                  <Pressable
+                    accessibilityRole="button"
+                    disabled={choosePayment.isPending}
+                    onPress={chooseCash}
+                    className="mt-1 items-center py-1"
+                  >
+                    <Text className="text-[12.5px] font-semibold text-gray-500">
+                      Prefer cash? Pay after the service instead
+                    </Text>
+                  </Pressable>
+                ) : null}
+              </>
+            ) : booking.initialQuoteAmountNaira != null &&
+              ['Pending'].includes(booking.status) ? (
+              // Fixed-price booking waiting on the artisan to accept — payment
+              // opens once they confirm (avoids charging for a job they decline).
+              <Text className="mt-1 text-[12px] leading-4 text-gray-500">
+                Waiting for {booking.artisanName ?? 'the artisan'} to accept. Once
+                they confirm, pay {formatNaira(booking.initialQuoteAmountNaira)}{' '}
+                securely — held until the job is done.
+              </Text>
             ) : (
               <Text className="mt-1 text-[12px] leading-4 text-gray-500">
-                Final price is quoted after the artisan inspects the job.
+                Nothing to pay yet — you&apos;ll get a price to review first, and
+                your payment is held securely until the job is done.
               </Text>
             )}
           </Section>
@@ -560,6 +810,58 @@ export default function BookingDetailScreen() {
           ) : null}
         </ScrollView>
       )}
+
+      {/* ── Payment moment: how to settle the agreed price ── */}
+      <BottomSheet visible={paySheetOpen} onClose={() => setPaySheetOpen(false)}>
+        <View className="px-5 pb-6 pt-1">
+          <View className="items-center">
+            <View className="h-14 w-14 items-center justify-center rounded-full bg-green-100">
+              <Ionicons name="checkmark" size={28} color="#16A34A" />
+            </View>
+            <Text className="mt-3 text-[18px] font-bold text-gray-900">Price agreed!</Text>
+            <Text className="mt-1 text-center text-[13px] leading-5 text-gray-500">
+              {booking?.artisanName ?? 'Your artisan'} will do the job for{' '}
+              <Text className="font-bold text-gray-900">
+                {booking?.initialQuoteAmountNaira != null
+                  ? formatNaira(booking.initialQuoteAmountNaira)
+                  : 'the agreed price'}
+              </Text>
+              . How would you like to pay?
+            </Text>
+          </View>
+
+          <Pressable
+            accessibilityRole="button"
+            disabled={paying}
+            onPress={() => {
+              setPaySheetOpen(false);
+              payNow();
+            }}
+            className="mt-5 h-14 flex-row items-center justify-center gap-2 rounded-2xl bg-primary active:opacity-90"
+          >
+            <Ionicons name="lock-closed" size={17} color="#FFFFFF" />
+            <Text className="text-[15px] font-bold text-white">
+              Pay securely — held until job is done
+            </Text>
+          </Pressable>
+
+          <Pressable
+            accessibilityRole="button"
+            disabled={choosePayment.isPending}
+            onPress={chooseCash}
+            className="mt-2.5 h-13 flex-row items-center justify-center gap-2 rounded-2xl border border-gray-200 py-3.5 active:opacity-70"
+          >
+            <Ionicons name="cash-outline" size={17} color={colors.textPrimary} />
+            <Text className="text-[14px] font-semibold text-gray-700">
+              {choosePayment.isPending ? 'Saving…' : 'Pay cash after service'}
+            </Text>
+          </Pressable>
+          <Text className="mt-2.5 text-center text-[11.5px] leading-4 text-gray-400">
+            Online payment is protected by escrow — released to the artisan only
+            when you confirm the job. Cash jobs have limited dispute protection.
+          </Text>
+        </View>
+      </BottomSheet>
     </SafeAreaView>
   );
 }

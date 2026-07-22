@@ -20,7 +20,7 @@ function buildConnection(): HubConnection {
       accessTokenFactory: async () => (await tokenStorage.getAccessToken()) ?? '',
     })
     .withAutomaticReconnect()
-    .configureLogging(LogLevel.Warning)
+    .configureLogging(LogLevel.Critical) // transient WS drops auto-reconnect; don't spam console.error / dev LogBox
     .build();
 }
 

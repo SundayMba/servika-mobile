@@ -138,9 +138,11 @@ export default function BookingSuccess() {
     amount?: string;
     open?: string;
     mode?: string;
+    fixed?: string;
   }>();
 
   const isOpen = params.open === '1';
+  const isFixed = params.fixed === '1';
   const amount = params.amount ? Number(params.amount) : null;
   const { data: artisan } = useArtisan(params.artisanId || undefined);
   const avatar = artisan ? artisanPhotoSource(artisan.photoUrl, artisan.imageKey) : undefined;
@@ -165,14 +167,16 @@ export default function BookingSuccess() {
             </View>
           </View>
           <Text className="mt-5 text-center text-[24px] font-bold text-gray-900">
-            {isOpen ? 'Request posted!' : 'Booking Confirmed!'}
+            {isOpen ? 'Request posted!' : 'Request sent!'}
           </Text>
           <Text className="mt-1.5 px-4 text-center text-[14px] leading-5 text-gray-500">
             {isOpen
               ? params.mode === 'RemoteQuote'
                 ? 'Artisans are reviewing your photos and will send price offers. Compare them and pick your favourite.'
                 : 'We’re finding you a verified pro nearby. You’ll be notified the moment one accepts.'
-              : 'Your request has been sent. The artisan will respond shortly.'}
+              : isFixed
+                ? `${params.artisanName || 'The artisan'} will confirm your booking${amount != null ? ` — then you pay ${formatNaira(amount)}` : ''}, held securely until the job is done.`
+                : `${params.artisanName || 'The artisan'} will review your request and send you a quote — you only pay after you accept it.`}
           </Text>
         </View>
 
@@ -231,7 +235,11 @@ export default function BookingSuccess() {
           </ReceiptRow>
           <ReceiptRow label="Amount due now">
             <Text className="text-[14px] font-bold text-primary">
-              {amount != null ? formatNaira(amount) : 'To be quoted'}
+              {isFixed && amount != null
+                ? `₦0 now — ${formatNaira(amount)} after the artisan accepts`
+                : amount != null
+                  ? formatNaira(amount)
+                  : '₦0 — pay after you accept a quote'}
             </Text>
           </ReceiptRow>
         </View>

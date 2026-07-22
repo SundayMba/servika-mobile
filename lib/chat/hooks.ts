@@ -18,6 +18,7 @@ import {
 } from '@/lib/api/chat';
 import type { ChatMessage } from '@/lib/chat/types';
 import { config } from '@/lib/config';
+import { usePhoneGate } from '@/lib/phone/PhoneGate';
 
 const HUB_URL = `${config.apiBaseUrl}/hubs/chat`;
 const messagesKey = (conversationId: string) => ['chat', conversationId] as const;
@@ -85,6 +86,7 @@ export function useChatUnreadCount(options?: { enabled?: boolean }) {
  */
 export function useOpenChat() {
   const router = useRouter();
+  const phoneGate = usePhoneGate();
 
   const openConversation = useCallback(
     (conversationId: string, name?: string) => {
@@ -110,11 +112,13 @@ export function useOpenChat() {
             artisanId: ref.artisanId,
           },
         });
-      } catch {
+      } catch (e) {
+        // If the server requires a verified phone, prompt for it, then re-open.
+        if (phoneGate.handle(e, () => openWithArtisan(artisanId, name))) return;
         // best-effort — the artisan profile / card action just no-ops on failure
       }
     },
-    [router],
+    [router, phoneGate],
   );
 
   const openForBooking = useCallback(
@@ -150,7 +154,7 @@ export function useChatRealtime(conversationId: string | undefined) {
         accessTokenFactory: async () => (await tokenStorage.getAccessToken()) ?? '',
       })
       .withAutomaticReconnect()
-      .configureLogging(LogLevel.Warning)
+      .configureLogging(LogLevel.Critical) // transient WS drops auto-reconnect; don't spam console.error / dev LogBox
       .build();
 
     conn.on('MessageReceived', (message: ChatMessage) => {

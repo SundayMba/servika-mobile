@@ -26,4 +26,9 @@ export type RequestWithdrawalRequest = {
   bankName: string;
   accountNumber: string;
   accountName: string;
+  /** Provider bank code from the bank picker (required for a real transfer). */
+  bankCode?: string;
 };
+
+/** A payout-destination bank (name + provider code) for the withdrawal picker. */
+export type Bank = { name: string; code: string };

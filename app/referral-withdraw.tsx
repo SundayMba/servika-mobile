@@ -2,15 +2,17 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useState } from 'react';
-import { Alert, Pressable, Text, TextInput, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import { Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { BottomSheet } from '@/components/BottomSheet';
 import { colors } from '@/constants/colors';
 import { authErrorMessage } from '@/lib/api/auth';
+import type { Bank } from '@/lib/artisan/walletTypes';
 import { formatNaira } from '@/lib/catalogue/assets';
-import { useMyReferrals, useRequestReferralWithdrawal } from '@/lib/referral/hooks';
+import { useBanks, useMyReferrals, useRequestReferralWithdrawal } from '@/lib/referral/hooks';
 
 // One referral reward (₦500) is the smallest cash-out — matches the backend floor.
 const MIN_WITHDRAWAL = 500;
@@ -30,10 +32,11 @@ export default function ReferralWithdraw() {
   const available = referral?.availableNaira ?? 0;
 
   const [amount, setAmount] = useState(available > 0 ? String(available) : '');
-  const [bankName, setBankName] = useState('');
+  const [bank, setBank] = useState<Bank | null>(null);
   const [accountNumber, setAccountNumber] = useState('');
   const [accountName, setAccountName] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   const amountNaira = Number(amount) || 0;
 
@@ -47,20 +50,21 @@ export default function ReferralWithdraw() {
       setError(`You can withdraw at most ${formatNaira(available)}.`);
       return;
     }
-    if (!bankName.trim() || !accountNumber.trim() || !accountName.trim()) {
-      setError('Enter your bank name, account number and account name.');
+    if (!bank || !accountNumber.trim() || !accountName.trim()) {
+      setError('Choose your bank and enter your account number and name.');
       return;
     }
     try {
       await requestWithdrawal.mutateAsync({
         amountNaira,
-        bankName: bankName.trim(),
+        bankName: bank.name,
+        bankCode: bank.code,
         accountNumber: accountNumber.trim(),
         accountName: accountName.trim(),
       });
       Alert.alert(
-        'Withdrawal successful',
-        `${formatNaira(amountNaira)} is on its way to your ${bankName.trim()} account.`,
+        'Withdrawal requested',
+        `${formatNaira(amountNaira)} is on its way to your ${bank.name} account. Bank transfers usually arrive within minutes — we'll notify you once it lands.`,
         [{ text: 'OK', onPress: () => router.back() }],
       );
     } catch (e) {
@@ -113,12 +117,19 @@ export default function ReferralWithdraw() {
         <Text className="mb-3 mt-6 text-[15px] font-bold text-gray-900">
           Bank Account
         </Text>
-        <Field
-          label="Bank name"
-          value={bankName}
-          onChangeText={setBankName}
-          placeholder="e.g. GTBank"
-        />
+        <View className="mb-3">
+          <Text className="mb-1.5 text-[12px] font-medium text-gray-500">Bank</Text>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => setPickerOpen(true)}
+            className="flex-row items-center justify-between rounded-2xl border border-gray-200 bg-white px-4 py-3.5 active:bg-gray-50"
+          >
+            <Text className={`text-[15px] ${bank ? 'text-gray-900' : 'text-gray-400'}`}>
+              {bank?.name ?? 'Select your bank'}
+            </Text>
+            <Ionicons name="chevron-down" size={18} color={colors.textMuted} />
+          </Pressable>
+        </View>
         <Field
           label="Account number"
           value={accountNumber}
@@ -181,7 +192,81 @@ export default function ReferralWithdraw() {
           </Text>
         </View>
       </KeyboardAwareScrollView>
+
+      <BankPickerSheet
+        visible={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        onSelect={(b) => {
+          setBank(b);
+          setPickerOpen(false);
+        }}
+      />
     </View>
+  );
+}
+
+/** Searchable bank list in a bottom sheet. */
+function BankPickerSheet({
+  visible,
+  onClose,
+  onSelect,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  onSelect: (bank: Bank) => void;
+}) {
+  const { data: banks, isLoading } = useBanks();
+  const [query, setQuery] = useState('');
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const list = banks ?? [];
+    return q ? list.filter((b) => b.name.toLowerCase().includes(q)) : list;
+  }, [banks, query]);
+
+  return (
+    <BottomSheet visible={visible} onClose={onClose}>
+      <View className="px-5 pb-4 pt-1">
+        <Text className="text-[18px] font-bold text-gray-900">Choose your bank</Text>
+        <View className="mt-3 flex-row items-center rounded-2xl border border-gray-200 bg-white px-3">
+          <Ionicons name="search" size={16} color={colors.textMuted} />
+          <TextInput
+            value={query}
+            onChangeText={setQuery}
+            placeholder="Search banks"
+            placeholderTextColor={colors.textMuted}
+            autoCorrect={false}
+            className="ml-2 flex-1 py-3 text-[14px] text-gray-900"
+          />
+        </View>
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          style={{ maxHeight: 320 }}
+          className="mt-3"
+        >
+          {isLoading ? (
+            <Text className="py-6 text-center text-[13px] text-gray-400">Loading banks…</Text>
+          ) : filtered.length === 0 ? (
+            <Text className="py-6 text-center text-[13px] text-gray-400">No banks match.</Text>
+          ) : (
+            filtered.map((b) => (
+              <Pressable
+                key={b.code}
+                accessibilityRole="button"
+                onPress={() => onSelect(b)}
+                className="flex-row items-center border-b border-gray-100 py-3.5 active:opacity-60"
+              >
+                <View className="h-9 w-9 items-center justify-center rounded-full bg-primary/10">
+                  <Ionicons name="business-outline" size={16} color={colors.primary} />
+                </View>
+                <Text className="ml-3 flex-1 text-[14px] font-medium text-gray-800">{b.name}</Text>
+              </Pressable>
+            ))
+          )}
+        </ScrollView>
+      </View>
+    </BottomSheet>
   );
 }
 

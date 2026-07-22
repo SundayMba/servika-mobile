@@ -3,12 +3,14 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   acceptBid,
   cancelBooking,
+  choosePaymentMethod,
   completeBooking,
   createBooking,
   getBooking,
   getBookingBids,
   getBookings,
   getJobCompletion,
+  rebroadcastBooking,
 } from '@/lib/api/bookings';
 
 /**
@@ -100,6 +102,37 @@ export function useAcceptBid() {
       queryClient.setQueryData(['booking', booking.id], booking);
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
       queryClient.invalidateQueries({ queryKey: ['booking-bids', booking.id] });
+    },
+  });
+}
+
+/** Re-broadcast a stalled direct request to every matching artisan. */
+export function useRebroadcast() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (bookingId: string) => rebroadcastBooking(bookingId),
+    onSuccess: (booking) => {
+      queryClient.setQueryData(['booking', booking.id], booking);
+      queryClient.invalidateQueries({ queryKey: ['bookings'] });
+      queryClient.invalidateQueries({ queryKey: ['booking-bids', booking.id] });
+    },
+  });
+}
+
+/** Pick escrow ("online") or "cash" for the agreed price. */
+export function useChoosePaymentMethod() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      bookingId,
+      method,
+    }: {
+      bookingId: string;
+      method: 'online' | 'cash';
+    }) => choosePaymentMethod(bookingId, method),
+    onSuccess: (booking) => {
+      queryClient.setQueryData(['booking', booking.id], booking);
+      queryClient.invalidateQueries({ queryKey: ['bookings'] });
     },
   });
 }

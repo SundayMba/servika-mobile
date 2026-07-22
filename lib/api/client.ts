@@ -18,7 +18,12 @@ import { tokenStorage } from '@/lib/auth/tokenStorage';
 export const apiClient = axios.create({
   baseURL: config.apiBaseUrl,
   timeout: 15000,
-  headers: { 'Content-Type': 'application/json' },
+  headers: {
+    'Content-Type': 'application/json',
+    // Skip ngrok-free's browser-warning interstitial when testing via a tunnel
+    // (harmless header; ignored by the real API).
+    'ngrok-skip-browser-warning': 'true',
+  },
 });
 
 apiClient.interceptors.request.use(async (request) => {

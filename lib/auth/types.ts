@@ -12,6 +12,8 @@ export interface User {
   email: string;
   phoneNumber: string;
   role: Role;
+  /** True once the phone number has been OTP-verified (SMS/WhatsApp). */
+  phoneVerified: boolean;
 }
 
 /** Response from POST /login and from a successful verify-otp (AuthResponse). */

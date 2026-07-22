@@ -113,12 +113,15 @@ function UrgencyOption({
 
 export default function BookingRequest() {
   const router = useRouter();
-  const { service, artisanId, categorySlug, open } = useLocalSearchParams<{
-    service?: string;
-    artisanId?: string;
-    categorySlug?: string;
-    open?: string;
-  }>();
+  const { service, artisanId, categorySlug, open, artisanServiceId, fixedPrice } =
+    useLocalSearchParams<{
+      service?: string;
+      artisanId?: string;
+      categorySlug?: string;
+      open?: string;
+      artisanServiceId?: string;
+      fixedPrice?: string;
+    }>();
 
   const [description, setDescription] = useState('');
   // `date` holds an ISO datetime; the field shows it formatted.
@@ -203,6 +206,8 @@ export default function BookingRequest() {
         artisanId,
         categorySlug: effectiveCategorySlug,
         open,
+        artisanServiceId,
+        fixedPrice,
         description: description.trim(),
         date,
         time,

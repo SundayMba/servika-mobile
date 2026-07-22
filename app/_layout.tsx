@@ -7,6 +7,7 @@ import { SplashScreen } from '../components/SplashScreen';
 import { colors } from '@/constants/colors';
 import { QueryProvider } from '@/lib/query/QueryProvider';
 import { AuthProvider } from '@/lib/auth/AuthContext';
+import { PhoneGateProvider } from '@/lib/phone/PhoneGate';
 import { ApiStatusBadge } from '@/components/ApiStatusBadge';
 import { useNotificationObserver } from '@/lib/push/useNotificationObserver';
 
@@ -21,6 +22,7 @@ export default function RootLayout() {
     <KeyboardProvider>
     <QueryProvider>
       <AuthProvider>
+        <PhoneGateProvider>
         <Stack
         screenOptions={{
           headerShown: false,
@@ -49,6 +51,7 @@ export default function RootLayout() {
             onFinish={() => setSplashDone(true)}
           />
         ) : null}
+        </PhoneGateProvider>
       </AuthProvider>
     </QueryProvider>
     </KeyboardProvider>

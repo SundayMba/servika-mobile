@@ -274,44 +274,77 @@ export default function ArtisanProfile() {
             </Pressable>
           </View>
 
-          {/* Inspection fee */}
+          {/* How pricing works — booking and inspection are free */}
           <View className="mt-7 px-5">
-            <View className="rounded-2xl border border-blue-100 bg-blue-50/60 p-4">
-              <View className="flex-row items-center justify-between">
-                <View className="flex-row items-center gap-3">
-                  <View className="h-11 w-11 items-center justify-center rounded-xl bg-primary/10">
-                    <Ionicons
-                      name="receipt-outline"
-                      size={20}
-                      color={colors.primary}
-                    />
-                  </View>
-                  <View>
-                    <Text className="text-[12px] font-medium text-gray-500">
-                      Inspection Fee
-                    </Text>
-                    <Text className="text-[20px] font-bold text-gray-900">
-                      {formatNaira(artisan.inspectionFeeNaira)}
-                    </Text>
-                  </View>
+            <View className="rounded-2xl border border-green-100 bg-green-50/60 p-4">
+              <View className="flex-row items-center gap-3">
+                <View className="h-11 w-11 items-center justify-center rounded-xl bg-green-100">
+                  <Ionicons name="shield-checkmark" size={20} color="#16A34A" />
                 </View>
-                <View className="flex-row items-center gap-1">
-                  <Ionicons
-                    name="checkmark-circle"
-                    size={14}
-                    color="#22C55E"
-                  />
-                  <Text className="text-[11px] font-medium text-gray-500">
-                    Satisfaction{'\n'}Guaranteed
+                <View className="flex-1">
+                  <Text className="text-[15px] font-bold text-gray-900">
+                    Free inspection · No booking fee
+                  </Text>
+                  <Text className="text-[12px] font-medium text-gray-500">
+                    You only pay a price you&apos;ve agreed
                   </Text>
                 </View>
               </View>
               <Text className="mt-3 text-[12px] leading-4 text-gray-500">
-                Deducted from the final service cost once you proceed with the
-                job.
+                {artisan.fullName.split(' ')[0]} reviews your request and sends a
+                quote — or inspects the job free of charge first. Your payment is
+                held securely by Servika until the work is done.
               </Text>
             </View>
           </View>
+
+          {/* Fixed-price services — book instantly at the listed price */}
+          {(artisan.pricedServices?.length ?? 0) > 0 ? (
+            <View className="mt-7 px-5">
+              <Text className="mb-3 text-[16px] font-bold text-gray-900">
+                Book a service
+              </Text>
+              <View className="rounded-2xl border border-gray-100 bg-white">
+                {artisan.pricedServices.map((s, i) => (
+                  <Pressable
+                    key={s.id}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Book ${s.name} for ${formatNaira(s.priceNaira)}`}
+                    onPress={() =>
+                      guard(() =>
+                        router.push({
+                          pathname: '/booking/request',
+                          params: {
+                            service: s.name,
+                            artisanId: artisan.id,
+                            artisanServiceId: s.id,
+                            fixedPrice: String(s.priceNaira),
+                          },
+                        }),
+                      )
+                    }
+                    className={`flex-row items-center px-4 py-3.5 active:bg-gray-50 ${
+                      i === artisan.pricedServices.length - 1 ? '' : 'border-b border-gray-100'
+                    }`}
+                  >
+                    <View className="flex-1 pr-3">
+                      <Text className="text-[14px] font-semibold text-gray-900">{s.name}</Text>
+                      <Text className="mt-0.5 text-[15px] font-bold text-primary">
+                        {formatNaira(s.priceNaira)}
+                      </Text>
+                    </View>
+                    <View className="h-9 items-center justify-center rounded-full bg-primary px-4">
+                      <Text className="text-[13px] font-bold text-white">Book</Text>
+                    </View>
+                  </Pressable>
+                ))}
+              </View>
+              <Text className="mt-2 text-[11.5px] leading-4 text-gray-400">
+                Fixed prices — pay securely once {artisan.fullName.split(' ')[0]} accepts, held
+                until the job is done.
+              </Text>
+            </View>
+          ) : null}
 
           {/* Customer reviews */}
           <View className="mt-7">

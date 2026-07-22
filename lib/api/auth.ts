@@ -123,3 +123,36 @@ export function authErrorMessage(
 export async function deleteAccount(): Promise<void> {
   await apiClient.delete('/api/v1/auth/me');
 }
+
+/** Phone verification (verified at first booking/chat, not at signup). */
+export type SendPhoneOtpResponse = {
+  sent: boolean;
+  alreadyVerified: boolean;
+  expiresInSeconds: number;
+};
+export type VerifyPhoneOtpResponse = { success: boolean; user: User };
+
+/** Send an OTP to the signed-in user's phone (SMS/WhatsApp). */
+export async function sendPhoneOtp(): Promise<SendPhoneOtpResponse> {
+  const { data } = await apiClient.post<SendPhoneOtpResponse>(`${BASE}/phone/send`);
+  return data;
+}
+
+/** Verify the signed-in user's phone with the received code. */
+export async function verifyPhoneOtp(otpCode: string): Promise<VerifyPhoneOtpResponse> {
+  const { data } = await apiClient.post<VerifyPhoneOtpResponse>(`${BASE}/phone/verify`, {
+    otpCode,
+  });
+  return data;
+}
+
+/** True when an API error is the server's "verify your phone first" 403
+ * (Auth:RequirePhoneForBooking is on and the caller's phone isn't verified). */
+export function isPhoneVerificationRequired(error: unknown): boolean {
+  return (
+    axios.isAxiosError(error) &&
+    error.response?.status === 403 &&
+    (error.response?.data as { code?: string } | undefined)?.code ===
+      'phone_verification_required'
+  );
+}

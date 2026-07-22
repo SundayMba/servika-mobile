@@ -1,5 +1,6 @@
 import { apiClient } from '@/lib/api/client';
 import type {
+  Bank,
   RequestWithdrawalRequest,
   Withdrawal,
 } from '@/lib/artisan/walletTypes';
@@ -22,5 +23,11 @@ export async function requestReferralWithdrawal(
     '/api/v1/referrals/withdrawals',
     body,
   );
+  return data;
+}
+
+/** Payout-destination banks (name + code) for the withdrawal picker. */
+export async function getBanks(): Promise<Bank[]> {
+  const { data } = await apiClient.get<Bank[]>('/api/v1/banks');
   return data;
 }

@@ -73,3 +73,23 @@ export async function acceptBid(
   );
   return data;
 }
+
+/** Re-broadcast a declined/unanswered direct request to all matching artisans. */
+export async function rebroadcastBooking(bookingId: string): Promise<BookingDetail> {
+  const { data } = await apiClient.post<BookingDetail>(
+    `${BASE}/${bookingId}/rebroadcast`,
+  );
+  return data;
+}
+
+/** Choose how the agreed price gets settled: escrow ("online") or "cash". */
+export async function choosePaymentMethod(
+  bookingId: string,
+  method: 'online' | 'cash',
+): Promise<BookingDetail> {
+  const { data } = await apiClient.post<BookingDetail>(
+    `${BASE}/${bookingId}/payment-method`,
+    { method },
+  );
+  return data;
+}

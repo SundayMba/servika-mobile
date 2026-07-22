@@ -57,6 +57,10 @@ export interface CreateBookingRequest {
   mediaBase64?: string[];
   /** A short job video clip as base64. Optional. */
   videoBase64?: string | null;
+  /** One of the chosen artisan's published fixed-price services — books at its
+   * listed price (server reads the price; never trusted from the client).
+   * Requires `artisanId`. */
+  artisanServiceId?: string | null;
 }
 
 /** A row in the customer's "My Bookings" history (GET /api/v1/bookings). */
@@ -98,6 +102,8 @@ export interface BookingDetail {
   urgency: string;
   pricingModel: string;
   paymentState: string;
+  /** "Online" (escrow, default) or "Cash" (pay the artisan after service). */
+  paymentMethod: 'Online' | 'Cash';
   initialQuoteAmountNaira: number | null;
   commissionRate: number;
   createdAt: string;
@@ -127,4 +133,6 @@ export interface Bid {
   materialsNote: string | null;
   status: 'Active' | 'Accepted' | 'Closed';
   createdAtUtc: string;
+  /** Km from the job to the artisan's base, when both are known. */
+  distanceKm: number | null;
 }

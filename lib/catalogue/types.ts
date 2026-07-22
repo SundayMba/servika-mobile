@@ -58,4 +58,14 @@ export interface ArtisanDetail extends ArtisanSummary {
   /** Category slugs this artisan serves; the first is the primary, used to
    * pre-fill a booking's service category. */
   categorySlugs: string[];
+  /** The artisan's published fixed-price services ("Knotless braids —
+   * ₦15,000") — bookable directly at that price. Empty for quote-only artisans. */
+  pricedServices: ArtisanServiceOffering[];
+}
+
+/** A fixed-price service an artisan publishes on their profile. */
+export interface ArtisanServiceOffering {
+  id: string;
+  name: string;
+  priceNaira: number;
 }
