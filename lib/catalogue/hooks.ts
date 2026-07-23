@@ -28,6 +28,9 @@ export function useNearbyArtisans(coords?: LatLng | null) {
     queryKey: ['artisans', 'nearby', key],
     queryFn: () => getArtisans(undefined, coords),
     staleTime: 60_000,
+    // Availability is another user's state — poll so an artisan going
+    // online/offline shows up without a manual refresh.
+    refetchInterval: 60_000,
   });
 }
 
@@ -47,6 +50,7 @@ export function useExploreArtisans(
     queryKey: ['artisans', 'explore', categorySlug ?? 'all', key],
     queryFn: () => getArtisans(categorySlug ?? undefined, coords),
     staleTime: 60_000,
+    refetchInterval: 60_000,
   });
 }
 
@@ -57,6 +61,7 @@ export function useCategoryArtisans(categorySlug: string | undefined) {
     queryFn: () => getArtisans(categorySlug),
     enabled: !!categorySlug,
     staleTime: 60_000,
+    refetchInterval: 60_000,
   });
 }
 

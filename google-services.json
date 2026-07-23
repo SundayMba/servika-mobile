@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "678593435307",
+    "project_id": "servika-500517",
+    "storage_bucket": "servika-500517.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:678593435307:android:9b06a20f2369296d8949ee",
+        "android_client_info": {
+          "package_name": "com.mba001.servika"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "678593435307-1jvoqq6c6gami1hphm68nv7pg2i53evi.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD5pfqihFP09UzwSwJnO85JI3icYqelVRE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "678593435307-1jvoqq6c6gami1hphm68nv7pg2i53evi.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -51,8 +51,11 @@ export async function registerForPush(): Promise<void> {
 
     currentToken = token;
     await registerPushToken(token, Platform.OS);
-  } catch {
-    // Best-effort — a missing dev build / denied permission just means no push.
+  } catch (e) {
+    // Best-effort — a denied permission just means no push. But surface the
+    // error in dev: on Android a missing google-services.json (FCM) makes
+    // getExpoPushTokenAsync throw here, silently disabling ALL push banners.
+    if (__DEV__) console.warn('[push] registration failed:', e);
   }
 }
 
