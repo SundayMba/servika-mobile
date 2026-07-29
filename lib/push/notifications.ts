@@ -29,9 +29,15 @@ export async function registerForPush(): Promise<void> {
     if (!Device.isDevice) return; // simulators can't get a push token
 
     if (Platform.OS === 'android') {
+      // MAX importance = heads-up banner that drops from the top (WhatsApp
+      // style). NOTE: Android freezes a channel's importance at first creation —
+      // devices that already created this channel at DEFAULT need an app
+      // reinstall (or clear-data) to pick this up.
       await Notifications.setNotificationChannelAsync('default', {
         name: 'Default',
-        importance: Notifications.AndroidImportance.DEFAULT,
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
       });
     }
 
@@ -40,7 +46,12 @@ export async function registerForPush(): Promise<void> {
     if (status !== 'granted') {
       status = (await Notifications.requestPermissionsAsync()).status;
     }
-    if (status !== 'granted') return;
+    if (status !== 'granted') {
+      // Denied (or "don't ask again") — no push for this install until the user
+      // enables notifications in the OS settings. Surface it in dev.
+      if (__DEV__) console.warn('[push] notification permission not granted:', status);
+      return;
+    }
 
     const projectId =
       Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId;
