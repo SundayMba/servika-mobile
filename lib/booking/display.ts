@@ -30,7 +30,15 @@ export function statusStyle(status: BookingStatus): ChipStyle {
 
 /** A booking can still be cancelled by the customer only in these states. */
 export function canCancel(status: BookingStatus): boolean {
-  return status === 'Open' || status === 'Pending' || status === 'Accepted';
+  // Cancellable up to and including Arrived (full refund if paid); once work is
+  // InProgress it's the dispute flow instead.
+  return (
+    status === 'Open' ||
+    status === 'Pending' ||
+    status === 'Accepted' ||
+    status === 'OnMyWay' ||
+    status === 'Arrived'
+  );
 }
 
 /** The job is live — the customer can open the tracking map/dashboard. */

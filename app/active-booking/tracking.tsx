@@ -3,7 +3,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Location from 'expo-location';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Alert, Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ArtisanRow, VerifiedBadges } from '@/components/active-booking/parts';
@@ -12,7 +12,9 @@ import { Button } from '@/components/ui/Button';
 import { LiveMap, type NearbyMarker } from '@/components/tracking/LiveMap';
 import { colors } from '@/constants/colors';
 import { useArtisan, useNearbyArtisans } from '@/lib/catalogue/hooks';
-import { useBooking } from '@/lib/booking/hooks';
+import { authErrorMessage } from '@/lib/api/auth';
+import { canCancel } from '@/lib/booking/display';
+import { useBooking, useCancelBooking } from '@/lib/booking/hooks';
 import { useOpenChat } from '@/lib/chat/hooks';
 import {
   destinationPoint,
@@ -74,6 +76,31 @@ export default function LiveTracking() {
 
   const name = artisan?.fullName || params.name || 'Your artisan';
   const { openForBooking } = useOpenChat();
+  const { mutate: cancelBooking, isPending: cancelling } = useCancelBooking();
+
+  const confirmCancel = () => {
+    if (!bookingId) return;
+    const refundNote =
+      booking?.paymentState === 'Paid'
+        ? ' Your payment will be refunded in full.'
+        : '';
+    Alert.alert('Cancel booking?', `${name} will be notified.${refundNote}`, [
+      { text: 'Keep booking', style: 'cancel' },
+      {
+        text: 'Cancel booking',
+        style: 'destructive',
+        onPress: () =>
+          cancelBooking(bookingId, {
+            onSuccess: () => {
+              setSheet(false);
+              router.back();
+            },
+            onError: (err) =>
+              Alert.alert('Could not cancel', authErrorMessage(err, 'Please try again.')),
+          }),
+      },
+    ]);
+  };
   const openChat = () => {
     if (bookingId) openForBooking(bookingId, name);
   };
@@ -187,7 +214,15 @@ export default function LiveTracking() {
           <Ionicons name="chevron-up" size={18} color={colors.textMuted} />
         </Pressable>
 
-        <LiveMap destination={destination} artisan={artisanPos} nearby={nearby} route={routeForMap} showsUserLocation />
+        <LiveMap
+          destination={destination}
+          artisan={artisanPos}
+          nearby={nearby}
+          route={routeForMap}
+          showsUserLocation
+          artisanLabel={name.split(' ')[0]}
+          destinationLabel="You"
+        />
       </View>
 
       {/* Bottom card */}
@@ -258,6 +293,18 @@ export default function LiveTracking() {
               openChat();
             }}
           />
+          {booking && canCancel(booking.status) ? (
+            <Pressable
+              accessibilityRole="button"
+              disabled={cancelling}
+              onPress={confirmCancel}
+              className="mt-3 items-center py-2"
+            >
+              <Text className="text-[14px] font-semibold text-red-500">
+                {cancelling ? 'Cancelling…' : 'Cancel booking'}
+              </Text>
+            </Pressable>
+          ) : null}
         </View>
       </BottomSheet>
     </SafeAreaView>

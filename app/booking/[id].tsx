@@ -284,7 +284,9 @@ export default function BookingDetailScreen() {
   const confirmCancel = () => {
     Alert.alert(
       'Cancel booking?',
-      'This will withdraw your request. You can always book again.',
+      booking?.paymentState === 'Paid'
+        ? 'This will withdraw your request. Your payment will be refunded in full.'
+        : 'This will withdraw your request. You can always book again.',
       [
         { text: 'Keep booking', style: 'cancel' },
         {
