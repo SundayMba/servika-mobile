@@ -54,13 +54,6 @@ const ACTIVE_STATUSES: BookingStatus[] = [
   'InProgress',
 ];
 
-/** Greeting that tracks the local time of day. */
-function timeGreeting(hour: number): string {
-  if (hour < 12) return 'Good morning';
-  if (hour < 17) return 'Good afternoon';
-  return 'Good evening';
-}
-
 // Approx. height of the custom bottom tab bar (excluding the safe-area inset,
 // which we add separately) so scroll content clears it.
 const TAB_BAR_HEIGHT = 60;
@@ -157,9 +150,9 @@ export default function Home() {
   const { isAuthenticated, guard, promptVisible, hidePrompt } = useAuthGate();
   const { openWithArtisan } = useOpenChat();
 
-  // Greet the signed-in user by first name; guests see "Guest".
+  // Greet the signed-in user by first name; guests see "Guest". A short "Hi"
+  // (instead of "Good morning/…") keeps the line compact even with long names.
   const firstName = user?.fullName.trim().split(/\s+/)[0] || 'Guest';
-  const greeting = useMemo(() => timeGreeting(new Date().getHours()), []);
 
   const categoriesQuery = useCategories();
   const artisansQuery = useNearbyArtisans(areaCoords);
@@ -212,8 +205,8 @@ export default function Home() {
       >
         <View className="flex-row items-center justify-between">
           <View className="flex-1 pr-3">
-            <Text className="text-[22px] font-bold text-white">
-              {greeting}, {firstName}
+            <Text numberOfLines={1} className="text-[22px] font-bold text-white">
+              Hi, {firstName}
             </Text>
             <TouchableOpacity
               accessibilityRole="button"

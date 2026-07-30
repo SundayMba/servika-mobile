@@ -6,6 +6,7 @@ import {
 } from '@microsoft/signalr';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { getLatestLocation, sendLocationPing } from '@/lib/api/tracking';
 import { config } from '@/lib/config';
 import { tokenStorage } from '@/lib/auth/tokenStorage';
 import type { LocationUpdate, TrackingState } from '@/lib/tracking/types';
@@ -74,6 +75,34 @@ export function useLiveTracking(bookingId: string | undefined) {
     };
   }, [bookingId]);
 
+  // REST fallback: poll the latest recorded position every few seconds so the
+  // map still moves when the hub socket is down (flaky networks/tunnels drop
+  // long-lived WebSockets). Hub events win when they're newer.
+  useEffect(() => {
+    if (!bookingId) return;
+    let stopped = false;
+    const tick = async () => {
+      try {
+        const latest = await getLatestLocation(bookingId);
+        if (stopped || !latest) return;
+        setLocation((prev) =>
+          prev && new Date(prev.atUtc).getTime() >= new Date(latest.atUtc).getTime()
+            ? prev
+            : latest,
+        );
+        setState((s) => (s === 'ended' ? s : 'tracking'));
+      } catch {
+        // fallback only — the hub path still applies
+      }
+    };
+    tick();
+    const timer = setInterval(tick, 5000);
+    return () => {
+      stopped = true;
+      clearInterval(timer);
+    };
+  }, [bookingId]);
+
   return { location, state };
 }
 
@@ -118,19 +147,26 @@ export function useLocationStreamer(bookingId: string | undefined, enabled: bool
       heading?: number | null;
       speed?: number | null;
     }) => {
+      if (!bookingId) return;
       const conn = connRef.current;
-      if (!conn || conn.state !== HubConnectionState.Connected || !bookingId) return;
-      conn
-        .invoke(
-          'SendLocationUpdate',
-          bookingId,
-          coords.latitude,
-          coords.longitude,
-          coords.accuracy ?? null,
-          coords.heading ?? null,
-          coords.speed ?? null,
-        )
-        .catch(() => {});
+      if (conn && conn.state === HubConnectionState.Connected) {
+        conn
+          .invoke(
+            'SendLocationUpdate',
+            bookingId,
+            coords.latitude,
+            coords.longitude,
+            coords.accuracy ?? null,
+            coords.heading ?? null,
+            coords.speed ?? null,
+          )
+          // Invoke failed mid-flight — persist the fix over REST instead.
+          .catch(() => sendLocationPing(bookingId, coords).catch(() => {}));
+      } else {
+        // Hub socket down — REST keeps the pings flowing (and the server still
+        // broadcasts them to hub watchers).
+        sendLocationPing(bookingId, coords).catch(() => {});
+      }
     },
     [bookingId],
   );
