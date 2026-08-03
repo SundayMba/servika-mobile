@@ -123,7 +123,6 @@ export default function LiveTracking() {
     artisan?.latitude != null && artisan?.longitude != null
       ? { latitude: artisan.latitude, longitude: artisan.longitude }
       : null;
-  const isLive = !!location;
   const artisanPos: LatLng | null = location
     ? { latitude: location.latitude, longitude: location.longitude }
     : basePos;

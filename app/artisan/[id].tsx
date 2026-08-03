@@ -71,6 +71,10 @@ export default function ArtisanProfile() {
   const { isAuthenticated, guard, promptVisible, hidePrompt } = useAuthGate();
   const { openWithArtisan } = useOpenChat();
   const [aboutExpanded, setAboutExpanded] = useState(false);
+  // First render is unclamped so we can count real lines; then we clamp to 3
+  // and only offer "Read more" when there genuinely is more to read.
+  const [aboutLines, setAboutLines] = useState<number | null>(null);
+  const [servicesExpanded, setServicesExpanded] = useState(false);
 
   const { data: artisan, isLoading, isError } = useArtisan(id);
   const isFavorite = useIsFavorite(id, isAuthenticated);
@@ -98,14 +102,11 @@ export default function ArtisanProfile() {
     );
   }
 
-  // Two separate uploads: the cover (them at work) tops the profile; the
-  // profile photo is the round avatar. Each falls back through the other /
-  // bundled seed art / the initials placeholders below.
-  const cover = artisanCoverSource(
-    artisan.coverPhotoUrl,
-    artisan.photoUrl,
-    artisan.imageKey,
-  );
+  // The cover is PLATFORM art only (bundled seed artwork or the branded
+  // initials design) — deliberately never an artisan upload. A free-form cover
+  // is a billboard: business cards / phone numbers / banners would route jobs
+  // off-platform. The round profile photo below stays theirs (it's a face).
+  const cover = artisanCoverSource(null, null, artisan.imageKey);
   const avatar = artisanPhotoSource(artisan.photoUrl, artisan.imageKey);
   // Uploaded work-evidence photos win; seed artisans fall back to bundled art.
   const gallery =
@@ -233,27 +234,35 @@ export default function ArtisanProfile() {
           <View className="mt-7 px-5">
             <SectionTitle title="Services" />
             <View className="flex-row flex-wrap gap-2">
-              {artisan.services.slice(0, 3).map((service) => (
-                <View
-                  key={service}
-                  className="flex-row items-center gap-1.5 rounded-xl border border-gray-100 bg-gray-50 px-3.5 py-2"
-                >
-                  <Ionicons
-                    name="construct-outline"
-                    size={14}
-                    color={colors.primary}
-                  />
-                  <Text className="text-[13px] font-medium text-gray-700">
-                    {service}
-                  </Text>
-                </View>
-              ))}
+              {(servicesExpanded ? artisan.services : artisan.services.slice(0, 3)).map(
+                (service) => (
+                  <View
+                    key={service}
+                    className="flex-row items-center gap-1.5 rounded-xl border border-gray-100 bg-gray-50 px-3.5 py-2"
+                  >
+                    <Ionicons
+                      name="construct-outline"
+                      size={14}
+                      color={colors.primary}
+                    />
+                    <Text className="text-[13px] font-medium text-gray-700">
+                      {service}
+                    </Text>
+                  </View>
+                ),
+              )}
               {artisan.services.length > 3 && (
-                <View className="flex-row items-center rounded-xl border border-gray-100 bg-gray-50 px-3.5 py-2">
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => setServicesExpanded((v) => !v)}
+                  className="flex-row items-center rounded-xl border border-primary/20 bg-primary/5 px-3.5 py-2 active:opacity-70"
+                >
                   <Text className="text-[13px] font-semibold text-primary">
-                    +{artisan.services.length - 3} more
+                    {servicesExpanded
+                      ? 'Show less'
+                      : `+${artisan.services.length - 3} more`}
                   </Text>
-                </View>
+                </Pressable>
               )}
             </View>
           </View>
@@ -262,16 +271,21 @@ export default function ArtisanProfile() {
           <View className="mt-7 px-5">
             <SectionTitle title={`About ${artisan.fullName.split(' ')[0]}`} />
             <Text
-              numberOfLines={aboutExpanded ? undefined : 3}
+              numberOfLines={aboutExpanded || aboutLines === null ? undefined : 3}
+              onTextLayout={(e) => {
+                if (aboutLines === null) setAboutLines(e.nativeEvent.lines.length);
+              }}
               className="text-[14px] leading-5 text-gray-500"
             >
               {artisan.about}
             </Text>
-            <Pressable hitSlop={6} onPress={() => setAboutExpanded((v) => !v)}>
-              <Text className="mt-1.5 text-[13px] font-semibold text-primary">
-                {aboutExpanded ? 'Read less' : 'Read more'}
-              </Text>
-            </Pressable>
+            {(aboutLines ?? 0) > 3 ? (
+              <Pressable hitSlop={6} onPress={() => setAboutExpanded((v) => !v)}>
+                <Text className="mt-1.5 text-[13px] font-semibold text-primary">
+                  {aboutExpanded ? 'Read less' : 'Read more'}
+                </Text>
+              </Pressable>
+            ) : null}
           </View>
 
           {/* How pricing works — booking and inspection are free */}

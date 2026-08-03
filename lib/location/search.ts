@@ -29,11 +29,64 @@ const PLACES_KEY = process.env.EXPO_PUBLIC_GOOGLE_PLACES_KEY;
 /** True when real Google Places autocomplete is available. */
 export const hasPlacesKey = !!PLACES_KEY;
 
-/** Google Places Autocomplete — Nigeria-scoped type-ahead. */
-async function searchGooglePlaces(
+/**
+ * Google Places Autocomplete (New) — Nigeria-scoped type-ahead.
+ * Recent Google Cloud projects can only enable "Places API (New)", so this is
+ * the primary endpoint. Returns `null` on an API error (key not enabled /
+ * restricted / quota) so the caller can fall back — `[]` means a real
+ * "no matches" and should NOT cascade.
+ */
+async function searchGooglePlacesNew(
   query: string,
   signal?: AbortSignal,
-): Promise<PlaceResult[]> {
+): Promise<PlaceResult[] | null> {
+  const res = await fetch('https://places.googleapis.com/v1/places:autocomplete', {
+    method: 'POST',
+    signal,
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Goog-Api-Key': PLACES_KEY!,
+    },
+    body: JSON.stringify({
+      input: query,
+      includedRegionCodes: ['ng'],
+      languageCode: 'en',
+    }),
+  });
+  const json = (await res.json()) as {
+    error?: { message?: string };
+    suggestions?: {
+      placePrediction?: {
+        placeId: string;
+        text?: { text?: string };
+        structuredFormat?: {
+          mainText?: { text?: string };
+          secondaryText?: { text?: string };
+        };
+      };
+    }[];
+  };
+  if (!res.ok || json.error) {
+    if (__DEV__)
+      console.warn('[places-new] error:', json.error?.message ?? res.status);
+    return null;
+  }
+  return (json.suggestions ?? [])
+    .map((s) => s.placePrediction)
+    .filter((p): p is NonNullable<typeof p> => !!p)
+    .map((p) => ({
+      id: p.placeId,
+      label: p.structuredFormat?.mainText?.text ?? p.text?.text ?? query,
+      sub: p.structuredFormat?.secondaryText?.text,
+    }));
+}
+
+/** Legacy Places Autocomplete — kept as a fallback for keys/projects that
+ *  still have the old "Places API" enabled instead of the new one. */
+async function searchGooglePlacesLegacy(
+  query: string,
+  signal?: AbortSignal,
+): Promise<PlaceResult[] | null> {
   const url =
     'https://maps.googleapis.com/maps/api/place/autocomplete/json' +
     `?input=${encodeURIComponent(query)}` +
@@ -41,14 +94,19 @@ async function searchGooglePlaces(
   const res = await fetch(url, { signal });
   const json = (await res.json()) as {
     status: string;
+    error_message?: string;
     predictions?: {
       place_id: string;
       description: string;
       structured_formatting?: { main_text: string; secondary_text?: string };
     }[];
   };
-  if (json.status !== 'OK' || !json.predictions) return [];
-  return json.predictions.map((p) => ({
+  if (json.status !== 'OK' && json.status !== 'ZERO_RESULTS') {
+    if (__DEV__)
+      console.warn('[places-legacy] error:', json.status, json.error_message ?? '');
+    return null;
+  }
+  return (json.predictions ?? []).map((p) => ({
     id: p.place_id,
     label: p.structured_formatting?.main_text ?? p.description,
     sub: p.structured_formatting?.secondary_text,
@@ -90,7 +148,15 @@ export async function searchPlaces(
 ): Promise<PlaceResult[]> {
   const q = query.trim();
   if (q.length < 2) return [];
-  return PLACES_KEY ? searchGooglePlaces(q, signal) : searchNativeGeocode(q);
+  if (PLACES_KEY) {
+    // New API first, legacy second; only an API *error* (null) falls through —
+    // a legitimate empty result stays empty. Last resort: native geocoder.
+    const fresh = await searchGooglePlacesNew(q, signal);
+    if (fresh) return fresh;
+    const legacy = await searchGooglePlacesLegacy(q, signal);
+    if (legacy) return legacy;
+  }
+  return searchNativeGeocode(q);
 }
 
 /** Build a readable area label from a reverse-geocoded place. */

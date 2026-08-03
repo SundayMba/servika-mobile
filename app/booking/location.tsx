@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Alert,
   Pressable,
@@ -17,6 +17,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { BookingSteps } from '@/components/booking/BookingSteps';
 import { Button } from '@/components/ui/Button';
 import { colors } from '@/constants/colors';
+import { geocodeText, searchPlaces, type PlaceResult } from '@/lib/location/search';
+
+const dropShadow = {
+  shadowColor: '#0F172A',
+  shadowOpacity: 0.08,
+  shadowRadius: 10,
+  shadowOffset: { width: 0, height: 4 },
+  elevation: 4,
+} as const;
 
 export default function BookingLocation() {
   const router = useRouter();
@@ -52,6 +61,43 @@ export default function BookingLocation() {
     null,
   );
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  // Places autocomplete under the address field: suggestions appear while the
+  // user types and clear once they pick one (or use GPS).
+  const [suggestions, setSuggestions] = useState<PlaceResult[]>([]);
+  const suppressSearch = useRef(false);
+
+  useEffect(() => {
+    if (suppressSearch.current) {
+      suppressSearch.current = false;
+      return;
+    }
+    const q = addressText.trim();
+    if (q.length < 3) {
+      setSuggestions([]);
+      return;
+    }
+    const ctrl = new AbortController();
+    const t = setTimeout(() => {
+      searchPlaces(q, ctrl.signal)
+        .then((r) => setSuggestions(r.slice(0, 5)))
+        .catch(() => {});
+    }, 350);
+    return () => {
+      ctrl.abort();
+      clearTimeout(t);
+    };
+  }, [addressText]);
+
+  const pickSuggestion = async (place: PlaceResult) => {
+    const full = place.sub ? `${place.label}, ${place.sub}` : place.label;
+    suppressSearch.current = true;
+    setAddressText(full);
+    setSuggestions([]);
+    // Best-effort coordinates for the picked place (free native geocoder) —
+    // they power bid distances and the tracking destination.
+    const pos = await geocodeText(full);
+    if (pos) setCoords({ lat: pos.latitude, lng: pos.longitude });
+  };
 
   const canConfirm = addressText.trim().length > 0;
 
@@ -85,7 +131,9 @@ export default function BookingLocation() {
             .join(', ')
         : `${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}`;
 
+      suppressSearch.current = true;
       setAddressText(formattedAddress);
+      setSuggestions([]);
       setCoords({
         lat: position.coords.latitude,
         lng: position.coords.longitude,
@@ -208,17 +256,45 @@ export default function BookingLocation() {
               textAlignVertical="top"
               className="min-h-[72px] rounded-2xl border border-gray-200 bg-white px-4 py-3 text-[15px] text-gray-900"
             />
+            {suggestions.length > 0 ? (
+              <View className="mt-2 overflow-hidden rounded-2xl border border-gray-100 bg-white" style={dropShadow}>
+                {suggestions.map((sug, i) => (
+                  <Pressable
+                    key={sug.id}
+                    accessibilityRole="button"
+                    onPress={() => pickSuggestion(sug)}
+                    className={`flex-row items-center gap-3 px-4 py-3 active:bg-gray-50 ${
+                      i === suggestions.length - 1 ? '' : 'border-b border-gray-50'
+                    }`}
+                  >
+                    <View className="h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+                      <Ionicons name="location-outline" size={15} color={colors.primary} />
+                    </View>
+                    <View className="flex-1">
+                      <Text className="text-[14px] font-semibold text-gray-900" numberOfLines={1}>
+                        {sug.label}
+                      </Text>
+                      {sug.sub ? (
+                        <Text className="text-[12px] text-gray-400" numberOfLines={1}>
+                          {sug.sub}
+                        </Text>
+                      ) : null}
+                    </View>
+                  </Pressable>
+                ))}
+              </View>
+            ) : null}
           </View>
 
-          {/* Delivery instructions */}
+          {/* Access instructions (gate codes, directions for the artisan) */}
           <View className="mt-5">
             <Text className="mb-1.5 text-[13px] font-semibold text-gray-700">
-              Add delivery instructions (optional)
+              Access instructions (optional)
             </Text>
             <TextInput
               value={instructions}
               onChangeText={setInstructions}
-              placeholder="e.g. Gate code, floor number, landmark"
+              placeholder="e.g. Gate code, floor, landmark, 'call at the gate'"
               placeholderTextColor={colors.textMuted}
               className="h-14 rounded-2xl border border-gray-200 bg-white px-4 text-[15px] text-gray-900"
             />

@@ -1,8 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
+import { useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from 'react-native';
+
+import { PhotoViewer } from '@/components/PhotoViewer';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { colors } from '@/constants/colors';
@@ -18,6 +21,8 @@ import { useArtisan } from '@/lib/catalogue/hooks';
  * review. "Raise an issue" routes to the (scaffolded) dispute flow.
  */
 export default function ServiceCompletion() {
+  // Fullscreen zoomable viewer for the proof photos (null = closed).
+  const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   const router = useRouter();
   const params = useLocalSearchParams<{
     id?: string;
@@ -117,12 +122,19 @@ export default function ServiceCompletion() {
         ) : (
           <View className="flex-row flex-wrap gap-3">
             {completion!.photos.map((uri, i) => (
-              <Image
+              <Pressable
                 key={i}
-                source={{ uri }}
-                style={{ width: '47%', height: 150, borderRadius: 16 }}
-                contentFit="cover"
-              />
+                accessibilityRole="imagebutton"
+                accessibilityLabel="View photo fullscreen"
+                style={{ width: '47%' }}
+                onPress={() => setViewerIndex(i)}
+              >
+                <Image
+                  source={{ uri }}
+                  style={{ width: '100%', height: 150, borderRadius: 16 }}
+                  contentFit="cover"
+                />
+              </Pressable>
             ))}
           </View>
         )}
@@ -171,6 +183,14 @@ export default function ServiceCompletion() {
           <Text className="text-[14px] font-semibold text-red-600">Raise an issue</Text>
         </Pressable>
       </ScrollView>
+      {/* Zoomable fullscreen viewer for the artisan's proof photos */}
+      <PhotoViewer
+        visible={viewerIndex !== null}
+        initialIndex={viewerIndex ?? 0}
+        onClose={() => setViewerIndex(null)}
+        photos={(completion?.photos ?? []).map((uri) => ({ uri }))}
+      />
+
     </SafeAreaView>
   );
 }

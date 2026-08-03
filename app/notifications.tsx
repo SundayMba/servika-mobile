@@ -73,17 +73,10 @@ export default function Notifications() {
     // app now, so here the tap just marks it read.
     if (n.type === 'OpenJob') return;
     if (!n.bookingId) return;
-    // Booking updates open the active-booking dashboard, which jumps
-    // straight to the live map when the artisan is en route (and to the detail once
-    // done). Payment/other notifications open the booking detail.
-    if (n.type === 'Booking') {
-      router.push({
-        pathname: '/active-booking/dashboard',
-        params: { bookingId: n.bookingId },
-      });
-    } else {
-      router.push({ pathname: '/booking/[id]', params: { id: n.bookingId } });
-    }
+    // Every booking-shaped notification opens the booking DETAIL — the summary of
+    // where things stand — never the map directly. The detail screen offers
+    // "Track artisan live" when the artisan is en route.
+    router.push({ pathname: '/booking/[id]', params: { id: n.bookingId } });
   };
 
   return (

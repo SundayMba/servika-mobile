@@ -92,6 +92,9 @@ export interface BookingDetail {
   categorySlug: string;
   serviceName: string;
   artisanName: string | null;
+  /** The customer's display name — present on the ARTISAN-side job detail
+   *  (drives the live map's destination name tag); null customer-side. */
+  customerName?: string | null;
   description: string;
   addressText: string;
   locationLat: number | null;

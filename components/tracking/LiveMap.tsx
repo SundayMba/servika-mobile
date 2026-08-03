@@ -177,16 +177,25 @@ export function LiveMap({
   const lastFitAt = useRef<LatLng | null>(null);
 
   const fit = () => {
-    const pts = [destination, ...(artisan ? [artisan] : [])];
-    if (pts.length < 2) {
+    lastFitAt.current = artisan;
+    // Close together (or no artisan ping yet): a street-level camera — you
+    // should read street/place names, like a ride app — instead of a far-out
+    // fitToCoordinates (which zooms way out when the two points nearly
+    // coincide, e.g. "0 m away").
+    if (!artisan || distanceKm(destination, artisan) < 0.35) {
+      const center = artisan
+        ? {
+            latitude: (destination.latitude + artisan.latitude) / 2,
+            longitude: (destination.longitude + artisan.longitude) / 2,
+          }
+        : destination;
       mapRef.current?.animateToRegion(
-        { ...destination, latitudeDelta: 0.02, longitudeDelta: 0.02 },
+        { ...center, latitudeDelta: 0.008, longitudeDelta: 0.008 },
         500,
       );
       return;
     }
-    lastFitAt.current = artisan;
-    mapRef.current?.fitToCoordinates(pts, {
+    mapRef.current?.fitToCoordinates([destination, artisan], {
       edgePadding: { top: 140, right: 90, bottom: 340, left: 90 },
       animated: true,
     });
@@ -216,10 +225,10 @@ export function LiveMap({
         showsMyLocationButton={false}
         provider={PROVIDER_DEFAULT}
         style={{ flex: 1 }}
-        userInterfaceStyle="dark"
-        customMapStyle={DARK_MAP_STYLE}
+        userInterfaceStyle="light"
+        customMapStyle={LIGHT_MAP_STYLE}
         showsCompass={false}
-        showsPointsOfInterest={false}
+        showsPointsOfInterest
         showsBuildings={false}
         toolbarEnabled={false}
         onPanDrag={() => {
@@ -295,18 +304,20 @@ const shadow = {
   elevation: 5,
 } as const;
 
-// Compact sleek dark style (Google provider; ignored by Apple Maps, which uses
-// userInterfaceStyle="dark"). Tuned for a calm Uber/Bolt-like night map.
-const DARK_MAP_STYLE = [
-  { elementType: 'geometry', stylers: [{ color: '#1d2330' }] },
-  { elementType: 'labels.text.fill', stylers: [{ color: '#8b93a7' }] },
-  { elementType: 'labels.text.stroke', stylers: [{ color: '#1d2330' }] },
-  { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+// Calm light day-map (Google provider; ignored by Apple Maps, which uses
+// userInterfaceStyle="light"). inDrive-like: streets white, water soft blue,
+// and — unlike the old dark style — neighbourhood/place labels stay VISIBLE so
+// riders can orient by the places they know. Only business POIs are hidden
+// (they read as ads and clutter the trip view).
+const LIGHT_MAP_STYLE = [
+  { elementType: 'geometry', stylers: [{ color: '#f2f4f7' }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#4b5563' }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: '#ffffff' }] },
+  { featureType: 'poi.business', stylers: [{ visibility: 'off' }] },
   { featureType: 'transit', stylers: [{ visibility: 'off' }] },
-  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#2a3142' }] },
-  { featureType: 'road.arterial', elementType: 'geometry', stylers: [{ color: '#323a4d' }] },
-  { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#3b4356' }] },
-  { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#9aa3b7' }] },
-  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#11151c' }] },
-  { featureType: 'landscape', elementType: 'geometry', stylers: [{ color: '#1d2330' }] },
+  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#ffffff' }] },
+  { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#e5e7eb' }] },
+  { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#6b7280' }] },
+  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#c9d6e0' }] },
+  { featureType: 'landscape', elementType: 'geometry', stylers: [{ color: '#eef1f4' }] },
 ];
