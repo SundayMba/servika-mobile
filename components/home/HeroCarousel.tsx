@@ -130,8 +130,8 @@ export function HeroCarousel({
           off a single, monotonic `pos` value that eases toward `step`. At every
           step boundary the interpolations evaluate to the exact same pixels, so
           nothing is ever reset and the on-screen image never snaps — no flicker.
-          It's a pure left → right conveyor: enter from far left, exit to the
-          right, both clipped to the lane. */}
+          It's a pure right → left conveyor: enter from far right, exit to the
+          left, both clipped to the lane. */}
       <View
         pointerEvents="none"
         onLayout={(e) => setBoxW(e.nativeEvent.layout.width)}
@@ -143,23 +143,23 @@ export function HeroCarousel({
           // makes the remount on their next turn effectively free).
           if (i !== entering && !(step > 0 && i === leaving)) return null;
 
-          // Default: parked just off the right edge (fully clipped, hidden).
-          let translateX: Animated.AnimatedInterpolation<number> | number = boxW;
+          // Default: parked just off the left edge (fully clipped, hidden).
+          let translateX: Animated.AnimatedInterpolation<number> | number = -boxW;
           let opacity = 0;
 
           if (i === entering) {
-            // Glide from far left to centre as pos: step-1 → step.
+            // Glide from far right to centre as pos: step-1 → step.
             translateX = pos.interpolate({
               inputRange: [step - 1, step],
-              outputRange: [-boxW, 0],
+              outputRange: [boxW, 0],
               extrapolate: 'clamp',
             });
             opacity = 1;
           } else if (step > 0 && i === leaving) {
-            // Glide from centre out to the right over the same interval.
+            // Glide from centre out to the left over the same interval.
             translateX = pos.interpolate({
               inputRange: [step - 1, step],
-              outputRange: [0, boxW],
+              outputRange: [0, -boxW],
               extrapolate: 'clamp',
             });
             opacity = 1;

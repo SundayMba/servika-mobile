@@ -28,11 +28,11 @@ export const SERVICE_FILTERS: {
 
 /** Representative work photos used as listing thumbnails per category. */
 const CATEGORY_PHOTOS: Record<string, ImageSourcePropType> = {
-  electrical: require('../assets/images/artisans/working/electrician_working_on_wall_electrical_box.png'),
-  plumbing: require('../assets/images/artisans/working/plumber_fixing_sink_pipes_with_wrench.png'),
-  ac: require('../assets/images/artisans/working/hvac_technician_working_on_ac_unit.png'),
-  fridge: require('../assets/images/artisans/working/technician_repairing_refrigerator_with_tools.png'),
-  carpentry: require('../assets/images/artisans/working/carpenter_focused_on_sawing_wood.png'),
+  electrical: require('../assets/images/artisans/working/hero_electrician.png'),
+  plumbing: require('../assets/images/artisans/working/hero_plumber.png'),
+  ac: require('../assets/images/artisans/working/hero_ac.png'),
+  fridge: require('../assets/images/artisans/working/hero_fridge.png'),
+  carpentry: require('../assets/images/artisans/working/hero_carpenter.png'),
 };
 
 /**

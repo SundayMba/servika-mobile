@@ -46,18 +46,18 @@ const ARTISAN_AVATARS: Record<string, ImageSourcePropType> = {
 
 /** Artisan cover/banner photo, keyed by artisan imageKey. */
 const ARTISAN_COVERS: Record<string, ImageSourcePropType> = {
-  'emeka-okafor': require('@assets/images/artisans/working/electrician_working_on_wall_electrical_box.png'),
-  'ibrahim-yusuf': require('@assets/images/artisans/working/plumber_fixing_sink_pipes_with_wrench.png'),
-  'chidi-okeke': require('@assets/images/artisans/working/hvac_technician_working_on_ac_unit.png'),
+  'emeka-okafor': require('@assets/images/artisans/working/hero_electrician.png'),
+  'ibrahim-yusuf': require('@assets/images/artisans/working/hero_plumber.png'),
+  'chidi-okeke': require('@assets/images/artisans/working/hero_ac.png'),
 };
 
 /** Work-gallery photos, keyed by gallery key. */
 const WORKING_PHOTOS: Record<string, ImageSourcePropType> = {
-  electrician: require('@assets/images/artisans/working/electrician_working_on_wall_electrical_box.png'),
-  plumber: require('@assets/images/artisans/working/plumber_fixing_sink_pipes_with_wrench.png'),
-  hvac: require('@assets/images/artisans/working/hvac_technician_working_on_ac_unit.png'),
-  fridge: require('@assets/images/artisans/working/technician_repairing_refrigerator_with_tools.png'),
-  carpenter: require('@assets/images/artisans/working/carpenter_focused_on_sawing_wood.png'),
+  electrician: require('@assets/images/artisans/working/hero_electrician.png'),
+  plumber: require('@assets/images/artisans/working/hero_plumber.png'),
+  hvac: require('@assets/images/artisans/working/hero_ac.png'),
+  fridge: require('@assets/images/artisans/working/hero_fridge.png'),
+  carpenter: require('@assets/images/artisans/working/hero_carpenter.png'),
 };
 
 export function categoryImage(slug: string): ImageSourcePropType | undefined {
