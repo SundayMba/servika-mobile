@@ -108,6 +108,8 @@ export interface BookingDetail {
   /** "Online" (escrow, default) or "Cash" (pay the artisan after service). */
   paymentMethod: 'Online' | 'Cash';
   initialQuoteAmountNaira: number | null;
+  /** Amount returned to the customer if refunded (full or partial), else null. */
+  refundedAmountNaira?: number | null;
   commissionRate: number;
   createdAt: string;
   acceptedAtUtc: string | null;

@@ -612,7 +612,14 @@ export default function BookingDetailScreen() {
               <View className="mt-2 flex-row items-center gap-2 rounded-xl bg-green-50 px-3 py-2">
                 <Ionicons name="arrow-undo" size={15} color="#15803D" />
                 <Text className="flex-1 text-[12px] font-semibold text-green-700">
-                  Refunded{booking.initialQuoteAmountNaira != null ? ` · ${formatNaira(booking.initialQuoteAmountNaira)}` : ''} to your payment method
+                  Refunded{booking.refundedAmountNaira != null ? ` · ${formatNaira(booking.refundedAmountNaira)}` : ''} to your payment method
+                </Text>
+              </View>
+            ) : booking.paymentState === 'PartiallyRefunded' ? (
+              <View className="mt-2 flex-row items-center gap-2 rounded-xl bg-green-50 px-3 py-2">
+                <Ionicons name="arrow-undo" size={15} color="#15803D" />
+                <Text className="flex-1 text-[12px] font-semibold text-green-700">
+                  {booking.refundedAmountNaira != null ? `${formatNaira(booking.refundedAmountNaira)} refunded` : 'Partially refunded'} to your payment method
                 </Text>
               </View>
             ) : booking.paymentState === 'Paid' ? (
