@@ -1,10 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import { Image } from 'expo-image';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Dimensions, Pressable, Text, View } from 'react-native';
+import { BackHandler, Dimensions, Pressable, Text, View } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -128,6 +128,25 @@ function ReceiptRow({ label, children }: { label: string; children: ReactNode })
 
 export default function BookingSuccess() {
   const router = useRouter();
+
+  // The flow screens (request -> photos -> location -> summary) are still on
+  // the stack beneath this screen. Leaving via dismissAll first means the
+  // Android back button and every button here exit the funnel cleanly instead
+  // of walking the user backward through their own form inputs.
+  const leaveTo = (href: Href, mode: 'replace' | 'push' = 'replace') => {
+    router.dismissAll();
+    if (mode === 'push') router.push(href);
+    else router.replace(href);
+  };
+
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      leaveTo('/bookings');
+      return true;
+    });
+    return () => sub.remove();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const params = useLocalSearchParams<{
     bookingId?: string;
     serviceName?: string;
@@ -156,6 +175,7 @@ export default function BookingSuccess() {
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top', 'bottom']}>
+      <Stack.Screen options={{ gestureEnabled: false }} />
       <StatusBar style="dark" />
 
       <View className="flex-1 px-6">
@@ -254,8 +274,8 @@ export default function BookingSuccess() {
               label="View Request"
               onPress={() =>
                 params.bookingId
-                  ? router.replace(`/booking/${params.bookingId}`)
-                  : router.replace('/bookings')
+                  ? leaveTo(`/booking/${params.bookingId}`, 'push')
+                  : leaveTo('/bookings')
               }
             />
           ) : (
@@ -263,15 +283,18 @@ export default function BookingSuccess() {
               <Button
                 label="Track Booking"
                 onPress={() =>
-                  router.replace({
-                    pathname: '/active-booking/dashboard',
-                    params: {
-                      bookingId: params.bookingId,
-                      artisanId: params.artisanId,
-                      serviceName: params.serviceName,
-                      artisanName: params.artisanName,
+                  leaveTo(
+                    {
+                      pathname: '/active-booking/dashboard',
+                      params: {
+                        bookingId: params.bookingId,
+                        artisanId: params.artisanId,
+                        serviceName: params.serviceName,
+                        artisanName: params.artisanName,
+                      },
                     },
-                  })
+                    'push',
+                  )
                 }
               />
               <Button
@@ -279,15 +302,15 @@ export default function BookingSuccess() {
                 variant="outline"
                 onPress={() =>
                   params.bookingId
-                    ? router.replace(`/booking/${params.bookingId}`)
-                    : router.replace('/bookings')
+                    ? leaveTo(`/booking/${params.bookingId}`, 'push')
+                    : leaveTo('/bookings')
                 }
               />
             </>
           )}
           <Pressable
             accessibilityRole="button"
-            onPress={() => router.replace('/home')}
+            onPress={() => leaveTo('/home')}
             className="items-center py-1"
           >
             <Text className="text-[14px] font-semibold text-gray-500">
