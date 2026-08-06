@@ -117,7 +117,7 @@ function ArtisanRow({
           accessibilityRole="button"
           accessibilityLabel={
             chatLocked
-              ? `Chat with ${artisan.fullName} — sign in required`
+              ? `Chat with ${artisan.fullName}, sign in required`
               : `Chat with ${artisan.fullName}`
           }
           onPress={onChat}
@@ -181,7 +181,7 @@ export default function ArtisansList() {
           ) : (
             <Text className="text-[13px] text-gray-400">
               {artisansQuery.isError
-                ? "Couldn't load artisans — pull to retry."
+                ? "Couldn't load artisans. Pull to retry."
                 : 'No artisans available yet.'}
             </Text>
           )}

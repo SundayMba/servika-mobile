@@ -88,7 +88,7 @@ export const REFERRAL_STEPS: { icon: string; title: string; body: string }[] = [
   {
     icon: 'hand-left-outline',
     title: 'Help them onboard',
-    body: "Guide them through sign-up and KYC — do it for them if they can't.",
+    body: "Guide them through sign-up and KYC, or do it for them if they can't.",
   },
   {
     icon: 'cash-outline',

@@ -157,7 +157,7 @@ export default function CategoryListing() {
               Not sure who to pick?
             </Text>
             <Text className="text-[12px] leading-4 text-gray-500">
-              Post a request — the first available {category.name.toLowerCase()} pro takes it.
+              Post a request and the first available {category.name.toLowerCase()} pro takes it.
             </Text>
           </View>
           <Ionicons name="chevron-forward" size={18} color={colors.primary} />

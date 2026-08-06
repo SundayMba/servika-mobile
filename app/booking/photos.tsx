@@ -200,7 +200,7 @@ export default function BookingPhotos() {
                   key: 'RemoteQuote' as const,
                   icon: 'pricetags-outline' as const,
                   title: 'Get price offers now',
-                  sub: 'Artisans price the job from your photos/video and send offers — you pick one.',
+                  sub: 'Artisans price the job from your photos/video and send offers. You pick one.',
                 },
               ]
             ).map((opt) => {

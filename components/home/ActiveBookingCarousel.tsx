@@ -14,7 +14,7 @@ import type { BookingStatus, BookingSummary } from '@/lib/booking/types';
 // Friendly one-liner for each in-flight status.
 const SUBTITLE: Partial<Record<BookingStatus, string>> = {
   Pending: 'Waiting for the artisan to accept',
-  Accepted: 'Confirmed — preparing to head out',
+  Accepted: 'Confirmed, preparing to head out',
   OnMyWay: 'On the way to you',
   Arrived: 'Your artisan has arrived',
   InProgress: 'Work in progress',

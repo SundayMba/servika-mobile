@@ -129,7 +129,7 @@ function DisputeCard({ dispute }: { dispute: Dispute }) {
     dispute.resolution === 'FavourCustomer'
       ? 'Resolved in your favour.'
       : dispute.resolution === 'FavourArtisan'
-        ? 'Reviewed — the job stands.'
+        ? 'Reviewed. The job stands.'
         : null;
   return (
     <View className="mt-4 rounded-2xl border border-red-100 bg-white p-4">
@@ -266,7 +266,7 @@ export default function BookingDetailScreen() {
   const confirmRebroadcast = () => {
     Alert.alert(
       'Ask other artisans?',
-      `Your request will be opened to all ${booking?.serviceName?.toLowerCase() ?? ''} artisans nearby — same details, nothing to re-type.`,
+      `Your request will be opened to all ${booking?.serviceName?.toLowerCase() ?? ''} artisans nearby, with the same details. Nothing to re-type.`,
       [
         { text: 'Not yet', style: 'cancel' },
         {
@@ -378,11 +378,22 @@ export default function BookingDetailScreen() {
                   </Text>
                   <Text className="mt-0.5 text-center text-[12px] leading-4 text-gray-400">
                     {isDirectPending
-                      ? `${booking.artisanName ?? 'The artisan'} is reviewing your request — they'll send a price, or come inspect for free first. We'll notify you.`
+                      ? `${booking.artisanName ?? 'The artisan'} is reviewing your request. They'll send a price or come inspect for free first. We'll notify you.`
                       : isDirectAwaitingQuote
                         ? `${booking.artisanName ?? 'The artisan'} is inspecting the job (free) and will send their price here. You only pay after you accept it.`
-                        : 'Artisans are reviewing your photos — offers usually arrive within a few hours. We’ll notify you.'}
+                        : 'Artisans are reviewing your photos. Offers usually arrive within a few hours, and we will notify you.'}
                   </Text>
+                  {/* The decisive anti-leakage moment: the artisan may be standing
+                      in the customer's home. Protection only exists in-app, so say
+                      it exactly here, where a side deal would happen. */}
+                  <View className="mt-3 rounded-xl bg-amber-50 px-3 py-2.5">
+                    <Text className="text-[12px] leading-4 text-amber-800">
+                      Keep the price inside Servika. Money you pay in the app is
+                      held safely until the job is done, and you can get it back
+                      if something goes wrong. We cannot protect any payment made
+                      outside the app.
+                    </Text>
+                  </View>
                   {isDirectPending ? (
                     <Pressable
                       accessibilityRole="button"
@@ -540,7 +551,7 @@ export default function BookingDetailScreen() {
                     {booking.artisanName ?? 'This artisan'} can&apos;t take this job
                   </Text>
                   <Text className="text-[12px] leading-4 text-gray-500">
-                    Don&apos;t start over — send the same request to every{' '}
+                    Don&apos;t start over. Send the same request to every{' '}
                     {booking.serviceName.toLowerCase()} artisan nearby.
                   </Text>
                 </View>
@@ -613,7 +624,7 @@ export default function BookingDetailScreen() {
                 <View className="mt-2 flex-row items-center gap-2 rounded-xl bg-amber-50 px-3 py-2.5">
                   <Ionicons name="cash-outline" size={16} color="#B45309" />
                   <Text className="flex-1 text-[12px] font-semibold leading-4 text-amber-700">
-                    Cash on service — pay {formatNaira(booking.initialQuoteAmountNaira)} to{' '}
+                    Cash on service: pay {formatNaira(booking.initialQuoteAmountNaira)} to{' '}
                     {booking.artisanName ?? 'the artisan'} when the job is done.
                     Cash jobs have limited dispute protection.
                   </Text>
@@ -651,7 +662,7 @@ export default function BookingDetailScreen() {
                   <Text className="text-[14px] font-bold text-white">
                     {paying
                       ? 'Opening secure payment…'
-                      : `Pay ${formatNaira(booking.initialQuoteAmountNaira)} — held in escrow`}
+                      : `Pay ${formatNaira(booking.initialQuoteAmountNaira)} into escrow`}
                   </Text>
                 </Pressable>
                 <Text className="mt-2 text-center text-[11.5px] leading-4 text-gray-400">
@@ -677,11 +688,11 @@ export default function BookingDetailScreen() {
               <Text className="mt-1 text-[12px] leading-4 text-gray-500">
                 Waiting for {booking.artisanName ?? 'the artisan'} to accept. Once
                 they confirm, pay {formatNaira(booking.initialQuoteAmountNaira)}{' '}
-                securely — held until the job is done.
+                securely. We hold it until the job is done.
               </Text>
             ) : (
               <Text className="mt-1 text-[12px] leading-4 text-gray-500">
-                Nothing to pay yet — you&apos;ll get a price to review first, and
+                Nothing to pay yet. You&apos;ll get a price to review first, and
                 your payment is held securely until the job is done.
               </Text>
             )}
@@ -843,7 +854,7 @@ export default function BookingDetailScreen() {
           >
             <Ionicons name="lock-closed" size={17} color="#FFFFFF" />
             <Text className="text-[15px] font-bold text-white">
-              Pay securely — held until job is done
+              Pay securely, held until the job is done
             </Text>
           </Pressable>
 
@@ -859,7 +870,7 @@ export default function BookingDetailScreen() {
             </Text>
           </Pressable>
           <Text className="mt-2.5 text-center text-[11.5px] leading-4 text-gray-400">
-            Online payment is protected by escrow — released to the artisan only
+            Online payment is protected by escrow and released to the artisan only
             when you confirm the job. Cash jobs have limited dispute protection.
           </Text>
         </View>

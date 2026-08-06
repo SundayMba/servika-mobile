@@ -201,7 +201,7 @@ export default function Bookings() {
               </Text>
               <Text className="mt-1 text-center text-[13px] leading-5 text-gray-500">
                 {tab === 'active'
-                  ? 'Find an artisan and request a service — it’ll show up here.'
+                  ? 'Find an artisan and request a service. It’ll show up here.'
                   : `You have no ${tab} bookings yet.`}
               </Text>
             </View>

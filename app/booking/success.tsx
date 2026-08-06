@@ -175,8 +175,8 @@ export default function BookingSuccess() {
                 ? 'Artisans are reviewing your photos and will send price offers. Compare them and pick your favourite.'
                 : 'We’re finding you a verified pro nearby. You’ll be notified the moment one accepts.'
               : isFixed
-                ? `${params.artisanName || 'The artisan'} will confirm your booking${amount != null ? ` — then you pay ${formatNaira(amount)}` : ''}, held securely until the job is done.`
-                : `${params.artisanName || 'The artisan'} will review your request and send you a quote — you only pay after you accept it.`}
+                ? `${params.artisanName || 'The artisan'} will confirm your booking${amount != null ? `, then you pay ${formatNaira(amount)}` : ''}, held securely until the job is done.`
+                : `${params.artisanName || 'The artisan'} will review your request and send you a quote. You only pay after you accept it.`}
           </Text>
         </View>
 
@@ -236,10 +236,10 @@ export default function BookingSuccess() {
           <ReceiptRow label="Amount due now">
             <Text className="text-[14px] font-bold text-primary">
               {isFixed && amount != null
-                ? `₦0 now — ${formatNaira(amount)} after the artisan accepts`
+                ? `₦0 now, ${formatNaira(amount)} after the artisan accepts`
                 : amount != null
                   ? formatNaira(amount)
-                  : '₦0 — pay after you accept a quote'}
+                  : '₦0 now, pay after you accept a quote'}
             </Text>
           </ReceiptRow>
         </View>

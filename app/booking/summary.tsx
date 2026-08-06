@@ -193,7 +193,7 @@ export default function BookingSummary() {
             <View className="ml-3 flex-1">
               <Text className="text-[15px] font-bold text-gray-900">Open request</Text>
               <Text className="text-[12px] leading-4 text-gray-500">
-                We&apos;ll match you with a verified {serviceName.toLowerCase()} pro nearby — the
+                We&apos;ll match you with a verified {serviceName.toLowerCase()} pro nearby. The
                 first to accept takes the job.
               </Text>
             </View>
@@ -279,7 +279,7 @@ export default function BookingSummary() {
               <Row label="Fixed price" value={formatNaira(fixedPrice!)} />
               <Text className="mt-1 text-[12px] leading-4 text-gray-500">
                 {artisan?.fullName ?? 'The artisan'} confirms your booking, then you
-                pay {formatNaira(fixedPrice!)} securely — held by Servika until the
+                pay {formatNaira(fixedPrice!)} securely. Servika holds it until the
                 job is done. Nothing to pay now.
               </Text>
             </>
@@ -293,8 +293,8 @@ export default function BookingSummary() {
               </View>
               <Text className="mt-1 text-[12px] leading-4 text-gray-500">
                 {isOpen
-                  ? 'Artisans review your request and send their prices. You only pay after you accept an offer — held securely until the job is done.'
-                  : `${artisan?.fullName ?? 'The artisan'} will review your request and send you a quote (or come inspect for free). You only pay after you accept — held securely until the job is done.`}
+                  ? 'Artisans review your request and send their prices. You only pay after you accept an offer, and your payment is held securely until the job is done.'
+                  : `${artisan?.fullName ?? 'The artisan'} will review your request and send you a quote (or come inspect for free). You only pay after you accept, and your payment is held securely until the job is done.`}
               </Text>
             </>
           )}

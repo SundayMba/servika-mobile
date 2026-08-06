@@ -306,7 +306,7 @@ export default function ArtisanProfile() {
               </View>
               <Text className="mt-3 text-[12px] leading-4 text-gray-500">
                 {artisan.fullName.split(' ')[0]} reviews your request and sends a
-                quote — or inspects the job free of charge first. Your payment is
+                quote, or inspects the job free of charge first. Your payment is
                 held securely by Servika until the work is done.
               </Text>
             </View>
@@ -354,7 +354,7 @@ export default function ArtisanProfile() {
                 ))}
               </View>
               <Text className="mt-2 text-[11.5px] leading-4 text-gray-400">
-                Fixed prices — pay securely once {artisan.fullName.split(' ')[0]} accepts, held
+                Fixed prices. Pay securely once {artisan.fullName.split(' ')[0]} accepts, held
                 until the job is done.
               </Text>
             </View>

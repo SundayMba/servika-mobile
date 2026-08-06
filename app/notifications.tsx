@@ -194,8 +194,8 @@ function EmptyState() {
         You&apos;re all caught up
       </Text>
       <Text className="mt-1.5 text-center text-[13px] leading-5 text-gray-500">
-        Updates about your bookings — when an artisan accepts, is on the way, or
-        finishes a job — will show up here.
+        Updates about your bookings will show up here, like when an artisan
+        accepts, is on the way, or finishes a job.
       </Text>
     </View>
   );

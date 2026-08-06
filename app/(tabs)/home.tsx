@@ -125,7 +125,7 @@ function SectionState({
         <ActivityIndicator color={colors.primary} />
       ) : (
         <Text className="text-[13px] text-gray-400">
-          {error ? "Couldn't load — pull to retry." : 'Nothing here yet.'}
+          {error ? "Couldn't load. Pull to retry." : 'Nothing here yet.'}
         </Text>
       )}
     </View>
@@ -523,7 +523,7 @@ export default function Home() {
               onPress={() =>
                 Alert.alert(
                   'Servika Pro',
-                  'Artisans work from the Servika Pro app — get verified, receive jobs near you and cash out your earnings. Coming to the app stores soon.',
+                  'Artisans work from the Servika Pro app. Get verified, receive jobs near you and cash out your earnings. Coming to the app stores soon.',
                 )
               }
               style={{

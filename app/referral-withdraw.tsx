@@ -64,7 +64,7 @@ export default function ReferralWithdraw() {
       });
       Alert.alert(
         'Withdrawal requested',
-        `${formatNaira(amountNaira)} is on its way to your ${bank.name} account. Bank transfers usually arrive within minutes — we'll notify you once it lands.`,
+        `${formatNaira(amountNaira)} is on its way to your ${bank.name} account. Bank transfers usually arrive within minutes. We'll notify you once it lands.`,
         [{ text: 'OK', onPress: () => router.back() }],
       );
     } catch (e) {

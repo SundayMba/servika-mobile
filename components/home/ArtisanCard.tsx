@@ -130,7 +130,7 @@ export function ArtisanCard({
             accessibilityRole="button"
             accessibilityLabel={
               chatLocked
-                ? `Chat with ${artisan.name} — sign in required`
+                ? `Chat with ${artisan.name}, sign in required`
                 : `Chat with ${artisan.name}`
             }
             onPress={onChat}
