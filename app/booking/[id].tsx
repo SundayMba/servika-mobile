@@ -144,6 +144,16 @@ function DisputeCard({ dispute }: { dispute: Dispute }) {
       <Text className="mt-2 text-[14px] leading-5 text-gray-800">
         {dispute.description}
       </Text>
+      {dispute.artisanResponse ? (
+        <View className="mt-3 rounded-xl border border-primary/15 bg-primary/5 p-3">
+          <Text className="text-[11px] font-bold uppercase tracking-wide text-primary">
+            Artisan responded
+          </Text>
+          <Text className="mt-1 text-[13px] leading-5 text-gray-700">
+            {dispute.artisanResponse}
+          </Text>
+        </View>
+      ) : null}
       {outcome ? (
         <View className="mt-3 rounded-xl bg-gray-50 p-3">
           <Text className="text-[12px] font-semibold text-gray-700">{outcome}</Text>

@@ -13,6 +13,8 @@ export type Dispute = {
   status: DisputeStatus;
   resolution: DisputeResolution;
   resolutionNote: string | null;
+  artisanResponse: string | null;
+  artisanRespondedAtUtc: string | null;
   createdAt: string;
   resolvedAtUtc: string | null;
 };
