@@ -19,7 +19,7 @@ const { width: W } = Dimensions.get('window');
 const SLIDES = [
   {
     id: '1',
-    image: require('@assets/images/onboarding/find-artisans.png'),
+    image: require('@assets/images/onboarding/find-artisans.webp'),
     imageAspect: 781 / 850,
     title: 'Find trusted\nartisans nearby',
     subtitle:
@@ -27,7 +27,7 @@ const SLIDES = [
   },
   {
     id: '2',
-    image: require('@assets/images/onboarding/explore-services.png'),
+    image: require('@assets/images/onboarding/explore-services.webp'),
     imageAspect: 755 / 865,
     title: 'Explore services\nbefore you sign up',
     subtitle:
@@ -35,7 +35,7 @@ const SLIDES = [
   },
   {
     id: '3',
-    image: require('@assets/images/onboarding/secure-booking.png'),
+    image: require('@assets/images/onboarding/secure-booking.webp'),
     imageAspect: 941 / 870,
     title: "Book only when\nyou're ready",
     subtitle:
@@ -83,7 +83,7 @@ export default function Welcome() {
       <View className="h-14 flex-row items-center justify-between px-6">
         <View className="flex-row items-center gap-2">
           <Image
-            source={require('@assets/images/logo/app-icon.png')}
+            source={require('@assets/images/logo/app-icon.webp')}
             className="h-[30px] w-[30px]"
             resizeMode="contain"
           />

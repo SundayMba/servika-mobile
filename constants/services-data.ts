@@ -1,4 +1,4 @@
-import type { Ionicons } from '@expo/vector-icons';
+import type Ionicons from '@expo/vector-icons/Ionicons';
 import type { ImageSourcePropType } from 'react-native';
 
 export type ServiceType = 'Installation' | 'Repair' | 'Maintenance';
@@ -28,11 +28,11 @@ export const SERVICE_FILTERS: {
 
 /** Representative work photos used as listing thumbnails per category. */
 const CATEGORY_PHOTOS: Record<string, ImageSourcePropType> = {
-  electrical: require('../assets/images/artisans/working/hero_electrician.png'),
-  plumbing: require('../assets/images/artisans/working/hero_plumber.png'),
-  ac: require('../assets/images/artisans/working/hero_ac.png'),
-  fridge: require('../assets/images/artisans/working/hero_fridge.png'),
-  carpentry: require('../assets/images/artisans/working/hero_carpenter.png'),
+  electrical: require('../assets/images/artisans/working/hero_electrician.webp'),
+  plumbing: require('../assets/images/artisans/working/hero_plumber.webp'),
+  ac: require('../assets/images/artisans/working/hero_ac.webp'),
+  fridge: require('../assets/images/artisans/working/hero_fridge.webp'),
+  carpentry: require('../assets/images/artisans/working/hero_carpenter.webp'),
 };
 
 /**

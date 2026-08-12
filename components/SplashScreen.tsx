@@ -17,7 +17,7 @@ import { colors } from '@/constants/colors';
 // so this animated splash is the only branding anyone sees. The orange logo
 // wouldn't read on orange, so it lives in a white rounded tile — the same
 // treatment as the Pro app, in the customer brand color.
-const LOGO = require('@assets/images/logo/splash-tile.png');
+const LOGO = require('@assets/images/logo/splash-tile.webp');
 const LOGO_SIZE = 96;
 const RING_SIZE = 190;
 

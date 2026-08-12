@@ -83,7 +83,7 @@ export default function Login() {
         <View className="flex-row items-center gap-2.5">
           <View className="h-11 w-11 items-center justify-center rounded-2xl bg-white">
             <Image
-              source={require('@assets/images/logo/app-icon.png')}
+              source={require('@assets/images/logo/app-icon.webp')}
               style={{ height: 30, width: 30 }}
               contentFit="contain"
             />
