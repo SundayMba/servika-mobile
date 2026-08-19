@@ -2,6 +2,35 @@
 
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
+## Building on Windows: one extra step
+
+`npx expo run:android` fails on Windows without a newer ninja:
+
+```
+ninja: error: Stat(...RNKCKeyboardBackgroundViewShadowNode.cpp.o):
+Filename longer than 260 characters
+```
+
+CMake mirrors each source file's absolute path inside the object directory, so the
+Fabric codegen objects land at ~425 characters. The ninja bundled with Android SDK
+cmake 3.22.1 is 1.10, which refuses anything past 260. Fix it once per machine:
+
+```bash
+pip install ninja          # 1.11+ uses the Windows long-path APIs
+cp "$(python -c 'import ninja,os;print(os.path.join(os.path.dirname(ninja.__file__),"data","bin","ninja.exe"))')" .tools/ninja.exe
+```
+
+`plugins/withWindowsNinja.js` then points CMake at it — via `NINJA_PATH`, or
+`.tools/ninja.exe`, or whatever `ninja` is on your PATH. It is a no-op on macOS,
+Linux and EAS Build. Because the fix lives in a config plugin, `expo prebuild`
+reapplies it and `android/` stays disposable.
+
+Note that three things people usually try do **not** work here, so don't spend time
+on them: the `LongPathsEnabled` registry key (ninja 1.10 never uses the `\\?\`
+prefix), moving the project to a short path (the invariant part of that path is 290
+characters on its own), and `-DCMAKE_OBJECT_PATH_MAX` (only the Makefile generators
+honour it, not Ninja).
+
 ## Get started
 
 1. Install dependencies

@@ -7,6 +7,10 @@
 // key.) After changing it you must rebuild the native app.
 const { withGradleProperties } = require('@expo/config-plugins');
 
+// Windows-only: makes the Android C++ build use a ninja that can handle the long
+// Fabric-codegen object paths. No-op elsewhere, including on EAS.
+const withWindowsNinja = require('./plugins/withWindowsNinja');
+
 // Ship only the arm64-v8a native libraries. The default universal APK bundles
 // four ABIs (arm64-v8a, armeabi-v7a, x86, x86_64) — x86/x86_64 are emulator-only
 // and armeabi-v7a is legacy 32-bit, together ~53MB of dead weight for real users.
@@ -26,15 +30,17 @@ function withArm64Only(config) {
 }
 
 module.exports = ({ config }) =>
-  withArm64Only({
-    ...config,
-    android: {
-      ...config.android,
-      config: {
-        ...config.android?.config,
-        googleMaps: {
-          apiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_ANDROID_KEY ?? '',
+  withWindowsNinja(
+    withArm64Only({
+      ...config,
+      android: {
+        ...config.android,
+        config: {
+          ...config.android?.config,
+          googleMaps: {
+            apiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_ANDROID_KEY ?? '',
+          },
         },
       },
-    },
-  });
+    }),
+  );
