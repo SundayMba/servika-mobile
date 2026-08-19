@@ -1,7 +1,13 @@
 import '@/global.css';
+import {
+  InstrumentSans_400Regular,
+  InstrumentSans_500Medium,
+  InstrumentSans_600SemiBold,
+  useFonts,
+} from '@expo-google-fonts/instrument-sans';
 import { Stack } from 'expo-router';
 import * as ExpoSplashScreen from 'expo-splash-screen';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SplashScreen } from '../components/SplashScreen';
 import { colors } from '@/constants/colors';
@@ -15,8 +21,26 @@ ExpoSplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [splashDone, setSplashDone] = useState(false);
+  const [splashPainted, setSplashPainted] = useState(false);
   // Deep-link a tapped push notification to its booking.
   useNotificationObserver();
+
+  // Instrument Sans, for onboarding. Three weights only — the ones the design
+  // uses — since each is a separate file in the bundle. They ship with the app
+  // rather than being fetched, so this resolves in milliseconds; the animated
+  // splash below is already covering that window, and the tree renders
+  // underneath meanwhile, so a slow load costs nothing but a font swap.
+  const [fontsLoaded] = useFonts({
+    InstrumentSans_400Regular,
+    InstrumentSans_500Medium,
+    InstrumentSans_600SemiBold,
+  });
+
+  // Hide the native splash once the animated one has painted AND the fonts are
+  // in, whichever lands last — gating on only one of them can strand it.
+  useEffect(() => {
+    if (splashPainted && fontsLoaded) void ExpoSplashScreen.hideAsync();
+  }, [splashPainted, fontsLoaded]);
 
   return (
     <KeyboardProvider>
@@ -47,7 +71,7 @@ export default function RootLayout() {
             The native splash hides only once this has painted (onReady). */}
         {!splashDone ? (
           <SplashScreen
-            onReady={() => ExpoSplashScreen.hideAsync()}
+            onReady={() => setSplashPainted(true)}
             onFinish={() => setSplashDone(true)}
           />
         ) : null}

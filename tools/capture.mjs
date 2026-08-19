@@ -54,7 +54,9 @@ const SDK =
 const ADB = path.join(SDK, 'platform-tools', 'adb');
 
 function adb(args, opts = {}) {
-  return execFileSync(ADB, args, { encoding: 'buffer', ...opts });
+  // A full-bleed screenshot easily clears execFileSync's 1 MB default, which
+  // fails as an unhelpful ENOBUFS-style throw rather than a short read.
+  return execFileSync(ADB, args, { encoding: 'buffer', maxBuffer: 64 * 1024 * 1024, ...opts });
 }
 function adbText(args) {
   return adb(args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).toString().trim();

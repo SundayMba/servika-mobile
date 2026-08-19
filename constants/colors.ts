@@ -19,4 +19,23 @@ export const colors = {
 
   /** Soothing off-white page canvas — cards sit on top of this. */
   background: '#F2F4F8',
+
+  /**
+   * Onboarding v2, from the "Servika Onboarding" design canvas. Deliberately
+   * scoped to that flow rather than folded into the brand tokens above: it runs
+   * a warmer ground and a deeper orange than the rest of the app, and changing
+   * `primary` globally would repaint every screen.
+   */
+  sand: '#F4F3F0',
+  ink: '#14171B',
+  inkMuted: '#5B6472',
+  inkSubtle: '#6E7681',
+  accentDeep: '#E4620A',
+} as const;
+
+/** Instrument Sans, the onboarding typeface. Loaded in app/_layout.tsx. */
+export const fonts = {
+  regular: 'InstrumentSans_400Regular',
+  medium: 'InstrumentSans_500Medium',
+  semibold: 'InstrumentSans_600SemiBold',
 } as const;

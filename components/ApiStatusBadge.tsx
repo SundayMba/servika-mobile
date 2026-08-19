@@ -24,7 +24,9 @@ export function ApiStatusBadge() {
       pointerEvents="none"
       style={{
         position: 'absolute',
-        bottom: 90,
+        // Pinned to the top: at the bottom it covered the primary CTA on every
+        // screen, in the app and in captured screenshots alike.
+        top: 8,
         alignSelf: 'center',
         flexDirection: 'row',
         alignItems: 'center',
