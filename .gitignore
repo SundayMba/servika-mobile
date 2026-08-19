@@ -50,3 +50,7 @@ app-example
 # Windows-only: newer ninja for the Android C++ build (see plugins/withWindowsNinja.js).
 # Obtain with `pip install ninja`. Binary, so not committed.
 .tools/
+
+# Screenshots captured by tools/capture.mjs — regenerable, and they live in
+# the Claude Design project. Kept out of git so the repo stays light.
+design/screens/
