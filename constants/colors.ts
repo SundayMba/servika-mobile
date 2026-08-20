@@ -31,6 +31,12 @@ export const colors = {
   inkMuted: '#5B6472',
   inkSubtle: '#6E7681',
   accentDeep: '#E4620A',
+  /** Hairline that replaces the old stacked drop-shadows on v2 surfaces. */
+  hairline: 'rgba(20,23,27,0.07)',
+  /** Slightly stronger, for a control that needs to read as pressable. */
+  hairlineStrong: 'rgba(20,23,27,0.12)',
+  online: '#22C55E',
+  onlineInk: '#0E9E70',
 } as const;
 
 /** Instrument Sans, the onboarding typeface. Loaded in app/_layout.tsx. */

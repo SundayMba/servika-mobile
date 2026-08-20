@@ -399,26 +399,26 @@ export const WORKING_ARTISANS: WorkingArtisan[] = [
   {
     id: 'plumber',
     service: 'Plumbing',
-    image: require('../assets/images/artisans/working/hero_plumber.webp'),
+    image: require('../assets/images/artisans/working/v2/hero_plumber.webp'),
   },
   {
     id: 'electrician',
     service: 'Electrical',
-    image: require('../assets/images/artisans/working/hero_electrician.webp'),
+    image: require('../assets/images/artisans/working/v2/hero_electrician.webp'),
   },
   {
     id: 'hvac',
     service: 'AC Repair',
-    image: require('../assets/images/artisans/working/hero_ac.webp'),
+    image: require('../assets/images/artisans/working/v2/hero_ac.webp'),
   },
   {
     id: 'fridge',
     service: 'Fridge Fix',
-    image: require('../assets/images/artisans/working/hero_fridge.webp'),
+    image: require('../assets/images/artisans/working/v2/hero_fridge.webp'),
   },
   {
     id: 'carpenter',
     service: 'Carpentry',
-    image: require('../assets/images/artisans/working/hero_carpenter.webp'),
+    image: require('../assets/images/artisans/working/v2/hero_carpenter.webp'),
   },
 ];

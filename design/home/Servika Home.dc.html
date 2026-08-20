@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+  body { margin: 0; background: #E7E7E4; -webkit-font-smoothing: antialiased; }
+  * { box-sizing: border-box; }
+  a { color: #F97316; text-decoration: none; }
+  a:hover { color: #C2560C; }
+</style>
+</helmet>
+
+<!--
+  The CURRENT home screen, rebuilt from source (app/(tabs)/home.tsx and
+  components/home/*) rather than traced from a screenshot, so every value here is
+  the real one: #F97316 header, #F2F4F8 sheet pulled up 20pt over it, 68pt service
+  tiles on a 4-up grid, 224pt artisan cards. The app ships no custom font, so this
+  is the system stack — which is the first thing worth deciding, now that
+  onboarding runs Instrument Sans.
+
+  Shown in the guest state: the trust strip and the "Browsing as Guest" banner
+  only appear when signed out, and a signed-in user sees an active-booking card
+  at the top and the "Earn as an artisan" card instead.
+-->
+
+<div style="padding: 56px 48px 64px; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; color: #111827;">
+
+  <div style="max-width: 1180px; margin: 0 auto 40px; display: flex; flex-direction: column; gap: 10px;">
+    <div style="font-size: 11.5px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: #F97316;">Servika · customer app</div>
+    <h1 style="margin: 0; font-size: 38px; font-weight: 700; line-height: 1.05; letter-spacing: -.03em;">Home, as it ships today</h1>
+    <p style="margin: 0; max-width: 660px; font-size: 15px; line-height: 1.6; color: #5B6472;">Guest state, full scroll. Rebuilt from the source rather than the screenshot, so the spacing and colour are the app's real values — a redesign moves from here.</p>
+  </div>
+
+  <div style="display: flex; gap: 56px; justify-content: center; flex-wrap: wrap; align-items: flex-start;">
+
+    <div style="display: flex; flex-direction: column; gap: 16px; align-items: center;">
+      <div style="position: relative; width: 390px; height: 1400px; overflow: hidden; border-radius: 38px; background: #F2F4F8; box-shadow: 0 44px 72px -32px rgba(20,23,27,.42), 0 0 0 1px rgba(20,23,27,.07);">
+
+        <!-- ── Fixed orange bar: greeting, location, bell, search ── -->
+        <div style="background: #F97316; padding: 50px 20px 12px;">
+          <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;">
+            <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0;">
+              <div style="font-size: 22px; font-weight: 700; color: #FFFFFF; letter-spacing: -.01em;">Hi, Guest</div>
+              <div style="display: flex; align-items: center; gap: 4px;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="#FFFFFF" aria-hidden="true"><path d="M12 2c-3.9 0-7 3.1-7 7 0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z" /></svg>
+                <span style="font-size: 13px; font-weight: 500; color: rgba(255,255,255,.9);">Lekki, Lagos</span>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+              </div>
+            </div>
+            <div style="display: grid; place-items: center; width: 44px; height: 44px; flex: none; border-radius: 50%; background: rgba(255,255,255,.18);">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.7 21a2 2 0 0 1-3.4 0" /></svg>
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 10px; height: 56px; margin-top: 16px; padding: 0 16px; border-radius: 16px; background: #FFFFFF; box-shadow: 0 4px 10px rgba(124,45,18,.18);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.6-3.6" /></svg>
+            <span style="font-size: 14px; color: #9CA3AF;">Search services, artisans...</span>
+          </div>
+        </div>
+
+        <!-- ── Emergency hero, bleeding to the edges on the orange ── -->
+        <div style="position: relative; background: #F97316; padding: 12px 0 24px;">
+          <div style="position: relative; height: 182px; padding: 0 20px; display: flex; align-items: center;">
+            <div style="position: relative; z-index: 1; display: flex; flex-direction: column; align-items: flex-start; gap: 10px; max-width: 210px;">
+              <div style="display: inline-flex; align-items: center; gap: 7px; padding: 6px 14px; border-radius: 999px; background: rgba(255,255,255,.18);">
+                <span style="display: block; width: 6px; height: 6px; border-radius: 50%; background: #FFFFFF;"></span>
+                <span style="font-size: 13px; font-weight: 700; color: #FFFFFF;">24/7 Available</span>
+              </div>
+              <div style="font-size: 27px; font-weight: 700; line-height: 1.08; letter-spacing: -.02em; color: #FFFFFF;">Emergency<br />Plumbing</div>
+              <div style="font-size: 13.5px; line-height: 1.35; color: rgba(255,255,255,.92);">Fast help when you need it most.</div>
+              <div style="display: inline-flex; align-items: center; justify-content: center; height: 42px; margin-top: 2px; padding: 0 20px; border-radius: 12px; background: #FFFFFF;">
+                <span style="font-size: 14.5px; font-weight: 700; color: #F97316;">Get Help Now</span>
+              </div>
+            </div>
+            <img src="assets/hero_plumber.webp" alt="A plumber fixing a sink" style="position: absolute; right: 0; bottom: 0; height: 176px; width: auto; max-width: none; object-fit: contain;" />
+          </div>
+          <div style="position: absolute; right: 22px; bottom: 30px; display: flex; align-items: center; gap: 5px;">
+            <span style="display: block; width: 18px; height: 4px; border-radius: 99px; background: #FFFFFF;"></span>
+            <span style="display: block; width: 5px; height: 5px; border-radius: 50%; background: rgba(255,255,255,.5);"></span>
+            <span style="display: block; width: 5px; height: 5px; border-radius: 50%; background: rgba(255,255,255,.5);"></span>
+            <span style="display: block; width: 5px; height: 5px; border-radius: 50%; background: rgba(255,255,255,.5);"></span>
+          </div>
+        </div>
+
+        <!-- ── Light sheet, pulled up 20pt so it overlaps the orange ── -->
+        <div style="position: relative; margin-top: -20px; border-radius: 28px 28px 0 0; background: #F2F4F8; padding: 28px 0 0; display: flex; flex-direction: column; gap: 16px;">
+
+          <!-- Popular Services -->
+          <div style="padding: 0 20px;">
+            <div style="border-radius: 24px; border: 1px solid rgba(243,244,246,.7); background: #FFFFFF; padding: 16px 16px 20px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+                <span style="font-size: 17px; font-weight: 700; color: #111827;">Popular Services</span>
+                <span style="font-size: 13px; font-weight: 600; color: #F97316;">View all</span>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); row-gap: 20px;">
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                  <div style="display: grid; place-items: center; width: 68px; height: 68px; border-radius: 16px; background: #F2F4F8;"><img src="assets/electrical_maintenance_tools_and_symbols.webp" alt="" style="width: 60px; height: 60px; object-fit: contain;" /></div>
+                  <span style="font-size: 11px; font-weight: 500; color: #4B5563;">Electrical</span>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                  <div style="display: grid; place-items: center; width: 68px; height: 68px; border-radius: 16px; background: #F2F4F8;"><img src="assets/plumbing_tools_and_pipe_assembly.webp" alt="" style="width: 60px; height: 60px; object-fit: contain;" /></div>
+                  <span style="font-size: 11px; font-weight: 500; color: #4B5563;">Plumbing</span>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                  <div style="display: grid; place-items: center; width: 68px; height: 68px; border-radius: 16px; background: #F2F4F8;"><img src="assets/ac_repair_icon_with_cool_airflow.webp" alt="" style="width: 60px; height: 60px; object-fit: contain;" /></div>
+                  <span style="font-size: 11px; font-weight: 500; color: #4B5563;">AC Repair</span>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                  <div style="display: grid; place-items: center; width: 68px; height: 68px; border-radius: 16px; background: #F2F4F8;"><img src="assets/refrigerator_and_repair_tools_icon.webp" alt="" style="width: 60px; height: 60px; object-fit: contain;" /></div>
+                  <span style="font-size: 11px; font-weight: 500; color: #4B5563;">Fridge Repair</span>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                  <div style="display: grid; place-items: center; width: 68px; height: 68px; border-radius: 16px; background: #F2F4F8;"><img src="assets/portable_generator_with_wrench_and_power_icon.webp" alt="" style="width: 60px; height: 60px; object-fit: contain;" /></div>
+                  <span style="font-size: 11px; font-weight: 500; color: #4B5563;">Generator</span>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                  <div style="display: grid; place-items: center; width: 68px; height: 68px; border-radius: 16px; background: #F2F4F8;"><img src="assets/solar_panel_with_wrench_and_sun.webp" alt="" style="width: 60px; height: 60px; object-fit: contain;" /></div>
+                  <span style="font-size: 11px; font-weight: 500; color: #4B5563;">Solar</span>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                  <div style="display: grid; place-items: center; width: 68px; height: 68px; border-radius: 16px; background: #F2F4F8;"><img src="assets/paint_tools_in_vibrant_harmony.webp" alt="" style="width: 60px; height: 60px; object-fit: contain;" /></div>
+                  <span style="font-size: 11px; font-weight: 500; color: #4B5563;">Painting</span>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                  <div style="display: grid; place-items: center; width: 68px; height: 68px; border-radius: 16px; background: #F2F4F8;"><img src="assets/woodworking_tools_on_wooden_plank.webp" alt="" style="width: 60px; height: 60px; object-fit: contain;" /></div>
+                  <span style="font-size: 11px; font-weight: 500; color: #4B5563;">Carpentry</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Nearby Artisans -->
+          <div style="display: flex; flex-direction: column; gap: 14px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 0 20px;">
+              <span style="font-size: 17px; font-weight: 700; color: #111827;">Nearby Artisans</span>
+              <span style="font-size: 13px; font-weight: 600; color: #F97316;">View all</span>
+            </div>
+            <div style="display: flex; gap: 12px; padding: 0 20px; overflow: hidden;">
+
+              <div style="flex: none; width: 224px; border-radius: 16px; overflow: hidden; background: #FFFFFF; box-shadow: 0 4px 2px rgba(15,23,42,.04);">
+                <div style="position: relative; height: 160px; background: #F2F4F8;">
+                  <img src="assets/artisan-electrician.webp" alt="" style="width: 100%; height: 100%; object-fit: cover; object-position: top;" />
+                  <div style="position: absolute; left: 10px; top: 10px; display: flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 999px; background: rgba(255,255,255,.95);">
+                    <span style="display: block; width: 6px; height: 6px; border-radius: 50%; background: #22C55E;"></span>
+                    <span style="font-size: 8px; font-weight: 600; color: #16A34A;">Available</span>
+                  </div>
+                </div>
+                <div style="padding: 10px 12px 12px;">
+                  <div style="display: flex; align-items: center; gap: 4px;">
+                    <span style="font-size: 15px; font-weight: 600; color: #111827;">Emeka O.</span>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="#3B82F6" aria-hidden="true"><path d="M12 2l2.2 1.6 2.7-.3 1 2.5 2.3 1.4-.7 2.6.7 2.6-2.3 1.4-1 2.5-2.7-.3L12 18l-2.2-1.6-2.7.3-1-2.5L3.8 12.8l.7-2.6-.7-2.6 2.3-1.4 1-2.5 2.7.3z" /><path d="M10.6 14.2l-2.6-2.6 1.1-1.1 1.5 1.5 3.9-3.9 1.1 1.1z" fill="#fff" /></svg>
+                  </div>
+                  <div style="margin-top: 2px; font-size: 12px; font-weight: 500; color: #F97316;">Electrician</div>
+                  <div style="display: flex; align-items: center; gap: 12px; margin-top: 8px;">
+                    <div style="display: flex; align-items: center; gap: 4px;">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="#FBBF24" aria-hidden="true"><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.5 9.2l5.9-.9z" /></svg>
+                      <span style="font-size: 12px; font-weight: 600; color: #374151;">4.9</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 2px;">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" aria-hidden="true"><path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11z" /><circle cx="12" cy="10" r="2.5" /></svg>
+                      <span style="font-size: 12px; color: #6B7280;">2.4 km</span>
+                    </div>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 8px; margin-top: 12px;">
+                    <div style="display: grid; place-items: center; flex: 1 1 auto; height: 40px; border-radius: 12px; background: #F97316;">
+                      <span style="font-size: 13px; font-weight: 700; color: #FFFFFF;">Book Now</span>
+                    </div>
+                    <div style="position: relative; display: flex; align-items: center; gap: 6px; height: 40px; padding: 0 8px; border-radius: 12px; border: 1px solid #E5E7EB; background: #FFFFFF;">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-3.9-.9L3 21l1.9-4.1a8.4 8.4 0 0 1-.9-3.9 8.4 8.4 0 0 1 8.4-8.4h.6a8.4 8.4 0 0 1 8 8z" /></svg>
+                      <span style="font-size: 13px; font-weight: 700; color: #F97316;">Chat</span>
+                      <span style="position: absolute; right: -6px; top: -6px; display: grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; border: 1px solid #FFFFFF; background: #9CA3AF;">
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="#FFFFFF" aria-hidden="true"><path d="M17 10V8a5 5 0 0 0-10 0v2H5v12h14V10zM9 8a3 3 0 0 1 6 0v2H9z" /></svg>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div style="flex: none; width: 224px; border-radius: 16px; overflow: hidden; background: #FFFFFF; box-shadow: 0 4px 2px rgba(15,23,42,.04);">
+                <div style="position: relative; height: 160px; background: #F2F4F8;">
+                  <img src="assets/artisan-plumber.webp" alt="" style="width: 100%; height: 100%; object-fit: cover; object-position: top;" />
+                  <div style="position: absolute; left: 10px; top: 10px; display: flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 999px; background: rgba(255,255,255,.95);">
+                    <span style="display: block; width: 6px; height: 6px; border-radius: 50%; background: #D1D5DB;"></span>
+                    <span style="font-size: 8px; font-weight: 600; color: #9CA3AF;">Busy</span>
+                  </div>
+                </div>
+                <div style="padding: 10px 12px 12px;">
+                  <div style="display: flex; align-items: center; gap: 4px;">
+                    <span style="font-size: 15px; font-weight: 600; color: #111827;">Chidi A.</span>
+                  </div>
+                  <div style="margin-top: 2px; font-size: 12px; font-weight: 500; color: #F97316;">Plumber</div>
+                  <div style="display: flex; align-items: center; gap: 12px; margin-top: 8px;">
+                    <div style="display: flex; align-items: center; gap: 4px;">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="#FBBF24" aria-hidden="true"><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.5 9.2l5.9-.9z" /></svg>
+                      <span style="font-size: 12px; font-weight: 600; color: #374151;">4.7</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 2px;">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" aria-hidden="true"><path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11z" /><circle cx="12" cy="10" r="2.5" /></svg>
+                      <span style="font-size: 12px; color: #6B7280;">3.1 km</span>
+                    </div>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 8px; margin-top: 12px;">
+                    <div style="display: grid; place-items: center; flex: 1 1 auto; height: 40px; border-radius: 12px; background: #F97316;">
+                      <span style="font-size: 13px; font-weight: 700; color: #FFFFFF;">Book Now</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 6px; height: 40px; padding: 0 8px; border-radius: 12px; border: 1px solid #E5E7EB; background: #FFFFFF;">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-3.9-.9L3 21l1.9-4.1a8.4 8.4 0 0 1-.9-3.9 8.4 8.4 0 0 1 8.4-8.4h.6a8.4 8.4 0 0 1 8 8z" /></svg>
+                      <span style="font-size: 13px; font-weight: 700; color: #F97316;">Chat</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Why book with Servika — guests only -->
+          <div style="padding: 0 20px;">
+            <div style="border-radius: 24px; border: 1px solid rgba(243,244,246,.7); background: #FFFFFF; padding: 16px 16px 20px;">
+              <div style="margin-bottom: 16px; font-size: 17px; font-weight: 700; color: #111827;">Why book with Servika</div>
+              <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));">
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 0 4px;">
+                  <div style="display: grid; place-items: center; width: 48px; height: 48px; margin-bottom: 8px; border-radius: 16px; background: #FFEDD5;">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v6c0 4.2-2.9 7.6-7 9-4.1-1.4-7-4.8-7-9V6z" /><path d="M9 12l2.2 2.2L15.5 10" /></svg>
+                  </div>
+                  <span style="font-size: 12px; font-weight: 600; color: #111827; text-align: center;">Verified Pros</span>
+                  <span style="font-size: 10px; line-height: 1.2; color: #6B7280; text-align: center;">ID-checked artisans</span>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 0 4px;">
+                  <div style="display: grid; place-items: center; width: 48px; height: 48px; margin-bottom: 8px; border-radius: 16px; background: #D1FAE5;">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg>
+                  </div>
+                  <span style="font-size: 12px; font-weight: 600; color: #111827; text-align: center;">Secure Pay</span>
+                  <span style="font-size: 10px; line-height: 1.2; color: #6B7280; text-align: center;">Paid only when done</span>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 0 4px;">
+                  <div style="display: grid; place-items: center; width: 48px; height: 48px; margin-bottom: 8px; border-radius: 16px; background: #FEF3C7;">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="#F59E0B" aria-hidden="true"><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.5 9.2l5.9-.9z" /></svg>
+                  </div>
+                  <span style="font-size: 12px; font-weight: 600; color: #111827; text-align: center;">Rated &amp; Reviewed</span>
+                  <span style="font-size: 10px; line-height: 1.2; color: #6B7280; text-align: center;">Real customer reviews</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Browsing as Guest -->
+          <div style="padding: 0 20px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; border-radius: 16px; border: 1px solid #F3F4F6; background: #FFFFFF; padding: 20px 16px;">
+              <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0;">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><circle cx="12" cy="10" r="3" /><path d="M6.5 19a6 6 0 0 1 11 0" /></svg>
+                  <span style="font-size: 13px; font-weight: 600; color: #111827;">Browsing as Guest</span>
+                </div>
+                <span style="font-size: 10px; color: #6B7280;">Sign up to book services and track your jobs</span>
+              </div>
+              <div style="display: grid; place-items: center; flex: none; padding: 10px 20px; border-radius: 12px; background: #F97316; box-shadow: 0 4px 8px rgba(249,115,22,.3);">
+                <span style="font-size: 13px; font-weight: 700; color: #FFFFFF;">Sign Up</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="height: 96px;"></div>
+        </div>
+
+        <!-- ── Bottom tab bar, with the raised Explore action ── -->
+        <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 82px; background: #FFFFFF; border-radius: 24px 24px 0 0; box-shadow: 0 -6px 24px -12px rgba(15,23,42,.25); display: flex; align-items: flex-start; padding: 12px 8px 0;">
+          <div style="flex: 1 1 0; display: flex; flex-direction: column; align-items: center; gap: 3px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="#F97316" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" /></svg>
+            <span style="font-size: 11px; font-weight: 600; color: #F97316;">Home</span>
+          </div>
+          <div style="flex: 1 1 0; display: flex; flex-direction: column; align-items: center; gap: 3px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" /></svg>
+            <span style="font-size: 11px; color: #9CA3AF;">Bookings</span>
+          </div>
+          <div style="flex: 1 1 0; position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px;">
+            <div style="position: absolute; top: -26px; display: grid; place-items: center; width: 58px; height: 58px; border-radius: 50%; background: #F97316; border: 4px solid #FFFFFF; box-shadow: 0 8px 18px -6px rgba(249,115,22,.7);">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.6-3.6" /></svg>
+            </div>
+            <span style="margin-top: 34px; font-size: 11px; color: #9CA3AF;">Explore</span>
+          </div>
+          <div style="flex: 1 1 0; display: flex; flex-direction: column; align-items: center; gap: 3px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-3.9-.9L3 21l1.9-4.1a8.4 8.4 0 0 1-.9-3.9 8.4 8.4 0 0 1 8.4-8.4h.6a8.4 8.4 0 0 1 8 8z" /></svg>
+            <span style="font-size: 11px; color: #9CA3AF;">Messages</span>
+          </div>
+          <div style="flex: 1 1 0; display: flex; flex-direction: column; align-items: center; gap: 3px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M4.5 21a7.5 7.5 0 0 1 15 0" /></svg>
+            <span style="font-size: 11px; color: #9CA3AF;">Profile</span>
+          </div>
+        </div>
+
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 3px; align-items: center;">
+        <span style="font-size: 13px; font-weight: 700;">Home · guest, full scroll</span>
+        <span style="font-size: 12.5px; color: #7C8592;">app/(tabs)/home.tsx</span>
+      </div>
+    </div>
+
+    <!-- ── What to decide ── -->
+    <div style="width: 320px; display: flex; flex-direction: column; gap: 18px; padding-top: 8px;">
+      <div style="padding: 20px; border-radius: 18px; background: #FFFFFF; border: 1px solid rgba(20,23,27,.07);">
+        <div style="font-size: 11.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #F97316;">Worth deciding first</div>
+        <ol style="margin: 12px 0 0; padding-left: 18px; display: flex; flex-direction: column; gap: 10px; font-size: 13.5px; line-height: 1.5; color: #374151;">
+          <li><b>Typeface.</b> This screen is still the system font while onboarding now ships Instrument Sans. Carrying it across is the single biggest change available, and it costs nothing at runtime — the font is already bundled.</li>
+          <li><b>The orange.</b> The header uses #F97316; onboarding moved to the deeper #E4620A. Right now the two screens disagree.</li>
+          <li><b>Density.</b> Everything above the fold competes: greeting, location, bell, search, and a 182pt hero, before a single service is visible.</li>
+          <li><b>The hero.</b> A rotating emergency-plumbing ad sits between search and the catalogue — is that earning its place?</li>
+        </ol>
+      </div>
+      <div style="padding: 20px; border-radius: 18px; background: #FFFFFF; border: 1px solid rgba(20,23,27,.07);">
+        <div style="font-size: 11.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #F97316;">States not drawn</div>
+        <p style="margin: 12px 0 0; font-size: 13.5px; line-height: 1.5; color: #374151;">Signed in, the trust strip and guest banner disappear; an active-booking card appears above Popular Services, and an "Earn as an artisan" card on navy sits at the bottom. Say the word and I'll add that board too.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{}">
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

@@ -1,7 +1,8 @@
 import { Image } from 'expo-image';
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Easing, Pressable, StyleSheet, View } from 'react-native';
 
+import { AppText } from '@/components/ui/AppText';
 import { colors } from '@/constants/colors';
 import { WORKING_ARTISANS } from '@/constants/home-data';
 
@@ -113,17 +114,15 @@ export function HeroCarousel({
   const leaving = (step - 1 + len) % len; // artisan gliding out this cycle
 
   return (
-    // Flat brand-orange surface that matches the artisan images' solid #F97316
-    // background exactly, so each image dissolves seamlessly into the card.
-    // `bare` drops the card chrome so it merges into the orange canopy.
+    // The card surface is the parent's now: the hero artwork is cut out of its
+    // baked-in orange (tools/build-hero-art.mjs), so it composites over whatever
+    // colour the card is rather than requiring an exact match.
     <View
-      style={{
-        height,
-        overflow: 'hidden',
-        ...(bare
-          ? null
-          : { borderRadius: 26, backgroundColor: colors.primary }),
-      }}
+      style={[
+        styles.root,
+        { height },
+        bare ? null : styles.card,
+      ]}
     >
       {/* ── Rotating working-artisan images (right side, bleeds to edge) ──
           Each artisan owns a permanent layer (source never swaps) positioned
@@ -135,7 +134,7 @@ export function HeroCarousel({
       <View
         pointerEvents="none"
         onLayout={(e) => setBoxW(e.nativeEvent.layout.width)}
-        style={{ position: 'absolute', right: -8, top: 0, bottom: 0, width: '56%', overflow: 'hidden' }}
+        style={styles.lane}
       >
         {WORKING_ARTISANS.map((artisan, i) => {
           // Only the two active layers stay mounted — the parked ones would
@@ -168,7 +167,7 @@ export function HeroCarousel({
           return (
             <Animated.View
               key={artisan.id}
-              style={{ position: 'absolute', inset: 0, opacity, transform: [{ translateX }] }}
+              style={[StyleSheet.absoluteFill, { opacity, transform: [{ translateX }] }]}
             >
               <Image
                 source={artisan.image}
@@ -176,7 +175,7 @@ export function HeroCarousel({
                 contentPosition="bottom right"
                 cachePolicy="memory-disk"
                 transition={0}
-                style={{ flex: 1 }}
+                style={StyleSheet.absoluteFill}
               />
             </Animated.View>
           );
@@ -184,73 +183,167 @@ export function HeroCarousel({
       </View>
 
       {/* ── Text content (left side) ── */}
-      <View className="flex-1 justify-center p-5" style={{ width: '62%' }}>
-        <View className="mb-2.5 flex-row">
-          <View
-            className="flex-row items-center gap-1.5 rounded-full px-2.5 py-1"
-            style={{
-              backgroundColor: 'rgba(255,255,255,0.22)',
-              borderWidth: 1,
-              borderColor: 'rgba(255,255,255,0.4)',
-            }}
-          >
-            <View style={{ width: 7, height: 7, alignItems: 'center', justifyContent: 'center' }}>
-              <Animated.View
-                style={{
-                  position: 'absolute',
-                  width: 7,
-                  height: 7,
-                  borderRadius: 999,
-                  backgroundColor: '#FFFFFF',
+      <View style={styles.content}>
+        <View style={styles.pill}>
+          <View style={styles.pillDotBox}>
+            <Animated.View
+              style={[
+                styles.pillPulse,
+                {
                   opacity: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.5, 0] }),
                   transform: [
                     { scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 2.4] }) },
                   ],
-                }}
-              />
-              <View style={{ width: 5, height: 5, borderRadius: 999, backgroundColor: '#FFFFFF' }} />
-            </View>
-            <Text className="text-[11px] font-semibold text-white">24/7 Available</Text>
+                },
+              ]}
+            />
+            <View style={styles.pillDot} />
           </View>
+          <AppText weight="semibold" numberOfLines={1} style={styles.pillLabel}>
+            24/7 Available
+          </AppText>
         </View>
 
-        <Text className="text-[23px] font-extrabold leading-7 text-white">
+        <AppText weight="semibold" maxFontSizeMultiplier={1} style={styles.title}>
           Emergency{'\n'}
           {sub}
           <Animated.Text style={{ opacity: cursor }}>|</Animated.Text>
-        </Text>
+        </AppText>
 
-        <Text className="mt-1.5 text-[12px] text-white/90">
-          Fast help when you need it most.
-        </Text>
-
-        <TouchableOpacity
-          activeOpacity={0.85}
+        <Pressable
           onPress={onGetHelp}
-          style={{
-            shadowColor: '#000',
-            shadowOpacity: 0.15,
-            shadowRadius: 6,
-            shadowOffset: { width: 0, height: 3 },
-            elevation: 3,
-          }}
-          className="mt-3.5 self-start rounded-xl bg-white px-4 py-2.5"
+          accessibilityRole="button"
+          accessibilityLabel="Get emergency help now"
+          android_ripple={{ color: 'rgba(20,23,27,0.08)' }}
+          style={styles.cta}
         >
-          <Text className="text-[13px] font-bold text-primary">Get Help Now</Text>
-        </TouchableOpacity>
+          <AppText weight="semibold" numberOfLines={1} style={styles.ctaLabel}>
+            Get help now
+          </AppText>
+        </Pressable>
       </View>
 
-      {/* ── Progress dots ── */}
-      <View className="absolute bottom-3.5 right-4 flex-row items-center gap-1.5">
+      {/* ── Progress rail, bottom-left as in the design ── */}
+      <View style={styles.dots}>
         {WORKING_ARTISANS.map((artisan, i) => (
           <View
             key={artisan.id}
-            className={
-              i === index ? 'h-1.5 w-4 rounded-full bg-white' : 'h-1.5 w-1.5 rounded-full bg-white/40'
-            }
+            style={[styles.dot, i === index ? styles.dotActive : styles.dotIdle]}
           />
         ))}
       </View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  root: {
+    overflow: 'hidden',
+  },
+  card: {
+    borderRadius: 26,
+    backgroundColor: colors.accentDeep,
+  },
+  lane: {
+    position: 'absolute',
+    right: -18,
+    top: 0,
+    bottom: 0,
+    width: '58%',
+    overflow: 'hidden',
+  },
+  content: {
+    flex: 1,
+    justifyContent: 'center',
+    gap: 10,
+    paddingHorizontal: 20,
+    // The progress rail is absolutely positioned along the bottom; without this
+    // the CTA sits right on top of it.
+    paddingTop: 14,
+    paddingBottom: 30,
+    // The art occupies the right of the card, so the copy keeps to the left —
+    // wide enough that "24/7 Available" and "Get help now" both fit on one line.
+    width: '72%',
+  },
+  pill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    flexShrink: 0,
+    gap: 7,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+  },
+  pillDotBox: {
+    width: 5,
+    height: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pillPulse: {
+    position: 'absolute',
+    width: 5,
+    height: 5,
+    borderRadius: 999,
+    backgroundColor: colors.white,
+  },
+  pillDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 999,
+    backgroundColor: colors.white,
+  },
+  pillLabel: {
+    fontSize: 11.5,
+    // A hair of positive tracking, not negative: Android lays a tightly-tracked
+    // run out short and clips the final glyph. 0.2pt is invisible and gives it
+    // somewhere to land.
+    color: colors.white,
+  },
+  title: {
+    fontSize: 26,
+    lineHeight: 27,
+    letterSpacing: -1.04,
+    color: colors.white,
+  },
+  cta: {
+    alignSelf: 'flex-start',
+    flexShrink: 0,
+    height: 40,
+    paddingHorizontal: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 13,
+    overflow: 'hidden',
+    backgroundColor: colors.white,
+  },
+  ctaLabel: {
+    fontSize: 13.5,
+    // No negative tracking on a 13.5pt label: combined with this face's short
+    // advance on Android it clips the final glyph ("Get help no|w"). The 26pt
+    // headline below keeps its tracking, where there is room for it.
+    color: colors.accentDeep,
+  },
+  dots: {
+    position: 'absolute',
+    left: 20,
+    bottom: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  dot: {
+    height: 3,
+    borderRadius: 99,
+  },
+  dotActive: {
+    width: 18,
+    backgroundColor: colors.white,
+  },
+  dotIdle: {
+    width: 8,
+    backgroundColor: 'rgba(255,255,255,0.45)',
+  },
+});

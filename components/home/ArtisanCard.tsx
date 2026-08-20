@@ -1,8 +1,10 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Image } from 'expo-image';
-import { Pressable, Text, View, type ImageSourcePropType } from 'react-native';
+import { memo } from 'react';
+import { Pressable, StyleSheet, View, type ImageSourcePropType } from 'react-native';
 
+import { AppText } from '@/components/ui/AppText';
 import { colors } from '@/constants/colors';
 
 /** Minimal shape an artisan card needs — works for static and API-backed data. */
@@ -15,144 +17,244 @@ export type ArtisanCardItem = {
   avatar?: ImageSourcePropType;
 };
 
-export function ArtisanCard({
+/**
+ * Artisan card for the Home carousel, per the v2 design: a hairline-bordered
+ * white card with no shadow, and specialty, rating and distance folded onto one
+ * meta line so the card gets shorter without losing anything.
+ */
+function ArtisanCardBase({
   artisan,
   onPress,
   onBook,
   onChat,
-  chatLocked = true,
 }: {
   artisan: ArtisanCardItem;
   onPress?: () => void;
   onBook?: () => void;
   onChat?: () => void;
-  /** Show the lock badge on chat (guests). Hidden once signed in. */
-  chatLocked?: boolean;
 }) {
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={`${artisan.name}, ${artisan.specialty}`}
       onPress={onPress}
-      style={{
-        shadowColor: '#0F172A',
-        shadowOpacity: 0.04,
-        shadowRadius: 2,
-        shadowOffset: { width: 0, height: 4 },
-        elevation: 1,
-      }}
-      className="w-56 overflow-hidden rounded-2xl border-gray-100 bg-white"
+      style={styles.card}
     >
-      {/* Image on top, full width */}
-      <View className="h-40 w-full bg-background">
+      <View style={styles.media}>
         <Image
           source={artisan.avatar}
           contentFit="cover"
           contentPosition="top"
-          style={{ flex: 1 }}
+          style={StyleSheet.absoluteFill}
         />
-
-        {/* Availability badge floating on the image */}
-        <View className="absolute left-2.5 top-2.5 flex-row items-center gap-1 rounded-full bg-white/95 px-2 py-1">
+        <View style={styles.badge}>
           <View
-            className={
-              artisan.available
-                ? 'h-1.5 w-1.5 rounded-full bg-green-500'
-                : 'h-1.5 w-1.5 rounded-full bg-gray-300'
-            }
+            style={[
+              styles.badgeDot,
+              { backgroundColor: artisan.available ? colors.online : '#D1D5DB' },
+            ]}
           />
-          <Text
-            className={
-              artisan.available
-                ? 'text-[8px] font-semibold text-green-600'
-                : 'text-[8px] font-semibold text-gray-400'
-            }
+          <AppText
+            weight="semibold"
+            style={[
+              styles.badgeLabel,
+              { color: artisan.available ? colors.onlineInk : colors.inkSubtle },
+            ]}
           >
             {artisan.available ? 'Available' : 'Busy'}
-          </Text>
+          </AppText>
         </View>
       </View>
 
-      {/* Details below the image */}
-      <View className="px-3 pb-3 pt-2.5">
-        {/* Name + verified badge */}
-        <View className="flex-row items-center gap-1">
-          <Text
-            numberOfLines={1}
-            className="flex-shrink text-[15px] font-semibold text-gray-900"
-          >
-            {artisan.name}
-          </Text>
-          <MaterialCommunityIcons
-            name="check-decagram"
-            size={15}
-            color="#3B82F6"
-          />
-        </View>
-
-        <Text
-          numberOfLines={1}
-          className="mt-0.5 text-xs font-medium text-primary"
-        >
-          {artisan.specialty}
-        </Text>
-
-        {/* Rating + distance */}
-        <View className="mt-2 flex-row items-center gap-3">
-          <View className="flex-row items-center gap-1">
-            <Ionicons name="star" size={13} color="#FBBF24" />
-            <Text className="text-xs font-semibold text-gray-700">
-              {artisan.rating.toFixed(1)}
-            </Text>
-          </View>
-          <View className="flex-row items-center gap-0.5">
-            <Ionicons
-              name="location-outline"
-              size={13}
-              color={colors.textMuted}
+      <View style={styles.body}>
+        <View style={styles.identity}>
+          <View style={styles.nameRow}>
+            <AppText weight="semibold" numberOfLines={1} style={styles.name}>
+              {artisan.name}
+            </AppText>
+            <MaterialCommunityIcons
+              name="check-decagram"
+              size={14}
+              color={colors.accentDeep}
             />
-            <Text className="text-xs text-gray-500">
-              {artisan.distanceKm} km
-            </Text>
+          </View>
+
+          <View style={styles.metaRow}>
+            <AppText weight="medium" numberOfLines={1} style={styles.specialty}>
+              {artisan.specialty}
+            </AppText>
+            <View style={styles.metaItem}>
+              <Ionicons name="star" size={12} color={colors.accentDeep} />
+              <AppText weight="medium" style={styles.metaValue}>
+                {artisan.rating.toFixed(1)}
+              </AppText>
+            </View>
+            <View style={styles.metaItemTight}>
+              <Ionicons name="location-outline" size={12} color={colors.inkSubtle} />
+              <AppText style={styles.metaMuted}>{`${artisan.distanceKm} km`}</AppText>
+            </View>
           </View>
         </View>
 
-        {/* Book Now + Chat buttons */}
-        <View className="mt-3 flex-row items-center gap-2">
+        <View style={styles.actions}>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={`Book ${artisan.name}`}
             onPress={onBook}
-            className="h-10 flex-1 flex-row items-center justify-center rounded-xl bg-primary"
+            android_ripple={{ color: 'rgba(255,255,255,0.18)' }}
+            style={styles.book}
           >
-            <Text className="text-[13px] font-bold text-white">Book Now</Text>
+            <AppText weight="semibold" style={styles.bookLabel}>
+              Book now
+            </AppText>
           </Pressable>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={
-              chatLocked
-                ? `Chat with ${artisan.name}, sign in required`
-                : `Chat with ${artisan.name}`
-            }
+            accessibilityLabel={`Chat with ${artisan.name}`}
             onPress={onChat}
-            className="relative h-10 flex-row items-center pr-2 pl-2 gap-1.5  rounded-xl border border-gray-200 bg-white"
+            android_ripple={{ color: 'rgba(20,23,27,0.06)' }}
+            style={styles.chat}
           >
             <Ionicons
               name="chatbubble-ellipses-outline"
               size={15}
-              color={colors.primary}
+              color={colors.accentDeep}
             />
-            <Text className="text-[13px] font-bold text-primary">Chat</Text>
-
-            {/* Locked badge — only while signed out */}
-            {chatLocked ? (
-              <View className="absolute -right-1.5 -top-1.5 h-4 w-4 items-center justify-center rounded-full border border-white bg-gray-400">
-                <Ionicons name="lock-closed" size={9} color="#FFFFFF" />
-              </View>
-            ) : null}
+            <AppText weight="semibold" style={styles.chatLabel}>
+              Chat
+            </AppText>
           </Pressable>
         </View>
       </View>
     </Pressable>
   );
 }
+
+export const ArtisanCard = memo(ArtisanCardBase);
+
+const styles = StyleSheet.create({
+  card: {
+    width: 226,
+    borderRadius: 22,
+    overflow: 'hidden',
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.hairline,
+  },
+  media: {
+    height: 158,
+    backgroundColor: colors.sand,
+    // Android will not clip a child to the parent's radius once the parent has
+    // a border, so the image corners have to be rounded here. Inset by the
+    // 1pt border so the curves sit concentric with the card's.
+    borderTopLeftRadius: 21,
+    borderTopRightRadius: 21,
+    overflow: 'hidden',
+  },
+  badge: {
+    position: 'absolute',
+    left: 10,
+    top: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255,255,255,0.94)',
+  },
+  badgeDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 999,
+  },
+  badgeLabel: {
+    fontSize: 9.5,
+    letterSpacing: 0.19,
+  },
+  body: {
+    padding: 13,
+    paddingBottom: 14,
+    gap: 10,
+  },
+  identity: {
+    gap: 3,
+  },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  name: {
+    flexShrink: 1,
+    fontSize: 15.5,
+    letterSpacing: -0.31,
+    color: colors.ink,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  metaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  metaItemTight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  specialty: {
+    flexShrink: 1,
+    fontSize: 12.5,
+    color: colors.accentDeep,
+  },
+  metaValue: {
+    fontSize: 12.5,
+    color: colors.inkMuted,
+  },
+  metaMuted: {
+    fontSize: 12.5,
+    color: colors.inkSubtle,
+  },
+  actions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  book: {
+    // flexGrow with an explicit basis, not `flex: 1` — the shorthand alongside a
+    // row gap has failed to resolve a width on Android in this codebase before.
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 0,
+    height: 42,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 13,
+    backgroundColor: colors.accentDeep,
+  },
+  bookLabel: {
+    fontSize: 13.5,
+    letterSpacing: -0.135,
+    color: colors.white,
+  },
+  chat: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    height: 42,
+    paddingHorizontal: 12,
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: colors.hairlineStrong,
+    backgroundColor: colors.white,
+  },
+  chatLabel: {
+    fontSize: 13.5,
+    color: colors.accentDeep,
+  },
+});

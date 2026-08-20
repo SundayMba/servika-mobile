@@ -1,19 +1,13 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useCallback, useMemo, useState, type ComponentProps } from 'react';
 import {
-  useCallback,
-  useMemo,
-  useState,
-  type ComponentProps,
-} from 'react';
-import {
-  ActivityIndicator,
   Alert,
+  Pressable,
   RefreshControl,
   ScrollView,
-  Text,
-  TouchableOpacity,
+  StyleSheet,
   View,
 } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -27,9 +21,11 @@ import { HeroCarousel } from '@/components/home/HeroCarousel';
 import { LocationSheet } from '@/components/home/LocationSheet';
 import { ServiceTile } from '@/components/home/ServiceTile';
 import {
+  ActiveBookingSkeleton,
   ArtisanCarouselSkeleton,
   ServiceGridSkeleton,
 } from '@/components/home/Skeletons';
+import { AppText } from '@/components/ui/AppText';
 import { colors } from '@/constants/colors';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useAuthGate } from '@/lib/auth/useAuthGate';
@@ -45,6 +41,15 @@ import {
 } from '@/lib/location/areaStore';
 import { useUnreadCount } from '@/lib/notifications/hooks';
 
+/**
+ * Home, per the "Servika Home v2" design canvas.
+ *
+ * The orange header block is gone: the greeting and search sit on the sand
+ * ground, orange is reserved for actions and the emergency card, and nothing is
+ * pinned — the whole page scrolls as one, so the catalogue starts roughly 90pt
+ * earlier than it used to.
+ */
+
 // Bookings still "in flight" — worth surfacing a resume card on Home.
 const ACTIVE_STATUSES: BookingStatus[] = [
   'Pending',
@@ -58,6 +63,8 @@ const ACTIVE_STATUSES: BookingStatus[] = [
 // which we add separately) so scroll content clears it.
 const TAB_BAR_HEIGHT = 60;
 
+const GUTTER = 22;
+
 // "Why Servika" trust strip — speaks to the three core problems (trust, secure
 // payment, social proof). Static copy; no backend needed.
 const TRUST_POINTS: {
@@ -68,23 +75,23 @@ const TRUST_POINTS: {
   sub: string;
 }[] = [
   {
-    icon: 'shield-checkmark',
-    color: colors.primary,
-    tint: '#FFEDD5',
+    icon: 'shield-checkmark-outline',
+    color: colors.accentDeep,
+    tint: '#FFF1E4',
     label: 'Verified Pros',
     sub: 'ID-checked artisans',
   },
   {
-    icon: 'lock-closed',
-    color: '#059669',
-    tint: '#D1FAE5',
+    icon: 'lock-closed-outline',
+    color: colors.onlineInk,
+    tint: '#E6F5EE',
     label: 'Secure Pay',
     sub: 'Paid only when done',
   },
   {
     icon: 'star',
-    color: '#F59E0B',
-    tint: '#FEF3C7',
+    color: '#D9950B',
+    tint: '#FFF6E0',
     label: 'Rated & Reviewed',
     sub: 'Real customer reviews',
   },
@@ -98,36 +105,28 @@ function SectionHeader({
   onViewAll?: () => void;
 }) {
   return (
-    <View className="mb-3.5 flex-row items-center justify-between">
-      <Text className="text-[17px] font-bold text-gray-900">{title}</Text>
+    <View style={styles.sectionHeader}>
+      <AppText weight="semibold" maxFontSizeMultiplier={1} style={styles.sectionTitle}>
+        {title}
+      </AppText>
       {onViewAll ? (
-        <TouchableOpacity hitSlop={8} onPress={onViewAll}>
-          <Text className="text-[13px] font-semibold text-primary">
+        <Pressable hitSlop={8} onPress={onViewAll} accessibilityRole="button">
+          <AppText weight="medium" style={styles.viewAll}>
             View all
-          </Text>
-        </TouchableOpacity>
+          </AppText>
+        </Pressable>
       ) : null}
     </View>
   );
 }
 
-/** Compact loading spinner / error message for an async section. */
-function SectionState({
-  loading,
-  error,
-}: {
-  loading: boolean;
-  error?: boolean;
-}) {
+/** Shown when a section has no data and isn't loading. */
+function SectionEmpty({ error }: { error?: boolean }) {
   return (
-    <View className="items-center justify-center py-6">
-      {loading ? (
-        <ActivityIndicator color={colors.primary} />
-      ) : (
-        <Text className="text-[13px] text-gray-400">
-          {error ? "Couldn't load. Pull to retry." : 'Nothing here yet.'}
-        </Text>
-      )}
+    <View style={styles.sectionEmpty}>
+      <AppText style={styles.sectionEmptyLabel}>
+        {error ? "Couldn't load. Pull to retry." : 'Nothing here yet.'}
+      </AppText>
     </View>
   );
 }
@@ -150,8 +149,7 @@ export default function Home() {
   const { isAuthenticated, guard, promptVisible, hidePrompt } = useAuthGate();
   const { openWithArtisan } = useOpenChat();
 
-  // Greet the signed-in user by first name; guests see "Guest". A short "Hi"
-  // (instead of "Good morning/…") keeps the line compact even with long names.
+  // Greet the signed-in user by first name; guests see "Guest".
   const firstName = user?.fullName.trim().split(/\s+/)[0] || 'Guest';
 
   const categoriesQuery = useCategories();
@@ -183,393 +181,309 @@ export default function Home() {
     }
   }, [categoriesQuery, artisansQuery, bookingsQuery, unreadQuery, isAuthenticated]);
 
-  // In-flight bookings → resume card (newest first from the API; the card
-  // becomes a ticker when there's more than one).
+  // In-flight bookings → resume card.
   const activeBookings = useMemo(
     () =>
-      (bookingsQuery.data ?? []).filter((b) =>
-        ACTIVE_STATUSES.includes(b.status),
-      ),
+      (bookingsQuery.data ?? []).filter((b) => ACTIVE_STATUSES.includes(b.status)),
     [bookingsQuery.data],
   );
 
+  // A refresh re-runs every section, so show each one's skeleton rather than
+  // leaving stale content under a spinner — the page reads as reloading, and
+  // the skeletons match the real geometry so nothing shifts when data lands.
+  const servicesPending = refreshing || categoriesQuery.isLoading;
+  const artisansPending = refreshing || artisansQuery.isLoading;
+  const bookingsPending = refreshing || bookingsQuery.isLoading;
+
   return (
-    <View className="flex-1 bg-primary">
-      <StatusBar style="light" />
-
-      {/* ── Fixed orange bar: status-bar area + greeting + search all stay
-          pinned; only the hero and content below scroll ── */}
-      <View
-        style={{ paddingTop: insets.top + 6 }}
-        className="bg-primary px-5 pb-3"
-      >
-        <View className="flex-row items-center justify-between">
-          <View className="flex-1 pr-3">
-            <Text numberOfLines={1} className="text-[22px] font-bold text-white">
-              Hi, {firstName}
-            </Text>
-            <TouchableOpacity
-              accessibilityRole="button"
-              accessibilityLabel="Change service location"
-              activeOpacity={0.7}
-              onPress={() => setLocationVisible(true)}
-              className="mt-1 flex-row items-center gap-1 self-start"
-            >
-              <Ionicons name="location" size={13} color="#FFFFFF" />
-              <Text className="text-[13px] font-medium text-white/90">
-                {area}
-              </Text>
-              <Ionicons name="chevron-down" size={13} color="#FFFFFF" />
-            </TouchableOpacity>
-          </View>
-          <TouchableOpacity
-            accessibilityRole="button"
-            accessibilityLabel={
-              unreadCount > 0
-                ? `Notifications, ${unreadCount} unread`
-                : 'Notifications'
-            }
-            onPress={() => router.push('/notifications')}
-            className="h-11 w-11 items-center justify-center rounded-full"
-            style={{ backgroundColor: 'rgba(255,255,255,0.18)' }}
-          >
-            <Ionicons name="notifications-outline" size={22} color="#FFFFFF" />
-            {unreadCount > 0 ? (
-              <View
-                className="absolute -right-0.5 -top-0.5 h-5 min-w-5 items-center justify-center rounded-full px-1"
-                style={{ backgroundColor: '#EF4444', borderWidth: 1.5, borderColor: colors.primary }}
-              >
-                <Text className="text-[10px] font-bold text-white">
-                  {unreadCount > 9 ? '9+' : unreadCount}
-                </Text>
-              </View>
-            ) : null}
-          </TouchableOpacity>
-        </View>
-
-        {/* Search — pinned together with the greeting */}
-        <TouchableOpacity
-          activeOpacity={0.7}
-          accessibilityRole="search"
-          onPress={() => setSearchVisible(true)}
-          style={{
-            shadowColor: '#7C2D12',
-            shadowOpacity: 0.18,
-            shadowRadius: 10,
-            shadowOffset: { width: 0, height: 4 },
-            elevation: 3,
-          }}
-          className="mt-4 h-14 flex-row items-center gap-2.5 rounded-2xl bg-white px-4"
-        >
-          <Ionicons name="search-outline" size={20} color={colors.textMuted} />
-          <Text className="text-[14px] text-gray-400">
-            Search services, artisans...
-          </Text>
-        </TouchableOpacity>
-      </View>
+    <View style={styles.screen}>
+      <StatusBar style="dark" />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        style={{ backgroundColor: colors.primary }}
         onScrollBeginDrag={() => setScrolling(true)}
         onMomentumScrollBegin={() => setScrolling(true)}
         onScrollEndDrag={() => setScrolling(false)}
         onMomentumScrollEnd={() => setScrolling(false)}
+        contentContainerStyle={{
+          paddingTop: insets.top + 12,
+          paddingBottom: bottomPadding,
+          gap: 26,
+        }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor="#FFFFFF"
-            colors={[colors.primary]}
+            tintColor={colors.accentDeep}
+            colors={[colors.accentDeep]}
+            progressBackgroundColor={colors.white}
           />
         }
       >
-        {/* ── Emergency hero — thinner, bleeds to the edges; the orange below is
-            the buffer the light sheet overlaps up into ── */}
-        <View className="bg-primary pb-6 pt-3">
-          <HeroCarousel
-            bare
-            height={182}
-            paused={scrolling}
-            onGetHelp={() => router.push('/categories')}
-          />
+        {/* ── Greeting, location, bell, search — all scroll with the page ── */}
+        <View style={styles.top}>
+          <View style={styles.greetingRow}>
+            <View style={styles.greeting}>
+              <AppText
+                weight="semibold"
+                numberOfLines={1}
+                maxFontSizeMultiplier={1}
+                style={styles.hello}
+              >
+                {`Hi, ${firstName}`}
+              </AppText>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Change service location"
+                onPress={() => setLocationVisible(true)}
+                hitSlop={6}
+                style={styles.locationRow}
+              >
+                <Ionicons name="location" size={13} color={colors.accentDeep} />
+                <AppText weight="medium" numberOfLines={1} style={styles.location}>
+                  {area}
+                </AppText>
+                <Ionicons name="chevron-down" size={13} color={colors.inkSubtle} />
+              </Pressable>
+            </View>
+
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={
+                unreadCount > 0
+                  ? `Notifications, ${unreadCount} unread`
+                  : 'Notifications'
+              }
+              onPress={() => router.push('/notifications')}
+              android_ripple={{ color: 'rgba(20,23,27,0.06)' }}
+              style={styles.bell}
+            >
+              <Ionicons name="notifications-outline" size={20} color={colors.ink} />
+              {unreadCount > 0 ? <View style={styles.bellDot} /> : null}
+            </Pressable>
+          </View>
+
+          <Pressable
+            accessibilityRole="search"
+            accessibilityLabel="Search services and artisans"
+            onPress={() => setSearchVisible(true)}
+            style={styles.search}
+          >
+            <Ionicons name="search-outline" size={19} color={colors.inkSubtle} />
+            <AppText numberOfLines={1} style={styles.searchLabel}>
+              Search services, artisans...
+            </AppText>
+          </Pressable>
         </View>
 
-        {/* ── Light content sheet pulled up to overlap into the orange ── */}
-        <View
-          className="rounded-t-[28px] bg-background pt-7"
-          style={{ marginTop: -20, paddingBottom: bottomPadding }}
-        >
-          {/* ── Active-booking resume card — signed-in users with an in-flight
-              job; a ticker when there's more than one ── */}
-          {isAuthenticated && activeBookings.length > 0 ? (
-            <Animated.View
-              entering={FadeInDown.duration(450)}
-              className="mb-4 px-5"
-            >
-              <ActiveBookingCarousel
-                bookings={activeBookings}
-                onPress={(b) =>
-                  router.push({
-                    pathname: '/active-booking/dashboard',
-                    params: {
-                      bookingId: b.id,
-                      serviceName: b.serviceName,
-                      artisanName: b.artisanName ?? undefined,
-                    },
-                  })
-                }
-              />
-            </Animated.View>
-          ) : null}
+        {/* ── Emergency hero ── */}
+        <View style={styles.gutter}>
+          <View style={styles.hero}>
+            <HeroCarousel
+              bare
+              height={186}
+              paused={scrolling}
+              onGetHelp={() => router.push('/categories')}
+            />
+          </View>
+        </View>
 
-          {/* ── Popular Services (wrapped in a white card) ── */}
-          <Animated.View
-            entering={FadeInDown.delay(140).duration(450)}
-            className="mb-4 px-5"
-          >
-            <View className="rounded-3xl border border-gray-100/70 bg-white px-4 pb-5 pt-4">
-              <SectionHeader
-                title="Popular Services"
-                onViewAll={() => router.push('/categories')}
-              />
-              {popularServices.length === 0 ? (
-                categoriesQuery.isLoading ? (
-                  <ServiceGridSkeleton />
-                ) : (
-                  <SectionState loading={false} error={categoriesQuery.isError} />
-                )
-              ) : (
-                <View className="flex-row flex-wrap" style={{ rowGap: 20 }}>
-                  {popularServices.map((category) => (
-                    <ServiceTile
-                      key={category.id}
-                      service={{
-                        label: category.name,
-                        image: categoryImage(category.slug),
-                      }}
-                      onPress={() =>
-                        router.push({
-                          pathname: '/category/[id]',
-                          params: { id: category.slug },
-                        })
-                      }
-                    />
-                  ))}
-                </View>
-              )}
-            </View>
-          </Animated.View>
-
-          {/* ── Nearby Artisans ── */}
-          <Animated.View
-            entering={FadeInDown.delay(200).duration(450)}
-            className="mb-4"
-          >
-            <View className="px-5">
-              <SectionHeader
-                title="Nearby Artisans"
-                onViewAll={() => router.push('/artisans')}
-              />
-            </View>
-            {(artisansQuery.data?.length ?? 0) === 0 ? (
-              artisansQuery.isLoading ? (
-                <ArtisanCarouselSkeleton />
-              ) : (
-                <View className="px-5">
-                  <SectionState loading={false} error={artisansQuery.isError} />
-                </View>
-              )
+        {/* ── Resume an in-flight booking (signed in) ── */}
+        {isAuthenticated && (bookingsPending || activeBookings.length > 0) ? (
+          <Animated.View entering={FadeInDown.duration(420)}>
+            {bookingsPending && activeBookings.length === 0 ? (
+              <ActiveBookingSkeleton />
             ) : (
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ paddingHorizontal: 20, gap: 12 }}
-              >
-                {artisansQuery.data?.map((artisan) => (
-                  <ArtisanCard
-                    key={artisan.id}
-                    artisan={{
-                      name: artisan.fullName,
-                      specialty: artisan.specialty,
-                      available: artisan.isAvailable,
-                      rating: artisan.rating,
-                      distanceKm: artisan.distanceKm,
-                      avatar: artisanPhotoSource(artisan.photoUrl, artisan.imageKey),
-                    }}
-                    onPress={() =>
-                      router.push({
-                        pathname: '/artisan/[id]',
-                        params: { id: artisan.id },
-                      })
-                    }
-                    onBook={() =>
-                      guard(() =>
-                        router.push({
-                          pathname: '/booking/request',
-                          params: {
-                            service: artisan.specialty,
-                            artisanId: artisan.id,
-                          },
-                        }),
-                      )
-                    }
-                    onChat={() =>
-                      guard(() => openWithArtisan(artisan.id, artisan.fullName))
-                    }
-                    chatLocked={!isAuthenticated}
-                  />
-                ))}
-              </ScrollView>
-            )}
-          </Animated.View>
-
-          {/* ── Why Servika — trust strip (guests only; returning users get the
-            resume card + live catalogue instead) ── */}
-          {!isAuthenticated ? (
-            <View className="mb-4 px-5">
-              <View className="rounded-3xl border border-gray-100/70 bg-white px-4 pb-5 pt-4">
-                <Text className="mb-4 text-[17px] font-bold text-gray-900">
-                  Why book with Servika
-                </Text>
-                <View className="flex-row">
-                  {TRUST_POINTS.map((point) => (
-                    <View
-                      key={point.label}
-                      className="flex-1 items-center px-1"
-                    >
-                      <View
-                        className="mb-2 h-12 w-12 items-center justify-center rounded-2xl"
-                        style={{ backgroundColor: point.tint }}
-                      >
-                        <Ionicons
-                          name={point.icon}
-                          size={22}
-                          color={point.color}
-                        />
-                      </View>
-                      <Text className="text-center text-[12px] font-semibold text-gray-900">
-                        {point.label}
-                      </Text>
-                      <Text className="mt-0.5 text-center text-[10px] leading-3 text-gray-500">
-                        {point.sub}
-                      </Text>
-                    </View>
-                  ))}
-                </View>
-              </View>
-            </View>
-          ) : null}
-
-          {/* ── "Browsing as Guest" banner — only for guests ── */}
-          {!isAuthenticated ? (
-            <View className="mx-5">
-              <View
-                style={{
-                  shadowColor: '#0F172A',
-                  shadowOpacity: 0.01,
-                  shadowRadius: 1,
-                  shadowOffset: { width: 0, height: 10 },
-                  elevation: 0.5,
-                }}
-                className="flex-row items-center justify-between rounded-2xl border border-gray-100 bg-white px-4 py-5"
-              >
-                <View className="flex-1 pr-3">
-                  <View className="flex-row items-center gap-1.5">
-                    <Ionicons
-                      name="person-circle-outline"
-                      size={18}
-                      color={colors.primary}
-                    />
-                    <Text className="text-[13px] font-semibold text-gray-900">
-                      Browsing as Guest
-                    </Text>
-                  </View>
-                  <Text className="mt-0.5 text-[10px] text-gray-500">
-                    Sign up to book services and track your jobs
-                  </Text>
-                </View>
-                <TouchableOpacity
-                  activeOpacity={0.85}
-                  accessibilityRole="button"
-                  accessibilityLabel="Sign up"
-                  onPress={() => router.push('/register')}
-                  style={{
-                    shadowColor: colors.primary,
-                    shadowOpacity: 0.3,
-                    shadowRadius: 8,
-                    shadowOffset: { width: 0, height: 4 },
-                    elevation: 5,
-                  }}
-                  className="rounded-xl bg-primary px-5 py-2.5"
-                >
-                  <Text className="text-[13px] font-bold text-white">
-                    Sign Up
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          ) : null}
-
-          {/* ── Become a Servika Pro — artisan recruitment (supply-side).
-            Signed-in customers only; guests get the focused Sign Up banner. ── */}
-          {isAuthenticated ? (
-            <TouchableOpacity
-              activeOpacity={0.9}
-              accessibilityRole="button"
-              accessibilityLabel="Earn as an artisan on Servika Pro"
-              // The artisan surface is the separate Servika Pro app now; until
-              // it's on the stores, this card explains where to earn.
-              onPress={() =>
-                Alert.alert(
-                  'Servika Pro',
-                  'Artisans work from the Servika Pro app. Get verified, receive jobs near you and cash out your earnings. Coming to the app stores soon.',
-                )
-              }
-              style={{
-                backgroundColor: '#0F172A',
-                shadowColor: '#0F172A',
-                shadowOpacity: 0.18,
-                shadowRadius: 10,
-                shadowOffset: { width: 0, height: 6 },
-                elevation: 4,
-              }}
-              className="mx-5 mt-3 flex-row items-center rounded-2xl px-4 py-4"
-            >
-              <View
-                className="h-11 w-11 items-center justify-center rounded-xl"
-                style={{ backgroundColor: 'rgba(249,115,22,0.16)' }}
-              >
-                <Ionicons
-                  name="briefcase-outline"
-                  size={22}
-                  color={colors.primary}
+              <View style={styles.gutter}>
+                <ActiveBookingCarousel
+                  bookings={activeBookings}
+                  onPress={(b) =>
+                    router.push({
+                      pathname: '/active-booking/dashboard',
+                      params: {
+                        bookingId: b.id,
+                        serviceName: b.serviceName,
+                        artisanName: b.artisanName ?? undefined,
+                      },
+                    })
+                  }
                 />
               </View>
-              <View className="flex-1 px-3">
-                <Text className="text-[14px] font-bold text-white">
-                  Earn as an artisan
-                </Text>
-                <Text className="mt-0.5 text-[11px] text-white/60">
-                  Get paid jobs near you on Servika Pro
-                </Text>
-              </View>
-              <View
-                className="h-8 w-8 items-center justify-center rounded-full"
-                style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}
-              >
-                <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
-              </View>
-            </TouchableOpacity>
-          ) : null}
+            )}
+          </Animated.View>
+        ) : null}
+
+        {/* ── Popular Services ── */}
+        <View style={styles.section}>
+          <View style={styles.gutter}>
+            <SectionHeader
+              title="Popular Services"
+              onViewAll={() => router.push('/categories')}
+            />
+          </View>
+          {servicesPending ? (
+            <ServiceGridSkeleton />
+          ) : popularServices.length === 0 ? (
+            <SectionEmpty error={categoriesQuery.isError} />
+          ) : (
+            <View style={styles.serviceGrid}>
+              {popularServices.map((category) => (
+                <ServiceTile
+                  key={category.id}
+                  service={{
+                    label: category.name,
+                    image: categoryImage(category.slug),
+                  }}
+                  onPress={() =>
+                    router.push({
+                      pathname: '/category/[id]',
+                      params: { id: category.slug },
+                    })
+                  }
+                />
+              ))}
+            </View>
+          )}
         </View>
+
+        {/* ── Nearby Artisans ── */}
+        <View style={styles.sectionTight}>
+          <View style={styles.gutter}>
+            <SectionHeader
+              title="Nearby Artisans"
+              onViewAll={() => router.push('/artisans')}
+            />
+          </View>
+          {artisansPending ? (
+            <ArtisanCarouselSkeleton />
+          ) : (artisansQuery.data?.length ?? 0) === 0 ? (
+            <SectionEmpty error={artisansQuery.isError} />
+          ) : (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.carousel}
+            >
+              {artisansQuery.data?.map((artisan) => (
+                <ArtisanCard
+                  key={artisan.id}
+                  artisan={{
+                    name: artisan.fullName,
+                    specialty: artisan.specialty,
+                    available: artisan.isAvailable,
+                    rating: artisan.rating,
+                    distanceKm: artisan.distanceKm,
+                    avatar: artisanPhotoSource(artisan.photoUrl, artisan.imageKey),
+                  }}
+                  onPress={() =>
+                    router.push({
+                      pathname: '/artisan/[id]',
+                      params: { id: artisan.id },
+                    })
+                  }
+                  onBook={() =>
+                    guard(() =>
+                      router.push({
+                        pathname: '/booking/request',
+                        params: {
+                          service: artisan.specialty,
+                          artisanId: artisan.id,
+                        },
+                      }),
+                    )
+                  }
+                  onChat={() =>
+                    guard(() => openWithArtisan(artisan.id, artisan.fullName))
+                  }
+                />
+              ))}
+            </ScrollView>
+          )}
+        </View>
+
+        {/* ── Why Servika, then the sign-up nudge — guests only ── */}
+        {!isAuthenticated ? (
+          <View style={[styles.gutter, styles.card]}>
+            <AppText weight="semibold" style={styles.cardTitle}>
+              Why book with Servika
+            </AppText>
+            <View style={styles.trustRow}>
+              {TRUST_POINTS.map((point, i) => (
+                <View
+                  key={point.label}
+                  style={[styles.trustItem, i > 0 && styles.trustDivider]}
+                >
+                  <View style={[styles.trustIcon, { backgroundColor: point.tint }]}>
+                    <Ionicons name={point.icon} size={20} color={point.color} />
+                  </View>
+                  <AppText weight="semibold" style={styles.trustLabel}>
+                    {point.label}
+                  </AppText>
+                  <AppText style={styles.trustSub}>{point.sub}</AppText>
+                </View>
+              ))}
+            </View>
+          </View>
+        ) : null}
+
+        {!isAuthenticated ? (
+          <View style={[styles.gutter, styles.guestRow]}>
+            <View style={styles.guestCopy}>
+              <AppText weight="semibold" style={styles.guestTitle}>
+                Browsing as Guest
+              </AppText>
+              <AppText style={styles.guestSub}>
+                Sign up to book services and track your jobs
+              </AppText>
+            </View>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Sign up"
+              onPress={() => router.push('/register')}
+              android_ripple={{ color: 'rgba(255,255,255,0.18)' }}
+              style={styles.signUp}
+            >
+              <AppText weight="semibold" style={styles.signUpLabel}>
+                Sign up
+              </AppText>
+            </Pressable>
+          </View>
+        ) : null}
+
+        {/* ── Become a Servika Pro — signed-in customers ── */}
+        {isAuthenticated ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Earn as an artisan on Servika Pro"
+            // The artisan surface is the separate Servika Pro app now; until
+            // it's on the stores, this card explains where to earn.
+            onPress={() =>
+              Alert.alert(
+                'Servika Pro',
+                'Artisans work from the Servika Pro app. Get verified, receive jobs near you and cash out your earnings. Coming to the app stores soon.',
+              )
+            }
+            android_ripple={{ color: 'rgba(255,255,255,0.18)' }}
+            style={[styles.gutter, styles.proCard]}
+          >
+            <View style={styles.proIcon}>
+              <Ionicons name="briefcase-outline" size={20} color={colors.primaryLight} />
+            </View>
+            <View style={styles.proCopy}>
+              <AppText weight="semibold" style={styles.proTitle}>
+                Earn as an artisan
+              </AppText>
+              <AppText style={styles.proSub}>
+                Get paid jobs near you on Servika Pro
+              </AppText>
+            </View>
+            <Ionicons name="arrow-forward" size={18} color="rgba(255,255,255,0.75)" />
+          </Pressable>
+        ) : null}
       </ScrollView>
 
       {/* ── Search (open to guests) ── */}
-      <SearchSheet
-        visible={searchVisible}
-        onClose={() => setSearchVisible(false)}
-      />
+      <SearchSheet visible={searchVisible} onClose={() => setSearchVisible(false)} />
 
       {/* ── Service-area picker ── */}
       <LocationSheet
@@ -599,3 +513,265 @@ export default function Home() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: colors.sand,
+  },
+  gutter: {
+    marginHorizontal: GUTTER,
+  },
+
+  top: {
+    paddingHorizontal: GUTTER,
+    gap: 16,
+  },
+  greetingRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  greeting: {
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 0,
+    gap: 4,
+  },
+  hello: {
+    fontSize: 27,
+    letterSpacing: -1.08,
+    color: colors.ink,
+  },
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    alignSelf: 'flex-start',
+  },
+  location: {
+    flexShrink: 1,
+    fontSize: 13.5,
+    color: colors.inkMuted,
+  },
+  bell: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 22,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.hairline,
+  },
+  bellDot: {
+    position: 'absolute',
+    top: 9,
+    right: 11,
+    width: 7,
+    height: 7,
+    borderRadius: 999,
+    backgroundColor: colors.accentDeep,
+    borderWidth: 1.5,
+    borderColor: colors.white,
+  },
+  search: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    height: 54,
+    paddingHorizontal: 16,
+    borderRadius: 17,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.hairline,
+  },
+  searchLabel: {
+    // Shrink rather than wrap: the field is a fixed 54pt tall, so a second line
+    // is simply clipped and the placeholder reads as truncated mid-sentence.
+    flexShrink: 1,
+    fontSize: 14.5,
+    color: colors.inkSubtle,
+  },
+
+  hero: {
+    height: 186,
+    borderRadius: 26,
+    overflow: 'hidden',
+    backgroundColor: colors.accentDeep,
+  },
+
+  section: {
+    gap: 18,
+  },
+  sectionTight: {
+    gap: 16,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+  },
+  sectionTitle: {
+    // Not flexShrink: the row has room to spare, and shrinking sizes the Text to
+    // its measured width — which on Android is a shade narrower than this face
+    // paints, so the last glyph gets nipped ("Popular Service|s").
+    flexShrink: 0,
+    fontSize: 18,
+    color: colors.ink,
+  },
+  viewAll: {
+    flexShrink: 0,
+    fontSize: 13,
+    color: colors.accentDeep,
+  },
+  sectionEmpty: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 24,
+  },
+  sectionEmptyLabel: {
+    fontSize: 13,
+    color: colors.inkSubtle,
+  },
+
+  serviceGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    rowGap: 22,
+    paddingHorizontal: GUTTER,
+  },
+  carousel: {
+    paddingHorizontal: GUTTER,
+    gap: 12,
+  },
+
+  card: {
+    borderRadius: 24,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.hairline,
+    paddingHorizontal: 16,
+    paddingVertical: 20,
+  },
+  cardTitle: {
+    marginBottom: 18,
+    paddingHorizontal: 4,
+    fontSize: 15,
+    letterSpacing: -0.375,
+    color: colors.ink,
+  },
+  trustRow: {
+    flexDirection: 'row',
+  },
+  trustItem: {
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 0,
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 6,
+  },
+  trustDivider: {
+    borderLeftWidth: 1,
+    borderLeftColor: colors.hairline,
+  },
+  trustIcon: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+    borderRadius: 14,
+  },
+  trustLabel: {
+    fontSize: 12,
+    letterSpacing: -0.12,
+    color: colors.ink,
+    textAlign: 'center',
+  },
+  trustSub: {
+    fontSize: 10.5,
+    lineHeight: 13,
+    color: colors.inkSubtle,
+    textAlign: 'center',
+  },
+
+  guestRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    borderRadius: 20,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.hairline,
+    paddingHorizontal: 16,
+    paddingVertical: 18,
+  },
+  guestCopy: {
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 0,
+    gap: 3,
+  },
+  guestTitle: {
+    fontSize: 14,
+    letterSpacing: -0.28,
+    color: colors.ink,
+  },
+  guestSub: {
+    fontSize: 11.5,
+    lineHeight: 16,
+    color: colors.inkSubtle,
+  },
+  signUp: {
+    height: 42,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 13,
+    backgroundColor: colors.accentDeep,
+  },
+  signUpLabel: {
+    fontSize: 13.5,
+    letterSpacing: -0.135,
+    color: colors.white,
+  },
+
+  proCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    borderRadius: 20,
+    backgroundColor: '#14171B',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+  },
+  proIcon: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 14,
+    backgroundColor: 'rgba(249,115,22,0.16)',
+  },
+  proCopy: {
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 0,
+    gap: 3,
+  },
+  proTitle: {
+    fontSize: 14,
+    letterSpacing: -0.28,
+    color: colors.white,
+  },
+  proSub: {
+    fontSize: 11.5,
+    lineHeight: 16,
+    color: 'rgba(255,255,255,0.62)',
+  },
+
+});
