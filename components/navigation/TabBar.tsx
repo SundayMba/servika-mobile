@@ -236,6 +236,9 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 999,
-    backgroundColor: '#EF4444',
+    // The accent, not alarm red. An unread message is not an error, and the
+    // canvas carries the same dot in the accent on the header bell and the
+    // Notifications tile — one colour for "there is something here".
+    backgroundColor: colors.accentDeep,
   },
 });
