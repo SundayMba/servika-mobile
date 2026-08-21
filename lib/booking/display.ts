@@ -28,6 +28,48 @@ export function statusStyle(status: BookingStatus): ChipStyle {
   return STATUS_STYLES[status] ?? STATUS_STYLES.Pending;
 }
 
+/**
+ * The v2 form of the same vocabulary: resolved colours rather than Tailwind
+ * class strings, for screens that have moved to StyleSheet.
+ *
+ * Four of these tones are drawn on the Bookings canvas — neutral, amber, blue
+ * and warm. Indigo, green and red are not, and are built to the same recipe
+ * (a low-chroma tint behind a saturated ink of the same hue) so that
+ * "In progress", "Completed" and "Disputed" stay distinguishable rather than
+ * collapsing into the nearest tone that happened to be drawn.
+ *
+ * `statusStyle` above is unchanged — booking/[id].tsx still uses it.
+ */
+export type StatusTone = { label: string; bg: string; fg: string };
+
+const NEUTRAL = { bg: '#F1F1EE', fg: '#7C8592' };
+const AMBER = { bg: '#FDF3DC', fg: '#9A6608' };
+const BLUE = { bg: '#E8EFFB', fg: '#2563EB' };
+const WARM = { bg: '#FFF1E4', fg: '#B4500A' };
+const INDIGO = { bg: '#EAEAFB', fg: '#4F46E5' };
+const GREEN = { bg: '#E4F2EA', fg: '#0E7C4A' };
+const RED = { bg: '#FBE7E7', fg: '#C42B1C' };
+
+const STATUS_TONES: Record<BookingStatus, StatusTone> = {
+  Draft: { label: 'Draft', ...NEUTRAL },
+  Open: { label: 'Finding an artisan', ...AMBER },
+  Pending: { label: 'Pending', ...AMBER },
+  Accepted: { label: 'Accepted', ...BLUE },
+  Rejected: { label: 'Rejected', ...NEUTRAL },
+  OnMyWay: { label: 'On the way', ...BLUE },
+  Arrived: { label: 'Arrived', ...BLUE },
+  InProgress: { label: 'In progress', ...INDIGO },
+  AwaitingConfirmation: { label: 'Awaiting your confirmation', ...WARM },
+  Completed: { label: 'Completed', ...GREEN },
+  Cancelled: { label: 'Cancelled', ...NEUTRAL },
+  Disputed: { label: 'Disputed', ...RED },
+  Expired: { label: 'Expired', ...NEUTRAL },
+};
+
+export function statusTone(status: BookingStatus): StatusTone {
+  return STATUS_TONES[status] ?? STATUS_TONES.Pending;
+}
+
 /** A booking can still be cancelled by the customer only in these states. */
 export function canCancel(status: BookingStatus): boolean {
   // Cancellable up to and including Arrived (full refund if paid); once work is

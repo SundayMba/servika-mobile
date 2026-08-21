@@ -37,6 +37,12 @@ export const colors = {
   hairlineStrong: 'rgba(20,23,27,0.12)',
   online: '#22C55E',
   onlineInk: '#0E9E70',
+  /** Quietest ink on sand — meta rows, idle tab labels. */
+  inkFaint: '#7C8592',
+  /** Recessed sand, for a neutral chip sitting on a white surface. */
+  sandSunk: '#F1F1EE',
+  /** The accent at 8% — icon tiles and the warm status chip. */
+  accentTint: '#FFF1E4',
 } as const;
 
 /** Instrument Sans, the onboarding typeface. Loaded in app/_layout.tsx. */

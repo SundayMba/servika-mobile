@@ -1,10 +1,10 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
-import { Platform, Pressable, Text, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AppText } from '@/components/ui/AppText';
 import { colors } from '@/constants/colors';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useChatUnreadCount } from '@/lib/chat/hooks';
@@ -13,8 +13,9 @@ type IconName = keyof typeof Ionicons.glyphMap;
 
 type TabMeta = {
   label: string;
+  /** One glyph, outline, in both states — v2 marks the active tab with ink and
+   *  weight rather than by swapping in a filled variant. */
   icon: IconName;
-  iconActive: IconName;
   /** Render a small notification dot over the icon. */
   badge?: boolean;
 };
@@ -26,16 +27,11 @@ type TabMeta = {
  * a normal tab. (Categories moved to a plain stack screen at /categories.)
  */
 const TABS: Record<string, TabMeta> = {
-  home: { label: 'Home', icon: 'home-outline', iconActive: 'home' },
-  bookings: { label: 'Bookings', icon: 'calendar-outline', iconActive: 'calendar' },
-  explore: { label: 'Explore', icon: 'map-outline', iconActive: 'map' },
-  messages: {
-    label: 'Messages',
-    icon: 'chatbubble-ellipses-outline',
-    iconActive: 'chatbubble-ellipses',
-    badge: true,
-  },
-  profile: { label: 'Profile', icon: 'person-outline', iconActive: 'person' },
+  home: { label: 'Home', icon: 'home-outline' },
+  bookings: { label: 'Bookings', icon: 'calendar-outline' },
+  explore: { label: 'Explore', icon: 'map-outline' },
+  messages: { label: 'Messages', icon: 'chatbubble-ellipses-outline', badge: true },
+  profile: { label: 'Profile', icon: 'person-outline' },
 };
 
 type TabBarProps = BottomTabBarProps & {
@@ -45,6 +41,20 @@ type TabBarProps = BottomTabBarProps & {
   onBlockedPress?: () => void;
 };
 
+/**
+ * The v2 tab bar, from the Servika design canvas.
+ *
+ * What changed from v1: a flat translucent-white slab with a hairline top edge
+ * instead of a 28pt rounded card on a drop shadow; outline glyphs throughout,
+ * with the active tab picked out in ink rather than orange; and a plain solid
+ * raised button in place of the gradient one. The whole bar is quieter, which
+ * is the point — it sits under every screen and was the loudest thing on most
+ * of them.
+ *
+ * The design shows the slab blurred. expo-blur is not a dependency and adding
+ * it means a native rebuild, so the fill stands in for it — see the note on
+ * `bar` below for why it is 96% rather than the canvas's 92%.
+ */
 export function TabBar({
   state,
   navigation,
@@ -59,17 +69,7 @@ export function TabBar({
   const hasUnread = (unreadMessages ?? 0) > 0;
 
   return (
-    <View
-      style={{
-        paddingBottom: Math.max(insets.bottom, 12),
-        shadowColor: '#0F172A',
-        shadowOpacity: 0.08,
-        shadowRadius: 16,
-        shadowOffset: { width: 0, height: -4 },
-        elevation: 16,
-      }}
-      className="absolute inset-x-0 bottom-0 flex-row items-end justify-around rounded-t-[28px] bg-white px-3 pt-2.5"
-    >
+    <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 14) }]}>
       {state.routes.map((route, index) => {
         const meta = TABS[route.name];
         if (!meta) return null;
@@ -107,7 +107,7 @@ export function TabBar({
           );
         }
 
-        const color = isFocused ? colors.primary : colors.textMuted;
+        const color = isFocused ? colors.ink : colors.inkFaint;
 
         return (
           <Pressable
@@ -116,24 +116,19 @@ export function TabBar({
             accessibilityState={isFocused ? { selected: true } : {}}
             accessibilityLabel={meta.label}
             onPress={onPress}
-            className="flex-1 items-center justify-end gap-1 pb-1 pt-1"
+            style={styles.tab}
           >
-            <View>
-              <Ionicons
-                name={isFocused ? meta.iconActive : meta.icon}
-                size={24}
-                color={color}
-              />
-              {meta.badge && hasUnread ? (
-                <View className="absolute -right-1.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-red-500" />
-              ) : null}
+            <View style={styles.glyph}>
+              <Ionicons name={meta.icon} size={23} color={color} />
+              {meta.badge && hasUnread ? <View style={styles.badge} /> : null}
             </View>
-            <Text
-              style={{ color }}
-              className={isFocused ? 'text-[11px] font-semibold' : 'text-[11px] font-medium'}
+            <AppText
+              weight={isFocused ? 'semibold' : 'medium'}
+              numberOfLines={1}
+              style={[styles.label, { color }]}
             >
               {meta.label}
-            </Text>
+            </AppText>
           </Pressable>
         );
       })}
@@ -151,50 +146,96 @@ function CenterButton({
   onPress: () => void;
 }) {
   return (
-    <View className="flex-1 items-center justify-end">
-      <Pressable
-        accessibilityRole="button"
-        accessibilityState={isFocused ? { selected: true } : {}}
-        accessibilityLabel={meta.label}
-        onPress={onPress}
-        className="items-center"
+    <Pressable
+      accessibilityRole="button"
+      accessibilityState={isFocused ? { selected: true } : {}}
+      accessibilityLabel={meta.label}
+      onPress={onPress}
+      style={styles.centerTab}
+    >
+      {/* Raised, ringed in the bar's own white so it reads as cut out of it.
+          No gradient and no glow — the canvas draws it flat. */}
+      <View style={styles.raised}>
+        <Ionicons name={meta.icon} size={23} color={colors.white} />
+      </View>
+      <AppText
+        weight={isFocused ? 'semibold' : 'medium'}
+        numberOfLines={1}
+        style={[styles.label, styles.centerLabel, { color: isFocused ? colors.ink : colors.inkFaint }]}
       >
-        {/* Floating circular button, lifted above the bar with a white ring */}
-        <View
-          style={{
-            marginTop: -34,
-            shadowColor: colors.primary,
-            shadowOpacity: 0.45,
-            shadowRadius: 12,
-            shadowOffset: { width: 0, height: 8 },
-            elevation: 10,
-          }}
-          className="h-[62px] w-[62px] items-center justify-center rounded-full border-4 border-white"
-        >
-          <LinearGradient
-            colors={[colors.primaryLight, colors.primary, colors.primaryDark]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={{
-              height: '100%',
-              width: '100%',
-              borderRadius: 999,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Ionicons name={meta.iconActive} size={26} color={colors.white} />
-          </LinearGradient>
-        </View>
-        <Text
-          style={{ color: isFocused ? colors.primary : colors.textMuted }}
-          className={
-            isFocused ? 'mt-1 text-[11px] font-semibold' : 'mt-1 text-[11px] font-medium'
-          }
-        >
-          {meta.label}
-        </Text>
-      </Pressable>
-    </View>
+        {meta.label}
+      </AppText>
+    </Pressable>
   );
 }
+
+const styles = StyleSheet.create({
+  bar: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingHorizontal: 8,
+    paddingTop: 14,
+    // The canvas specifies 92% white over a 12px backdrop blur. expo-blur is
+    // not a dependency and adding it needs a native rebuild, so there is no
+    // blur — and at 92% the content scrolling underneath stays sharp and
+    // legible through the bar, which reads as a bug rather than as glass. 96%
+    // keeps the faint warmth of the sand showing through without the noise.
+    backgroundColor: 'rgba(255,255,255,0.96)',
+    borderTopWidth: 1,
+    borderTopColor: colors.hairline,
+  },
+  tab: {
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 0,
+    // 'stretch' with a centred label, so the text box fills its column instead
+    // of shrink-wrapping — Android clips whatever overflows a shrink-wrapped
+    // Text, which is how "Bookings" lost its final glyph before.
+    alignItems: 'stretch',
+    gap: 4,
+  },
+  glyph: {
+    // The column is 'stretch' so the label can fill it; the icon has to opt
+    // back out or it lands hard against the left edge.
+    alignSelf: 'center',
+  },
+  centerTab: {
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 0,
+    alignItems: 'center',
+  },
+  raised: {
+    position: 'absolute',
+    top: -28,
+    width: 56,
+    height: 56,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 999,
+    backgroundColor: colors.accentDeep,
+    borderWidth: 4,
+    borderColor: colors.white,
+  },
+  label: {
+    fontSize: 10.5,
+    textAlign: 'center',
+  },
+  centerLabel: {
+    marginTop: 33,
+    alignSelf: 'stretch',
+  },
+  badge: {
+    position: 'absolute',
+    top: -1,
+    right: -2,
+    width: 8,
+    height: 8,
+    borderRadius: 999,
+    backgroundColor: '#EF4444',
+  },
+});
