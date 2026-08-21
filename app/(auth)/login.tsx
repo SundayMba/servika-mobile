@@ -4,7 +4,6 @@ import { StatusBar } from 'expo-status-bar';
 import { useRef, useState } from 'react';
 import {
   ScrollView,
-  Text,
   type TextInput,
   TouchableOpacity,
   View,
@@ -12,6 +11,7 @@ import {
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AppText } from '@/components/ui/AppText';
 import { GoogleAuthButton } from '@/components/GoogleAuthButton';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -88,15 +88,15 @@ export default function Login() {
               contentFit="contain"
             />
           </View>
-          <Text className="text-[17px] font-bold text-white">Servika</Text>
+          <AppText weight="semibold" className="text-[17px] text-white">Servika</AppText>
         </View>
 
-        <Text className="mt-6 text-[27px] font-bold text-white">
+        <AppText weight="semibold" className="mt-6 text-[27px] text-white">
           Welcome back 👋
-        </Text>
-        <Text className="mt-1.5 text-[14px] leading-5 text-white/85">
+        </AppText>
+        <AppText className="mt-1.5 text-[14px] leading-5 text-white/85">
           Sign in to continue with Servika.
-        </Text>
+        </AppText>
       </View>
 
       {/* ── White sheet curving up into the orange ── */}
@@ -145,18 +145,18 @@ export default function Login() {
                   className="mt-2 self-end"
                   onPress={() => router.push('/forgot-password')}
                 >
-                  <Text className="text-[13px] font-semibold text-primary">
+                  <AppText weight="semibold" className="text-[13px] text-primary">
                     Forgot Password?
-                  </Text>
+                  </AppText>
                 </TouchableOpacity>
               </View>
             </View>
 
             {/* Error */}
             {error ? (
-              <Text className="mt-4 text-center text-[13px] font-medium text-red-500">
+              <AppText weight="medium" className="mt-4 text-center text-[13px] text-red-500">
                 {error}
-              </Text>
+              </AppText>
             ) : null}
 
             {/* Submit */}
@@ -173,16 +173,16 @@ export default function Login() {
 
             {/* Footer */}
             <View className="mt-7 flex-row items-center justify-center gap-1">
-              <Text className="text-[14px] text-gray-500">
+              <AppText className="text-[14px] text-gray-500">
                 Don&apos;t have an account?
-              </Text>
+              </AppText>
               <TouchableOpacity
                 hitSlop={8}
                 onPress={() => router.replace('/register')}
               >
-                <Text className="text-[14px] font-bold text-primary">
+                <AppText weight="semibold" className="text-[14px] text-primary">
                   Create account
-                </Text>
+                </AppText>
               </TouchableOpacity>
             </View>
           </ScrollView>

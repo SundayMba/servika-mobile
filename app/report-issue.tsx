@@ -5,13 +5,13 @@ import { useState } from 'react';
 import {
   Pressable,
   ScrollView,
-  Text,
-  TextInput,
   View,
 } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppTextInput } from '@/components/ui/AppTextInput';
+import { AppText } from '@/components/ui/AppText';
 import { appAlert } from '@/components/ui/AppAlert';
 import { colors } from '@/constants/colors';
 import { ISSUE_TYPES } from '@/lib/active-booking/mock';
@@ -80,10 +80,10 @@ export default function ReportIssue() {
           <Ionicons name="chevron-back" size={22} color={colors.textPrimary} />
         </Pressable>
         <View className="items-center">
-          <Text className="text-[17px] font-bold text-gray-900">Report an Issue</Text>
-          <Text className="text-[12px] text-gray-500">
+          <AppText weight="semibold" className="text-[17px] text-gray-900">Report an Issue</AppText>
+          <AppText className="text-[12px] text-gray-500">
             Help us understand what happened
-          </Text>
+          </AppText>
         </View>
       </View>
 
@@ -96,9 +96,9 @@ export default function ReportIssue() {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ padding: 20, paddingBottom: 28 }}
         >
-          <Text className="mb-2 text-[13px] font-semibold text-gray-700">
+          <AppText weight="semibold" className="mb-2 text-[13px] text-gray-700">
             Select the issue type
-          </Text>
+          </AppText>
 
           {ISSUE_TYPES.map((it) => {
             const active = selected === it.id;
@@ -120,8 +120,8 @@ export default function ReportIssue() {
                   <Ionicons name={it.icon as keyof typeof Ionicons.glyphMap} size={20} color={DANGER} />
                 </View>
                 <View className="ml-3 flex-1">
-                  <Text className="text-[14px] font-bold text-gray-900">{it.title}</Text>
-                  <Text className="text-[12px] leading-4 text-gray-500">{it.detail}</Text>
+                  <AppText weight="semibold" className="text-[14px] text-gray-900">{it.title}</AppText>
+                  <AppText className="text-[12px] leading-4 text-gray-500">{it.detail}</AppText>
                 </View>
                 <Ionicons
                   name={active ? 'radio-button-on' : 'chevron-forward'}
@@ -132,10 +132,10 @@ export default function ReportIssue() {
             );
           })}
 
-          <Text className="mb-1.5 mt-2 text-[13px] font-semibold text-gray-700">
+          <AppText weight="semibold" className="mb-1.5 mt-2 text-[13px] text-gray-700">
             Additional details (optional)
-          </Text>
-          <TextInput
+          </AppText>
+          <AppTextInput
             value={details}
             onChangeText={(t) => setDetails(t.slice(0, 500))}
             placeholder="Please share more details about the issue..."
@@ -144,19 +144,19 @@ export default function ReportIssue() {
             textAlignVertical="top"
             className="min-h-[96px] rounded-2xl border border-gray-200 bg-white px-4 py-3 text-[15px] text-gray-900"
           />
-          <Text className="mt-1 text-right text-[11px] text-gray-400">
+          <AppText className="mt-1 text-right text-[11px] text-gray-400">
             {details.length}/500
-          </Text>
+          </AppText>
 
           <View
             className="mt-4 flex-row items-center rounded-2xl p-3"
             style={{ backgroundColor: '#FEF2F2' }}
           >
             <Ionicons name="shield-checkmark-outline" size={18} color={DANGER} />
-            <Text className="ml-2 flex-1 text-[12px] text-gray-600">
+            <AppText className="ml-2 flex-1 text-[12px] text-gray-600">
               We take your concerns seriously. Your report is confidential and we’ll
               review it and take appropriate action.
-            </Text>
+            </AppText>
           </View>
 
           <Pressable
@@ -166,9 +166,9 @@ export default function ReportIssue() {
             style={{ backgroundColor: DANGER, opacity: raiseDispute.isPending ? 0.6 : 1 }}
           >
             <Ionicons name="alert-circle" size={18} color={colors.white} />
-            <Text className="text-[16px] font-bold text-white">
+            <AppText weight="semibold" className="text-[16px] text-white">
               {raiseDispute.isPending ? 'Submitting…' : 'Submit Issue'}
-            </Text>
+            </AppText>
           </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>

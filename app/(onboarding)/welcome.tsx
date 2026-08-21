@@ -7,12 +7,12 @@ import {
   LayoutChangeEvent,
   Pressable,
   StyleSheet,
-  Text,
   View,
   useWindowDimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AppText } from '@/components/ui/AppText';
 import { OnboardingSlide } from '@/components/onboarding/OnboardingSlide';
 import { colors, fonts } from '@/constants/colors';
 
@@ -139,9 +139,9 @@ export default function Welcome() {
               narrower than it paints and clips the final glyph ("Servik|a").
               Padding cannot fix it — the clip is inside the text layout, not the
               view — so the run is given one more character to end on. */}
-          <Text style={styles.brandName} maxFontSizeMultiplier={1.15}>
+          <AppText style={styles.brandName} maxFontSizeMultiplier={1.15}>
             {'Servika '}
-          </Text>
+          </AppText>
         </View>
         <Pressable
           onPress={handleSkip}
@@ -149,9 +149,9 @@ export default function Welcome() {
           accessibilityRole="button"
           accessibilityLabel="Skip onboarding"
         >
-          <Text style={styles.skip} maxFontSizeMultiplier={1.15}>
+          <AppText style={styles.skip} maxFontSizeMultiplier={1.15}>
             {'Skip '}
-          </Text>
+          </AppText>
         </Pressable>
       </View>
 
@@ -179,9 +179,9 @@ export default function Welcome() {
           style={styles.cta}
         >
           {/* Spaced both sides so the same fix keeps the label centred. */}
-          <Text style={styles.ctaLabel} maxFontSizeMultiplier={1.15}>
+          <AppText style={styles.ctaLabel} maxFontSizeMultiplier={1.15}>
             {isLast ? ' Start exploring ' : ' Next '}
-          </Text>
+          </AppText>
         </Pressable>
       </View>
     </View>

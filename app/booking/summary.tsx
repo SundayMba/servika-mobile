@@ -3,9 +3,10 @@ import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppText } from '@/components/ui/AppText';
 import { BookingSteps } from '@/components/booking/BookingSteps';
 import { Button } from '@/components/ui/Button';
 import { colors } from '@/constants/colors';
@@ -27,9 +28,9 @@ function Section({
 }) {
   return (
     <View className="mt-4 rounded-2xl border border-gray-100 bg-white p-4">
-      <Text className="mb-2 text-[12px] font-bold uppercase tracking-wide text-gray-400">
+      <AppText weight="semibold" className="mb-2 text-[12px] uppercase tracking-wide text-gray-400">
         {title}
-      </Text>
+      </AppText>
       {children}
     </View>
   );
@@ -38,10 +39,10 @@ function Section({
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <View className="flex-row items-start justify-between py-1">
-      <Text className="text-[13px] text-gray-500">{label}</Text>
-      <Text className="ml-4 flex-1 text-right text-[13px] font-medium text-gray-900">
+      <AppText className="text-[13px] text-gray-500">{label}</AppText>
+      <AppText weight="medium" className="ml-4 flex-1 text-right text-[13px] text-gray-900">
         {value}
-      </Text>
+      </AppText>
     </View>
   );
 }
@@ -171,10 +172,10 @@ export default function BookingSummary() {
           <Ionicons name="chevron-back" size={22} color={colors.textPrimary} />
         </Pressable>
         <View className="items-center">
-          <Text className="text-[17px] font-bold text-gray-900">
+          <AppText weight="semibold" className="text-[17px] text-gray-900">
             Booking Summary
-          </Text>
-          <Text className="text-[12px] text-gray-500">{serviceName}</Text>
+          </AppText>
+          <AppText className="text-[12px] text-gray-500">{serviceName}</AppText>
         </View>
       </View>
 
@@ -194,11 +195,11 @@ export default function BookingSummary() {
               <Ionicons name="megaphone-outline" size={22} color={colors.primary} />
             </View>
             <View className="ml-3 flex-1">
-              <Text className="text-[15px] font-bold text-gray-900">Open request</Text>
-              <Text className="text-[12px] leading-4 text-gray-500">
+              <AppText weight="semibold" className="text-[15px] text-gray-900">Open request</AppText>
+              <AppText className="text-[12px] leading-4 text-gray-500">
                 We&apos;ll match you with a verified {serviceName.toLowerCase()} pro nearby. The
                 first to accept takes the job.
-              </Text>
+              </AppText>
             </View>
           </View>
         ) : null}
@@ -218,14 +219,14 @@ export default function BookingSummary() {
               </View>
             )}
             <View className="ml-3 flex-1">
-              <Text className="text-[15px] font-bold text-gray-900">
+              <AppText weight="semibold" className="text-[15px] text-gray-900">
                 {artisan.fullName}
-              </Text>
+              </AppText>
               <View className="flex-row items-center gap-1">
                 <Ionicons name="star" size={13} color={colors.primary} />
-                <Text className="text-[12px] text-gray-600">
+                <AppText className="text-[12px] text-gray-600">
                   {artisan.rating.toFixed(1)} ({artisan.reviewCount} reviews)
-                </Text>
+                </AppText>
               </View>
             </View>
           </View>
@@ -235,16 +236,16 @@ export default function BookingSummary() {
         <Section title="Job">
           <Row label="Service" value={serviceName} />
           {params.description ? (
-            <Text className="mt-1 text-[13px] leading-5 text-gray-700">
+            <AppText className="mt-1 text-[13px] leading-5 text-gray-700">
               {params.description}
-            </Text>
+            </AppText>
           ) : null}
           {photoCount > 0 ? (
             <View className="mt-2 flex-row items-center gap-1.5">
               <Ionicons name="images-outline" size={14} color={colors.textMuted} />
-              <Text className="text-[12px] text-gray-500">
+              <AppText className="text-[12px] text-gray-500">
                 {photoCount} photo{photoCount > 1 ? 's' : ''} attached
-              </Text>
+              </AppText>
             </View>
           ) : null}
         </Section>
@@ -265,13 +266,13 @@ export default function BookingSummary() {
 
         {/* Location */}
         <Section title="Location">
-          <Text className="text-[13px] leading-5 text-gray-900">
+          <AppText className="text-[13px] leading-5 text-gray-900">
             {params.addressText ?? 'No address provided'}
-          </Text>
+          </AppText>
           {params.instructions ? (
-            <Text className="mt-1 text-[12px] leading-4 text-gray-500">
+            <AppText className="mt-1 text-[12px] leading-4 text-gray-500">
               {params.instructions}
-            </Text>
+            </AppText>
           ) : null}
         </Section>
 
@@ -280,32 +281,32 @@ export default function BookingSummary() {
           {isFixed ? (
             <>
               <Row label="Fixed price" value={formatNaira(fixedPrice!)} />
-              <Text className="mt-1 text-[12px] leading-4 text-gray-500">
+              <AppText className="mt-1 text-[12px] leading-4 text-gray-500">
                 {artisan?.fullName ?? 'The artisan'} confirms your booking, then you
                 pay {formatNaira(fixedPrice!)} securely. Servika holds it until the
                 job is done. Nothing to pay now.
-              </Text>
+              </AppText>
             </>
           ) : (
             <>
               <View className="flex-row items-center gap-2">
                 <Ionicons name="shield-checkmark" size={16} color="#22C55E" />
-                <Text className="text-[14px] font-bold text-gray-900">
+                <AppText weight="semibold" className="text-[14px] text-gray-900">
                   Nothing to pay now
-                </Text>
+                </AppText>
               </View>
-              <Text className="mt-1 text-[12px] leading-4 text-gray-500">
+              <AppText className="mt-1 text-[12px] leading-4 text-gray-500">
                 {isOpen
                   ? 'Artisans review your request and send their prices. You only pay after you accept an offer, and your payment is held securely until the job is done.'
                   : `${artisan?.fullName ?? 'The artisan'} will review your request and send you a quote (or come inspect for free). You only pay after you accept, and your payment is held securely until the job is done.`}
-              </Text>
+              </AppText>
             </>
           )}
         </Section>
 
         {errorMsg ? (
           <View className="mt-4 rounded-2xl border border-red-100 bg-red-50 p-3">
-            <Text className="text-[13px] text-red-600">{errorMsg}</Text>
+            <AppText className="text-[13px] text-red-600">{errorMsg}</AppText>
           </View>
         ) : null}
 

@@ -9,11 +9,11 @@ import {
   ActivityIndicator,
   Pressable,
   ScrollView,
-  Text,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppText } from '@/components/ui/AppText';
 import { appAlert } from '@/components/ui/AppAlert';
 import { Button } from '@/components/ui/Button';
 import { colors } from '@/constants/colors';
@@ -175,10 +175,10 @@ export default function BookingPhotos() {
           <Ionicons name="chevron-back" size={22} color={colors.textPrimary} />
         </Pressable>
         <View className="items-center">
-          <Text className="text-[17px] font-bold text-gray-900">Job Details</Text>
-          <Text className="text-[12px] text-gray-500">
+          <AppText weight="semibold" className="text-[17px] text-gray-900">Job Details</AppText>
+          <AppText className="text-[12px] text-gray-500">
             Help the artisan understand the job
-          </Text>
+          </AppText>
         </View>
       </View>
 
@@ -189,9 +189,9 @@ export default function BookingPhotos() {
         {/* Pricing mode — open requests only */}
         {isOpen ? (
           <View className="mb-5">
-            <Text className="mb-2.5 text-[15px] font-bold text-gray-900">
+            <AppText weight="semibold" className="mb-2.5 text-[15px] text-gray-900">
               How should pricing work?
-            </Text>
+            </AppText>
             {(
               [
                 {
@@ -227,8 +227,8 @@ export default function BookingPhotos() {
                     />
                   </View>
                   <View className="flex-1">
-                    <Text className="text-[14px] font-bold text-gray-900">{opt.title}</Text>
-                    <Text className="mt-0.5 text-[12px] leading-4 text-gray-500">{opt.sub}</Text>
+                    <AppText weight="semibold" className="text-[14px] text-gray-900">{opt.title}</AppText>
+                    <AppText className="mt-0.5 text-[12px] leading-4 text-gray-500">{opt.sub}</AppText>
                   </View>
                   <View
                     className={
@@ -257,12 +257,12 @@ export default function BookingPhotos() {
               <Ionicons name="cloud-upload-outline" size={28} color={colors.primary} />
             )}
           </View>
-          <Text className="mt-3 text-[15px] font-bold text-gray-900">
+          <AppText weight="semibold" className="mt-3 text-[15px] text-gray-900">
             {bidding ? 'Add job photos (required)' : 'Upload photos'}
-          </Text>
-          <Text className="mt-1 text-[13px] text-gray-500">
+          </AppText>
+          <AppText className="mt-1 text-[13px] text-gray-500">
             Tap to choose from your library · up to {MAX_PHOTOS}
-          </Text>
+          </AppText>
         </Pressable>
 
         {/* Thumbnails */}
@@ -305,14 +305,14 @@ export default function BookingPhotos() {
             />
           </View>
           <View className="flex-1">
-            <Text className="text-[14px] font-bold text-gray-900">
+            <AppText weight="semibold" className="text-[14px] text-gray-900">
               {video ? 'Video clip attached' : 'Add a short video (optional)'}
-            </Text>
-            <Text className="mt-0.5 text-[12px] text-gray-500">
+            </AppText>
+            <AppText className="mt-0.5 text-[12px] text-gray-500">
               {video
                 ? 'Tap to remove it'
                 : 'A quick walk-around clip gives artisans the full picture'}
-            </Text>
+            </AppText>
           </View>
           <Ionicons
             name={video ? 'trash-outline' : 'add-circle-outline'}
@@ -325,12 +325,12 @@ export default function BookingPhotos() {
         <View className="mt-5 flex-row rounded-2xl bg-primary/5 p-4">
           <Ionicons name="bulb-outline" size={18} color={colors.primary} />
           <View className="ml-2 flex-1">
-            <Text className="text-[13px] font-bold text-gray-900">Tips</Text>
-            <Text className="mt-0.5 text-[12px] leading-4 text-gray-600">
+            <AppText weight="semibold" className="text-[13px] text-gray-900">Tips</AppText>
+            <AppText className="mt-0.5 text-[12px] leading-4 text-gray-600">
               {bidding
                 ? 'Clear photos and a short clip get you more (and more accurate) price offers.'
                 : 'Clear photos help artisans understand the problem better and give more accurate quotes.'}
-            </Text>
+            </AppText>
           </View>
         </View>
 

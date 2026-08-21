@@ -7,8 +7,6 @@ import {
   ActivityIndicator,
   Keyboard,
   Pressable,
-  Text,
-  TextInput,
   View,
 } from 'react-native';
 import MapView, { PROVIDER_DEFAULT, type Region } from 'react-native-maps';
@@ -22,6 +20,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AppTextInput } from '@/components/ui/AppTextInput';
+import { AppText } from '@/components/ui/AppText';
 import { appAlert } from '@/components/ui/AppAlert';
 import { colors } from '@/constants/colors';
 import { setSelectedArea } from '@/lib/location/areaStore';
@@ -302,7 +302,7 @@ export default function LocationPicker() {
             style={shadow}
           >
             <Ionicons name="search-outline" size={19} color={colors.textMuted} />
-            <TextInput
+            <AppTextInput
               value={query}
               onChangeText={setQuery}
               onFocus={() => setSearchFocused(true)}
@@ -340,16 +340,17 @@ export default function LocationPicker() {
                   color={colors.textMuted}
                 />
                 <View className="flex-1">
-                  <Text
+                  <AppText
+                    weight="medium"
                     numberOfLines={1}
-                    className="text-[14px] font-medium text-gray-800"
+                    className="text-[14px] text-gray-800"
                   >
                     {r.label}
-                  </Text>
+                  </AppText>
                   {r.sub ? (
-                    <Text numberOfLines={1} className="text-[12px] text-gray-400">
+                    <AppText numberOfLines={1} className="text-[12px] text-gray-400">
                       {r.sub}
-                    </Text>
+                    </AppText>
                   ) : null}
                 </View>
               </Pressable>
@@ -380,9 +381,9 @@ export default function LocationPicker() {
         style={{ paddingBottom: insets.bottom + 16 }}
         className="absolute inset-x-0 bottom-0 rounded-t-3xl bg-white px-5 pt-5"
       >
-        <Text className="mb-2 text-[12px] font-semibold text-gray-400">
+        <AppText weight="semibold" className="mb-2 text-[12px] text-gray-400">
           SELECTED LOCATION
-        </Text>
+        </AppText>
         <View className="mb-4 flex-row items-center gap-3">
           <View
             className="h-11 w-11 items-center justify-center rounded-2xl"
@@ -394,12 +395,12 @@ export default function LocationPicker() {
             {resolving ? (
               <View className="flex-row items-center gap-2">
                 <ActivityIndicator size="small" color={colors.primary} />
-                <Text className="text-[14px] text-gray-400">Locating…</Text>
+                <AppText className="text-[14px] text-gray-400">Locating…</AppText>
               </View>
             ) : (
-              <Text className="text-[15px] font-semibold text-gray-900">
+              <AppText weight="semibold" className="text-[15px] text-gray-900">
                 {address}
-              </Text>
+              </AppText>
             )}
           </View>
         </View>
@@ -417,12 +418,13 @@ export default function LocationPicker() {
             size={20}
             color={resolving ? colors.textMuted : '#FFFFFF'}
           />
-          <Text
-            className="text-[15px] font-bold"
+          <AppText
+            weight="semibold"
+            className="text-[15px]"
             style={{ color: resolving ? colors.textMuted : '#FFFFFF' }}
           >
             Confirm location
-          </Text>
+          </AppText>
         </Pressable>
       </Animated.View>
     </View>

@@ -4,7 +4,7 @@ import { Image } from 'expo-image';
 import { Stack, useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { BackHandler, Dimensions, Pressable, Text, View } from 'react-native';
+import { BackHandler, Dimensions, Pressable, View } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -14,6 +14,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
 import { colors } from '@/constants/colors';
 import { formatDate } from '@/lib/booking/display';
@@ -120,7 +121,7 @@ function Confetti() {
 function ReceiptRow({ label, children }: { label: string; children: ReactNode }) {
   return (
     <View className="flex-row items-start justify-between gap-4 py-1.5">
-      <Text className="text-[13px] text-gray-500">{label}</Text>
+      <AppText className="text-[13px] text-gray-500">{label}</AppText>
       <View className="flex-1 items-end">{children}</View>
     </View>
   );
@@ -186,10 +187,10 @@ export default function BookingSuccess() {
               <Ionicons name="checkmark" size={40} color={colors.white} />
             </View>
           </View>
-          <Text className="mt-5 text-center text-[24px] font-bold text-gray-900">
+          <AppText weight="semibold" className="mt-5 text-center text-[24px] text-gray-900">
             {isOpen ? 'Request posted!' : 'Request sent!'}
-          </Text>
-          <Text className="mt-1.5 px-4 text-center text-[14px] leading-5 text-gray-500">
+          </AppText>
+          <AppText className="mt-1.5 px-4 text-center text-[14px] leading-5 text-gray-500">
             {isOpen
               ? params.mode === 'RemoteQuote'
                 ? 'Artisans are reviewing your photos and will send price offers. Compare them and pick your favourite.'
@@ -197,13 +198,13 @@ export default function BookingSuccess() {
               : isFixed
                 ? `${params.artisanName || 'The artisan'} will confirm your booking${amount != null ? `, then you pay ${formatNaira(amount)}` : ''}, held securely until the job is done.`
                 : `${params.artisanName || 'The artisan'} will review your request and send you a quote. You only pay after you accept it.`}
-          </Text>
+          </AppText>
         </View>
 
         {/* Receipt */}
         <View className="mt-8 rounded-3xl border border-gray-100 bg-white p-5">
           <View className="flex-row items-center justify-between">
-            <Text className="text-[13px] text-gray-500">Booking ID</Text>
+            <AppText className="text-[13px] text-gray-500">Booking ID</AppText>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Copy booking ID"
@@ -211,9 +212,9 @@ export default function BookingSuccess() {
               hitSlop={8}
               className="flex-row items-center gap-1.5 active:opacity-60"
             >
-              <Text className="text-[14px] font-bold text-gray-900">
+              <AppText weight="semibold" className="text-[14px] text-gray-900">
                 {shortRef(params.bookingId)}
-              </Text>
+              </AppText>
               <Ionicons
                 name={copied ? 'checkmark-circle' : 'copy-outline'}
                 size={15}
@@ -234,33 +235,33 @@ export default function BookingSuccess() {
                     contentFit="cover"
                   />
                 ) : null}
-                <Text className="text-[14px] font-semibold text-gray-900">
+                <AppText weight="semibold" className="text-[14px] text-gray-900">
                   {params.artisanName}
-                </Text>
+                </AppText>
               </View>
             </ReceiptRow>
           ) : null}
           {params.serviceName ? (
             <ReceiptRow label="Service">
-              <Text className="text-right text-[14px] font-semibold text-gray-900">
+              <AppText weight="semibold" className="text-right text-[14px] text-gray-900">
                 {params.serviceName}
-              </Text>
+              </AppText>
             </ReceiptRow>
           ) : null}
           <ReceiptRow label="Date & Time">
-            <Text className="text-right text-[14px] font-semibold leading-5 text-gray-900">
+            <AppText weight="semibold" className="text-right text-[14px] leading-5 text-gray-900">
               {[formatDate(params.date), params.time].filter(Boolean).join('\n') ||
                 '—'}
-            </Text>
+            </AppText>
           </ReceiptRow>
           <ReceiptRow label="Amount due now">
-            <Text className="text-[14px] font-bold text-primary">
+            <AppText weight="semibold" className="text-[14px] text-primary">
               {isFixed && amount != null
                 ? `₦0 now, ${formatNaira(amount)} after the artisan accepts`
                 : amount != null
                   ? formatNaira(amount)
                   : '₦0 now, pay after you accept a quote'}
-            </Text>
+            </AppText>
           </ReceiptRow>
         </View>
 
@@ -313,9 +314,9 @@ export default function BookingSuccess() {
             onPress={() => leaveTo('/home')}
             className="items-center py-1"
           >
-            <Text className="text-[14px] font-semibold text-gray-500">
+            <AppText weight="semibold" className="text-[14px] text-gray-500">
               Back to Home
-            </Text>
+            </AppText>
           </Pressable>
         </View>
       </View>

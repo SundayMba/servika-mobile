@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, Text, TextInput, View } from 'react-native';
+import { Pressable, type TextInput, View } from 'react-native';
 
+import { AppTextInput } from '@/components/ui/AppTextInput';
+import { AppText } from '@/components/ui/AppText';
 import { BottomSheet } from '@/components/BottomSheet';
 import { Button } from '@/components/ui/Button';
 import { authErrorMessage, sendPhoneOtp, verifyPhoneOtp } from '@/lib/api/auth';
@@ -109,13 +111,13 @@ export function VerifyPhoneSheet({
 
   return (
     <BottomSheet visible={visible} onClose={onClose} onOpened={() => inputRef.current?.focus()}>
-      <Text className="text-center text-[20px] font-bold text-gray-900">
+      <AppText weight="semibold" className="text-center text-[20px] text-gray-900">
         Verify your phone
-      </Text>
-      <Text className="mb-6 mt-2 text-center text-[14px] leading-5 text-gray-500">
+      </AppText>
+      <AppText className="mb-6 mt-2 text-center text-[14px] leading-5 text-gray-500">
         Enter the 6-digit code we sent to{'\n'}
-        <Text className="font-semibold text-gray-700">{phoneNumber || 'your phone'}</Text>
-      </Text>
+        <AppText inline weight="semibold" className="text-gray-700">{phoneNumber || 'your phone'}</AppText>
+      </AppText>
 
       <Pressable
         accessibilityRole="none"
@@ -137,12 +139,12 @@ export function VerifyPhoneSheet({
                     : 'border-gray-200 bg-gray-50',
               ].join(' ')}
             >
-              <Text className="text-[22px] font-bold text-gray-900">{code[i] ?? ''}</Text>
+              <AppText weight="semibold" className="text-[22px] text-gray-900">{code[i] ?? ''}</AppText>
             </View>
           );
         })}
 
-        <TextInput
+        <AppTextInput
           ref={inputRef}
           value={code}
           onChangeText={handleChange}
@@ -157,10 +159,10 @@ export function VerifyPhoneSheet({
       </Pressable>
 
       {notice ? (
-        <Text className="mt-4 text-center text-[13px] font-medium text-primary">{notice}</Text>
+        <AppText weight="medium" className="mt-4 text-center text-[13px] text-primary">{notice}</AppText>
       ) : null}
       {error ? (
-        <Text className="mt-4 text-center text-[13px] font-medium text-red-500">{error}</Text>
+        <AppText weight="medium" className="mt-4 text-center text-[13px] text-red-500">{error}</AppText>
       ) : null}
 
       <View className="mt-6">
@@ -171,9 +173,9 @@ export function VerifyPhoneSheet({
           onPress={handleResend}
           className="mt-3 items-center py-1"
         >
-          <Text className={`text-[13px] font-semibold ${cooldown > 0 ? 'text-gray-400' : 'text-primary'}`}>
+          <AppText weight="semibold" className={`text-[13px] ${cooldown > 0 ? 'text-gray-400' : 'text-primary'}`}>
             {cooldown > 0 ? `Resend code in ${cooldown}s` : 'Resend code'}
-          </Text>
+          </AppText>
         </Pressable>
       </View>
     </BottomSheet>

@@ -6,11 +6,11 @@ import {
   Pressable,
   RefreshControl,
   ScrollView,
-  Text,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppText } from '@/components/ui/AppText';
 import { colors } from '@/constants/colors';
 import { useAuth } from '@/lib/auth/AuthContext';
 import {
@@ -94,7 +94,7 @@ export default function Notifications() {
         >
           <Ionicons name="chevron-back" size={22} color={colors.textPrimary} />
         </Pressable>
-        <Text className="text-[17px] font-bold text-gray-900">Notifications</Text>
+        <AppText weight="semibold" className="text-[17px] text-gray-900">Notifications</AppText>
         {isAuthenticated && unread > 0 ? (
           <Pressable
             accessibilityRole="button"
@@ -102,9 +102,9 @@ export default function Notifications() {
             hitSlop={8}
             onPress={() => markAll.mutate()}
           >
-            <Text className="text-[12px] font-semibold text-primary">
+            <AppText weight="semibold" className="text-[12px] text-primary">
               Mark all read
-            </Text>
+            </AppText>
           </Pressable>
         ) : (
           <View className="w-10" />
@@ -151,19 +151,19 @@ export default function Notifications() {
                 </View>
                 <View className="flex-1">
                   <View className="flex-row items-center gap-2">
-                    <Text className="flex-1 text-[14px] font-bold text-gray-900">
+                    <AppText weight="semibold" className="flex-1 text-[14px] text-gray-900">
                       {n.title}
-                    </Text>
+                    </AppText>
                     {!n.isRead ? (
                       <View className="h-2 w-2 rounded-full bg-primary" />
                     ) : null}
                   </View>
-                  <Text className="mt-0.5 text-[12px] leading-4 text-gray-500">
+                  <AppText className="mt-0.5 text-[12px] leading-4 text-gray-500">
                     {n.body}
-                  </Text>
-                  <Text className="mt-1 text-[11px] text-gray-400">
+                  </AppText>
+                  <AppText className="mt-1 text-[11px] text-gray-400">
                     {timeAgo(n.createdAt)}
-                  </Text>
+                  </AppText>
                 </View>
                 {n.bookingId || n.conversationId || n.type === 'OpenJob' ? (
                   <Ionicons
@@ -190,13 +190,13 @@ function EmptyState() {
       >
         <Ionicons name="notifications-outline" size={36} color={colors.primary} />
       </View>
-      <Text className="mt-5 text-[17px] font-bold text-gray-900">
+      <AppText weight="semibold" className="mt-5 text-[17px] text-gray-900">
         You&apos;re all caught up
-      </Text>
-      <Text className="mt-1.5 text-center text-[13px] leading-5 text-gray-500">
+      </AppText>
+      <AppText className="mt-1.5 text-center text-[13px] leading-5 text-gray-500">
         Updates about your bookings will show up here, like when an artisan
         accepts, is on the way, or finishes a job.
-      </Text>
+      </AppText>
     </View>
   );
 }
@@ -210,18 +210,18 @@ function GuestState({ onSignIn }: { onSignIn: () => void }) {
       >
         <Ionicons name="notifications-outline" size={36} color={colors.primary} />
       </View>
-      <Text className="mt-5 text-[17px] font-bold text-gray-900">
+      <AppText weight="semibold" className="mt-5 text-[17px] text-gray-900">
         Sign in for notifications
-      </Text>
-      <Text className="mt-1.5 text-center text-[13px] leading-5 text-gray-500">
+      </AppText>
+      <AppText className="mt-1.5 text-center text-[13px] leading-5 text-gray-500">
         Log in to get updates about your bookings and payments.
-      </Text>
+      </AppText>
       <Pressable
         accessibilityRole="button"
         onPress={onSignIn}
         className="mt-5 rounded-xl bg-primary px-6 py-3"
       >
-        <Text className="text-[14px] font-bold text-white">Sign In</Text>
+        <AppText weight="semibold" className="text-[14px] text-white">Sign In</AppText>
       </Pressable>
     </View>
   );

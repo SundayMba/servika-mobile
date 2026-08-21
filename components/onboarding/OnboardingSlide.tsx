@@ -1,8 +1,9 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { memo } from 'react';
-import { Image, StyleSheet, Text, View, type ImageSourcePropType } from 'react-native';
+import { Image, StyleSheet, View, type ImageSourcePropType } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
+import { AppText } from '@/components/ui/AppText';
 import { colors, fonts } from '@/constants/colors';
 
 /**
@@ -114,7 +115,7 @@ function OnboardingSlideBase({
           entering={animate ? FadeInDown.delay(250).duration(900) : undefined}
           style={styles.copy}
         >
-          <Text
+          <AppText
             style={[styles.title, titleStyle]}
             // The device's text-size setting is respected everywhere else, but
             // this is display type at 33pt with -.04em tracking: let it grow and
@@ -123,11 +124,11 @@ function OnboardingSlideBase({
           >
             {title}
             {'\n'}
-            <Text style={styles.titleAccent}>{titleAccent}</Text>
-          </Text>
-          <Text style={styles.subtitle} maxFontSizeMultiplier={1.3}>
+            <AppText inline style={styles.titleAccent}>{titleAccent}</AppText>
+          </AppText>
+          <AppText style={styles.subtitle} maxFontSizeMultiplier={1.3}>
             {subtitle}
-          </Text>
+          </AppText>
         </Animated.View>
       </View>
     </View>

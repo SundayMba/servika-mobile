@@ -1,9 +1,10 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import * as Haptics from 'expo-haptics';
-import { Platform, Pressable, Text, View } from 'react-native';
+import { Platform, Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AppText } from '@/components/ui/AppText';
 import { colors } from '@/constants/colors';
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -64,12 +65,13 @@ export function ArtisanTabBar({ state, navigation }: BottomTabBarProps) {
             className="flex-1 items-center justify-end gap-1 pb-1 pt-1"
           >
             <Ionicons name={isFocused ? meta.iconActive : meta.icon} size={24} color={color} />
-            <Text
+            <AppText
+              weight={isFocused ? 'semibold' : 'medium'}
               style={{ color }}
-              className={isFocused ? 'text-[11px] font-semibold' : 'text-[11px] font-medium'}
+              className="text-[11px]"
             >
               {meta.label}
-            </Text>
+            </AppText>
           </Pressable>
         );
       })}

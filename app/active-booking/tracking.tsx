@@ -3,9 +3,10 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Location from 'expo-location';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppText } from '@/components/ui/AppText';
 import { appAlert } from '@/components/ui/AppAlert';
 import { ArtisanRow, VerifiedBadges } from '@/components/active-booking/parts';
 import { BottomSheet } from '@/components/BottomSheet';
@@ -48,9 +49,9 @@ function ActionPill({
       className={`flex-1 items-center rounded-2xl py-3 ${danger ? 'bg-red-50' : 'bg-primary/5'}`}
     >
       <Ionicons name={icon} size={20} color={danger ? '#DC2626' : colors.primary} />
-      <Text className={`mt-1 text-[12px] font-semibold ${danger ? 'text-red-600' : 'text-primary'}`}>
+      <AppText weight="semibold" className={`mt-1 text-[12px] ${danger ? 'text-red-600' : 'text-primary'}`}>
         {label}
-      </Text>
+      </AppText>
     </Pressable>
   );
 }
@@ -185,7 +186,7 @@ export default function LiveTracking() {
         >
           <Ionicons name="chevron-back" size={22} color={colors.textPrimary} />
         </Pressable>
-        <Text className="text-[16px] font-extrabold text-gray-900">SERVIKA</Text>
+        <AppText weight="semibold" className="text-[16px] text-gray-900">SERVIKA</AppText>
         {/* Spacer keeps the title centered (no dead menu button). */}
         <View className="h-10 w-10" />
       </View>
@@ -208,8 +209,8 @@ export default function LiveTracking() {
             />
           </View>
           <View className="ml-3 flex-1">
-            <Text className="text-[15px] font-bold text-gray-900">{status.title}</Text>
-            <Text className="text-[12px] text-gray-500">{status.sub}</Text>
+            <AppText weight="semibold" className="text-[15px] text-gray-900">{status.title}</AppText>
+            <AppText className="text-[12px] text-gray-500">{status.sub}</AppText>
           </View>
           <Ionicons name="chevron-up" size={18} color={colors.textMuted} />
         </Pressable>
@@ -237,8 +238,8 @@ export default function LiveTracking() {
           right={
             eta != null ? (
               <View className="items-end">
-                <Text className="text-[18px] font-extrabold text-primary">{eta} min</Text>
-                <Text className="text-[11px] text-gray-400">{formatDistance(km ?? 0)}</Text>
+                <AppText weight="semibold" className="text-[18px] text-primary">{eta} min</AppText>
+                <AppText className="text-[11px] text-gray-400">{formatDistance(km ?? 0)}</AppText>
               </View>
             ) : undefined
           }
@@ -258,7 +259,7 @@ export default function LiveTracking() {
 
       {/* Tracking details sheet */}
       <BottomSheet visible={sheet} onClose={() => setSheet(false)} estimatedHeight={460}>
-        <Text className="text-[18px] font-bold text-gray-900">Tracking Details</Text>
+        <AppText weight="semibold" className="text-[18px] text-gray-900">Tracking Details</AppText>
         <View className="mt-4">
           <ArtisanRow
             name={name}
@@ -271,19 +272,19 @@ export default function LiveTracking() {
         </View>
         <View className="mt-4 flex-row gap-3">
           <View className="flex-1 rounded-2xl bg-gray-50 p-3">
-            <Text className="text-[11px] text-gray-400">ETA</Text>
-            <Text className="text-[15px] font-bold text-gray-900">{eta != null ? `${eta} min` : '—'}</Text>
+            <AppText className="text-[11px] text-gray-400">ETA</AppText>
+            <AppText weight="semibold" className="text-[15px] text-gray-900">{eta != null ? `${eta} min` : '—'}</AppText>
           </View>
           <View className="flex-1 rounded-2xl bg-gray-50 p-3">
-            <Text className="text-[11px] text-gray-400">Distance</Text>
-            <Text className="text-[15px] font-bold text-gray-900">{km != null ? formatDistance(km) : '—'}</Text>
+            <AppText className="text-[11px] text-gray-400">Distance</AppText>
+            <AppText weight="semibold" className="text-[15px] text-gray-900">{km != null ? formatDistance(km) : '—'}</AppText>
           </View>
         </View>
         <View className="mt-4 rounded-2xl bg-gray-50 p-3">
-          <Text className="text-[11px] text-gray-400">Heading to</Text>
-          <Text className="text-[14px] font-semibold text-gray-900" numberOfLines={2}>
+          <AppText className="text-[11px] text-gray-400">Heading to</AppText>
+          <AppText weight="semibold" className="text-[14px] text-gray-900" numberOfLines={2}>
             {booking?.addressText || 'Your location'}
-          </Text>
+          </AppText>
         </View>
         <View className="mt-4">
           <Button
@@ -300,9 +301,9 @@ export default function LiveTracking() {
               onPress={confirmCancel}
               className="mt-3 items-center py-2"
             >
-              <Text className="text-[14px] font-semibold text-red-500">
+              <AppText weight="semibold" className="text-[14px] text-red-500">
                 {cancelling ? 'Cancelling…' : 'Cancel booking'}
-              </Text>
+              </AppText>
             </Pressable>
           ) : null}
         </View>

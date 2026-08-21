@@ -1,6 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
+import { AppText } from '@/components/ui/AppText';
 import { BottomSheet } from '@/components/BottomSheet';
 import { colors } from '@/constants/colors';
 
@@ -39,12 +40,12 @@ export function AuthPromptSheet({
       </View>
 
       {/* Copy */}
-      <Text className="text-center text-[19px] font-bold text-gray-900">
+      <AppText weight="semibold" className="text-center text-[19px] text-gray-900">
         {title}
-      </Text>
-      <Text className="mt-2 text-center text-[14px] leading-5 text-gray-500">
+      </AppText>
+      <AppText className="mt-2 text-center text-[14px] leading-5 text-gray-500">
         {message}
-      </Text>
+      </AppText>
 
       {/* Actions */}
       <View className="mt-6 gap-3">
@@ -60,7 +61,7 @@ export function AuthPromptSheet({
           }}
           className="h-14 items-center justify-center rounded-2xl bg-primary active:opacity-90"
         >
-          <Text className="text-[16px] font-bold text-white">Sign Up</Text>
+          <AppText weight="semibold" className="text-[16px] text-white">Sign Up</AppText>
         </Pressable>
 
         <Pressable
@@ -68,7 +69,7 @@ export function AuthPromptSheet({
           onPress={onLogin ?? onClose}
           className="h-14 items-center justify-center rounded-2xl border border-gray-200 bg-white active:bg-gray-50"
         >
-          <Text className="text-[16px] font-bold text-gray-900">Log In</Text>
+          <AppText weight="semibold" className="text-[16px] text-gray-900">Log In</AppText>
         </Pressable>
       </View>
 
@@ -79,9 +80,9 @@ export function AuthPromptSheet({
         hitSlop={8}
         className="mt-4 items-center py-1"
       >
-        <Text className="text-[14px] font-semibold text-gray-400">
+        <AppText weight="semibold" className="text-[14px] text-gray-400">
           Continue browsing
-        </Text>
+        </AppText>
       </Pressable>
     </BottomSheet>
   );

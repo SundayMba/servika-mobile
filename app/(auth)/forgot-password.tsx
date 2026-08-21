@@ -4,7 +4,6 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
 import {
   ScrollView,
-  Text,
   type TextInput,
   TouchableOpacity,
   View,
@@ -12,6 +11,7 @@ import {
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { colors } from '@/constants/colors';
@@ -141,14 +141,14 @@ export default function ForgotPassword() {
           <Ionicons name="chevron-back" size={22} color="#FFFFFF" />
         </TouchableOpacity>
 
-        <Text className="mt-5 text-[27px] font-bold text-white">
+        <AppText weight="semibold" className="mt-5 text-[27px] text-white">
           {step === 'request' ? 'Forgot password?' : 'Reset password'}
-        </Text>
-        <Text className="mt-1.5 text-[14px] leading-5 text-white/85">
+        </AppText>
+        <AppText className="mt-1.5 text-[14px] leading-5 text-white/85">
           {step === 'request'
             ? 'Enter your email or phone and we’ll send you a reset code.'
             : 'Enter the code we sent and choose a new password.'}
-        </Text>
+        </AppText>
       </View>
 
       {/* ── White sheet curving up into the orange ── */}
@@ -173,9 +173,9 @@ export default function ForgotPassword() {
                 size={18}
                 color={colors.primary}
               />
-              <Text className="flex-1 text-[13px] leading-5 text-gray-600">
+              <AppText className="flex-1 text-[13px] leading-5 text-gray-600">
                 {notice}
-              </Text>
+              </AppText>
             </View>
           ) : null}
 
@@ -234,9 +234,9 @@ export default function ForgotPassword() {
           )}
 
           {error ? (
-            <Text className="mt-4 text-center text-[13px] font-medium text-red-500">
+            <AppText weight="medium" className="mt-4 text-center text-[13px] text-red-500">
               {error}
-            </Text>
+            </AppText>
           ) : null}
 
           <View className="mt-5">
@@ -257,22 +257,22 @@ export default function ForgotPassword() {
 
           {step === 'reset' ? (
             <View className="mt-5 flex-row items-center justify-center gap-1">
-              <Text className="text-[14px] text-gray-500">
+              <AppText className="text-[14px] text-gray-500">
                 Didn’t get a code?
-              </Text>
+              </AppText>
               <TouchableOpacity hitSlop={8} onPress={handleResend} disabled={resendIn > 0}>
-                <Text className={`text-[14px] font-bold ${resendIn > 0 ? 'text-gray-400' : 'text-primary'}`}>
+                <AppText weight="semibold" className={`text-[14px] ${resendIn > 0 ? 'text-gray-400' : 'text-primary'}`}>
                   {resendIn > 0 ? `Resend in ${resendIn}s` : 'Resend'}
-                </Text>
+                </AppText>
               </TouchableOpacity>
             </View>
           ) : (
             <View className="mt-5 flex-row items-center justify-center gap-1">
-              <Text className="text-[14px] text-gray-500">
+              <AppText className="text-[14px] text-gray-500">
                 Remembered it?
-              </Text>
+              </AppText>
               <TouchableOpacity hitSlop={8} onPress={() => router.replace('/login')}>
-                <Text className="text-[14px] font-bold text-primary">Sign in</Text>
+                <AppText weight="semibold" className="text-[14px] text-primary">Sign in</AppText>
               </TouchableOpacity>
             </View>
           )}

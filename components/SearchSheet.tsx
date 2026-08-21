@@ -2,8 +2,10 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 
+import { AppTextInput } from '@/components/ui/AppTextInput';
+import { AppText } from '@/components/ui/AppText';
 import { BottomSheet } from '@/components/BottomSheet';
 import { colors } from '@/constants/colors';
 import { artisanPhotoSource } from '@/lib/catalogue/assets';
@@ -66,7 +68,7 @@ export function SearchSheet({ visible, onClose }: SearchSheetProps) {
       {/* Search input */}
       <View className="h-12 flex-row items-center gap-2.5 rounded-2xl border border-gray-100 bg-background px-4">
         <Ionicons name="search-outline" size={20} color={colors.textMuted} />
-        <TextInput
+        <AppTextInput
           value={query}
           onChangeText={setQuery}
           placeholder="Search services, artisans..."
@@ -90,18 +92,18 @@ export function SearchSheet({ visible, onClose }: SearchSheetProps) {
         {noResults ? (
           <View className="items-center py-10">
             <Ionicons name="search-outline" size={28} color={colors.textMuted} />
-            <Text className="mt-2 text-[14px] text-gray-400">
+            <AppText className="mt-2 text-[14px] text-gray-400">
               No results for &ldquo;{query.trim()}&rdquo;
-            </Text>
+            </AppText>
           </View>
         ) : null}
 
         {/* Services */}
         {matchedCategories.length > 0 ? (
           <>
-            <Text className="mb-1 text-[13px] font-bold uppercase tracking-wide text-gray-400">
+            <AppText weight="semibold" className="mb-1 text-[13px] uppercase tracking-wide text-gray-400">
               {q ? 'Services' : 'Popular services'}
-            </Text>
+            </AppText>
             {matchedCategories.map((c) => (
               <Pressable
                 key={c.id}
@@ -120,9 +122,9 @@ export function SearchSheet({ visible, onClose }: SearchSheetProps) {
                 >
                   <Ionicons name="construct-outline" size={20} color={c.tint} />
                 </View>
-                <Text className="flex-1 text-[15px] font-medium text-gray-800">
+                <AppText weight="medium" className="flex-1 text-[15px] text-gray-800">
                   {c.name}
-                </Text>
+                </AppText>
                 <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
               </Pressable>
             ))}
@@ -132,9 +134,9 @@ export function SearchSheet({ visible, onClose }: SearchSheetProps) {
         {/* Artisans */}
         {matchedArtisans.length > 0 ? (
           <>
-            <Text className="mb-1 mt-4 text-[13px] font-bold uppercase tracking-wide text-gray-400">
+            <AppText weight="semibold" className="mb-1 mt-4 text-[13px] uppercase tracking-wide text-gray-400">
               Artisans
-            </Text>
+            </AppText>
             {matchedArtisans.map((a) => (
               <Pressable
                 key={a.id}
@@ -156,10 +158,10 @@ export function SearchSheet({ visible, onClose }: SearchSheetProps) {
                   />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-[15px] font-medium text-gray-800">
+                  <AppText weight="medium" className="text-[15px] text-gray-800">
                     {a.fullName}
-                  </Text>
-                  <Text className="text-[12px] text-gray-400">{a.specialty}</Text>
+                  </AppText>
+                  <AppText className="text-[12px] text-gray-400">{a.specialty}</AppText>
                 </View>
                 <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
               </Pressable>

@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, Text, TextInput, View } from 'react-native';
+import { Pressable, type TextInput, View } from 'react-native';
 
+import { AppTextInput } from '@/components/ui/AppTextInput';
+import { AppText } from '@/components/ui/AppText';
 import { BottomSheet } from '@/components/BottomSheet';
 import { Button } from '@/components/ui/Button';
 import { authErrorMessage, resendOtp, verifyOtp } from '@/lib/api/auth';
@@ -121,13 +123,13 @@ export function VerifyEmailSheet({
       onClose={onClose}
       onOpened={() => inputRef.current?.focus()}
     >
-      <Text className="text-center text-[20px] font-bold text-gray-900">
+      <AppText weight="semibold" className="text-center text-[20px] text-gray-900">
         Verify your email
-      </Text>
-      <Text className="mb-6 mt-2 text-center text-[14px] leading-5 text-gray-500">
+      </AppText>
+      <AppText className="mb-6 mt-2 text-center text-[14px] leading-5 text-gray-500">
         Enter the 6-digit code we sent to{'\n'}
-        <Text className="font-semibold text-gray-700">{email}</Text>
-      </Text>
+        <AppText inline weight="semibold" className="text-gray-700">{email}</AppText>
+      </AppText>
 
       {/* Segmented code boxes (a hidden input captures the keystrokes). */}
       <Pressable
@@ -150,14 +152,14 @@ export function VerifyEmailSheet({
                     : 'border-gray-200 bg-gray-50',
               ].join(' ')}
             >
-              <Text className="text-[22px] font-bold text-gray-900">
+              <AppText weight="semibold" className="text-[22px] text-gray-900">
                 {code[i] ?? ''}
-              </Text>
+              </AppText>
             </View>
           );
         })}
 
-        <TextInput
+        <AppTextInput
           ref={inputRef}
           value={code}
           onChangeText={handleChange}
@@ -172,14 +174,14 @@ export function VerifyEmailSheet({
       </Pressable>
 
       {notice ? (
-        <Text className="mt-4 text-center text-[13px] font-medium text-primary">
+        <AppText weight="medium" className="mt-4 text-center text-[13px] text-primary">
           {notice}
-        </Text>
+        </AppText>
       ) : null}
       {error ? (
-        <Text className="mt-4 text-center text-[13px] font-medium text-red-500">
+        <AppText weight="medium" className="mt-4 text-center text-[13px] text-red-500">
           {error}
-        </Text>
+        </AppText>
       ) : null}
 
       <View className="mt-6">
@@ -195,17 +197,18 @@ export function VerifyEmailSheet({
 
       {/* Resend */}
       <View className="mt-4 flex-row items-center justify-center gap-1">
-        <Text className="text-[14px] text-gray-500">Didn’t get the code?</Text>
+        <AppText className="text-[14px] text-gray-500">Didn’t get the code?</AppText>
         <Pressable hitSlop={8} disabled={cooldown > 0} onPress={handleResend}>
-          <Text
+          <AppText
+            weight="semibold"
             className={
               cooldown > 0
-                ? 'text-[14px] font-bold text-gray-300'
-                : 'text-[14px] font-bold text-primary'
+                ? 'text-[14px] text-gray-300'
+                : 'text-[14px] text-primary'
             }
           >
             {cooldown > 0 ? `Resend in ${cooldown}s` : 'Resend'}
-          </Text>
+          </AppText>
         </Pressable>
       </View>
     </BottomSheet>

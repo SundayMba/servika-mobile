@@ -12,12 +12,12 @@ import {
   PanResponder,
   Pressable,
   ScrollView,
-  Text,
   View,
 } from 'react-native';
 import MapView, { Marker, Polyline, PROVIDER_DEFAULT } from 'react-native-maps';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AppText } from '@/components/ui/AppText';
 import { SearchSheet } from '@/components/SearchSheet';
 import { LocationSheet } from '@/components/home/LocationSheet';
 import { colors } from '@/constants/colors';
@@ -168,9 +168,9 @@ function ArtisanRow({
           {avatar ? (
             <Image source={avatar} style={{ height: '100%', width: '100%' }} />
           ) : (
-            <Text className="text-[15px] font-bold text-white">
+            <AppText weight="semibold" className="text-[15px] text-white">
               {initials(artisan.fullName)}
-            </Text>
+            </AppText>
           )}
         </View>
         <View
@@ -184,32 +184,32 @@ function ArtisanRow({
 
       <View className="flex-1">
         <View className="flex-row items-center gap-1">
-          <Text numberOfLines={1} className="flex-shrink text-[15px] font-semibold text-gray-900">
+          <AppText weight="semibold" numberOfLines={1} className="flex-shrink text-[15px] text-gray-900">
             {artisan.fullName}
-          </Text>
+          </AppText>
           <MaterialCommunityIcons name="check-decagram" size={14} color="#3B82F6" />
         </View>
-        <Text numberOfLines={1} className="mt-0.5 text-[12px] font-medium text-primary">
+        <AppText weight="medium" numberOfLines={1} className="mt-0.5 text-[12px] text-primary">
           {artisan.specialty}
-        </Text>
+        </AppText>
         <View className="mt-1 flex-row items-center gap-2">
           <Ionicons name="star" size={12} color="#FBBF24" />
-          <Text className="-ml-1 text-[12px] font-semibold text-gray-700">
+          <AppText weight="semibold" className="-ml-1 text-[12px] text-gray-700">
             {artisan.rating.toFixed(1)}
-          </Text>
-          <Text className="text-[12px] text-gray-400">
+          </AppText>
+          <AppText className="text-[12px] text-gray-400">
             ({artisan.reviewCount})
-          </Text>
+          </AppText>
         </View>
       </View>
 
       <View className="items-end">
-        <Text className="text-[13px] font-bold text-gray-900">
+        <AppText weight="semibold" className="text-[13px] text-gray-900">
           {formatDistance(artisan.distanceKm)}
-        </Text>
-        <Text className="mt-0.5 text-[11px] text-gray-400">
+        </AppText>
+        <AppText className="mt-0.5 text-[11px] text-gray-400">
           ~{etaMinutes(artisan.distanceKm)} min away
-        </Text>
+        </AppText>
         {onLocate ? (
           <Pressable
             accessibilityRole="button"
@@ -219,7 +219,7 @@ function ArtisanRow({
             className="mt-1 flex-row items-center gap-0.5"
           >
             <Ionicons name="location" size={11} color={colors.primary} />
-            <Text className="text-[11px] font-semibold text-primary">Map</Text>
+            <AppText weight="semibold" className="text-[11px] text-primary">Map</AppText>
           </Pressable>
         ) : null}
       </View>
@@ -429,9 +429,9 @@ export default function Explore() {
             className="h-12 flex-1 flex-row items-center gap-2 rounded-full bg-white pl-4 pr-3"
           >
             <Ionicons name="location" size={18} color={colors.primary} />
-            <Text numberOfLines={1} className="flex-1 text-[14px] font-semibold text-gray-900">
+            <AppText weight="semibold" numberOfLines={1} className="flex-1 text-[14px] text-gray-900">
               {area}
-            </Text>
+            </AppText>
             <Ionicons name="chevron-down" size={16} color={colors.textMuted} />
           </Pressable>
           <Pressable
@@ -497,23 +497,23 @@ export default function Explore() {
                   style={{ height: '100%', width: '100%' }}
                 />
               ) : (
-                <Text className="text-[15px] font-bold text-white">
+                <AppText weight="semibold" className="text-[15px] text-white">
                   {initials(selected.fullName)}
-                </Text>
+                </AppText>
               )}
             </View>
             <View className="flex-1">
               <View className="flex-row items-center gap-1">
-                <Text numberOfLines={1} className="flex-shrink text-[15px] font-bold text-gray-900">
+                <AppText weight="semibold" numberOfLines={1} className="flex-shrink text-[15px] text-gray-900">
                   {selected.fullName}
-                </Text>
+                </AppText>
                 <MaterialCommunityIcons name="check-decagram" size={14} color="#3B82F6" />
               </View>
-              <Text numberOfLines={1} className="text-[12px] text-gray-500">
+              <AppText numberOfLines={1} className="text-[12px] text-gray-500">
                 {selected.specialty} · ⭐ {selected.rating.toFixed(1)} ·{' '}
                 {formatDistance(selected.distanceKm)} · ~
                 {etaMinutes(selected.distanceKm)} min
-              </Text>
+              </AppText>
             </View>
             <Pressable
               accessibilityRole="button"
@@ -531,7 +531,7 @@ export default function Explore() {
             onPress={() => openProfile(selected.id)}
             className="mt-2.5 h-10 items-center justify-center rounded-xl bg-primary"
           >
-            <Text className="text-[13px] font-bold text-white">View profile</Text>
+            <AppText weight="semibold" className="text-[13px] text-white">View profile</AppText>
           </Pressable>
         </View>
       ) : null}
@@ -564,14 +564,14 @@ export default function Explore() {
             <View className="h-1.5 w-12 rounded-full bg-gray-200" />
           </Pressable>
           <View className="px-5 pb-3 pt-1">
-            <Text className="text-[17px] font-bold text-gray-900">
+            <AppText weight="semibold" className="text-[17px] text-gray-900">
               {isLoading
                 ? 'Finding artisans nearby…'
                 : `${count} artisan${count === 1 ? '' : 's'} nearby`}
-            </Text>
-            <Text numberOfLines={1} className="mt-0.5 text-[12px] text-gray-400">
+            </AppText>
+            <AppText numberOfLines={1} className="mt-0.5 text-[12px] text-gray-400">
               Sorted by distance from {area}
-            </Text>
+            </AppText>
           </View>
         </View>
 
@@ -581,19 +581,19 @@ export default function Explore() {
           </View>
         ) : isError ? (
           <View className="items-center px-8 py-10">
-            <Text className="text-center text-[13px] text-gray-400">
+            <AppText className="text-center text-[13px] text-gray-400">
               Couldn&apos;t load nearby artisans. Check your connection and try
               again.
-            </Text>
+            </AppText>
           </View>
         ) : count === 0 ? (
           <View className="items-center px-8 py-10">
             <Ionicons name="construct-outline" size={28} color={colors.textMuted} />
-            <Text className="mt-2 text-center text-[13px] text-gray-400">
+            <AppText className="mt-2 text-center text-[13px] text-gray-400">
               No artisans in this area yet
               {category ? ' for this category' : ''}. Try another category or
               widen your area.
-            </Text>
+            </AppText>
           </View>
         ) : (
           <FlatList
@@ -651,15 +651,12 @@ function Chip({
           : 'h-9 flex-row items-center rounded-full bg-white px-4'
       }
     >
-      <Text
-        className={
-          active
-            ? 'text-[13px] font-semibold text-white'
-            : 'text-[13px] font-medium text-gray-700'
-        }
+      <AppText
+        weight={active ? 'semibold' : 'medium'}
+        className={active ? 'text-[13px] text-white' : 'text-[13px] text-gray-700'}
       >
         {label}
-      </Text>
+      </AppText>
     </Pressable>
   );
 }

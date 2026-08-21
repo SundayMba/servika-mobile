@@ -5,13 +5,13 @@ import { useState } from 'react';
 import {
   Pressable,
   ScrollView,
-  Text,
-  TextInput,
   View,
 } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppTextInput } from '@/components/ui/AppTextInput';
+import { AppText } from '@/components/ui/AppText';
 import { appAlert } from '@/components/ui/AppAlert';
 import { ArtisanRow } from '@/components/active-booking/parts';
 import { Button } from '@/components/ui/Button';
@@ -103,10 +103,10 @@ export default function ServiceReview() {
           <Ionicons name="chevron-back" size={22} color={colors.textPrimary} />
         </Pressable>
         <View className="items-center">
-          <Text className="text-[17px] font-bold text-gray-900">Review Artisan</Text>
-          <Text className="text-[12px] text-gray-500">
+          <AppText weight="semibold" className="text-[17px] text-gray-900">Review Artisan</AppText>
+          <AppText className="text-[12px] text-gray-500">
             Share your experience and help others
-          </Text>
+          </AppText>
         </View>
       </View>
 
@@ -133,24 +133,24 @@ export default function ServiceReview() {
 
           {/* Overall */}
           <View className="mt-4 items-center rounded-3xl border border-gray-100 bg-white p-5">
-            <Text className="text-[14px] font-bold text-gray-900">Overall Rating</Text>
-            <Text className="mt-0.5 text-[12px] text-gray-500">
+            <AppText weight="semibold" className="text-[14px] text-gray-900">Overall Rating</AppText>
+            <AppText className="mt-0.5 text-[12px] text-gray-500">
               How would you rate your experience?
-            </Text>
+            </AppText>
             <View className="mt-3">
               <Stars value={overall} onChange={setOverall} size={34} />
             </View>
-            <Text className="mt-2 text-[13px] font-semibold text-primary">
+            <AppText weight="semibold" className="mt-2 text-[13px] text-primary">
               {RATING_LABELS[overall]}
-            </Text>
+            </AppText>
           </View>
 
           {/* Write */}
           <View className="mt-4">
-            <Text className="mb-1.5 text-[13px] font-semibold text-gray-700">
+            <AppText weight="semibold" className="mb-1.5 text-[13px] text-gray-700">
               Write a review
-            </Text>
-            <TextInput
+            </AppText>
+            <AppTextInput
               value={text}
               onChangeText={(t) => setText(t.slice(0, 500))}
               placeholder="Write a short review..."
@@ -159,9 +159,9 @@ export default function ServiceReview() {
               textAlignVertical="top"
               className="min-h-[96px] rounded-2xl border border-gray-200 bg-white px-4 py-3 text-[15px] text-gray-900"
             />
-            <Text className="mt-1 text-right text-[11px] text-gray-400">
+            <AppText className="mt-1 text-right text-[11px] text-gray-400">
               {text.length}/500
-            </Text>
+            </AppText>
           </View>
 
           <View className="mt-3">

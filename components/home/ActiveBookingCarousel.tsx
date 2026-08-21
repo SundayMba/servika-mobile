@@ -1,6 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useEffect, useRef, useState } from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { TouchableOpacity, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -8,6 +8,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+import { AppText } from '@/components/ui/AppText';
 import { colors } from '@/constants/colors';
 import type { BookingStatus, BookingSummary } from '@/lib/booking/types';
 
@@ -118,20 +119,20 @@ export function ActiveBookingCarousel({
         <Animated.View style={contentStyle}>
           <View className="flex-row items-center gap-2">
             <LiveDot />
-            <Text numberOfLines={1} className="flex-shrink text-[14px] font-bold text-white">
+            <AppText weight="semibold" numberOfLines={1} className="flex-shrink text-[14px] text-white">
               {current.serviceName}
-            </Text>
+            </AppText>
           </View>
-          <Text numberOfLines={1} className="mt-0.5 text-[11px] text-white/70">
+          <AppText numberOfLines={1} className="mt-0.5 text-[11px] text-white/70">
             {current.artisanName ? `${current.artisanName} · ` : ''}
             {subtitle}
-          </Text>
+          </AppText>
         </Animated.View>
       </View>
 
       <View className="items-end gap-1.5">
         <View className="rounded-full bg-primary px-3.5 py-2">
-          <Text className="text-[12px] font-bold text-white">Track</Text>
+          <AppText weight="semibold" className="text-[12px] text-white">Track</AppText>
         </View>
         {n > 1 ? (
           <View className="flex-row gap-1">

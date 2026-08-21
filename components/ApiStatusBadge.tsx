@@ -1,4 +1,5 @@
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
+import { AppText } from '@/components/ui/AppText';
 import { useHealthCheck } from '@/lib/api/health';
 import { config } from '@/lib/config';
 
@@ -39,9 +40,9 @@ export function ApiStatusBadge() {
       }}
     >
       <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: color }} />
-      <Text style={{ color: 'white', fontSize: 11 }}>
+      <AppText style={{ color: 'white', fontSize: 11 }}>
         {label} · {config.apiBaseUrl.replace(/^https?:\/\//, '')}
-      </Text>
+      </AppText>
     </View>
   );
 }

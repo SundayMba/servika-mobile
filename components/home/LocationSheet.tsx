@@ -4,11 +4,11 @@ import {
   ActivityIndicator,
   Pressable,
   ScrollView,
-  Text,
-  TextInput,
   View,
 } from 'react-native';
 
+import { AppTextInput } from '@/components/ui/AppTextInput';
+import { AppText } from '@/components/ui/AppText';
 import { appAlert } from '@/components/ui/AppAlert';
 import { BottomSheet } from '@/components/BottomSheet';
 import { colors } from '@/constants/colors';
@@ -137,12 +137,12 @@ export function LocationSheet({
 
   return (
     <BottomSheet visible={visible} onClose={onClose} estimatedHeight={560}>
-      <Text className="mb-1 text-[18px] font-bold text-gray-900">
+      <AppText weight="semibold" className="mb-1 text-[18px] text-gray-900">
         Set your location
-      </Text>
-      <Text className="mb-4 text-[13px] text-gray-500">
+      </AppText>
+      <AppText className="mb-4 text-[13px] text-gray-500">
         We&apos;ll show artisans closest to you.
-      </Text>
+      </AppText>
 
       {/* Search */}
       <View
@@ -150,7 +150,7 @@ export function LocationSheet({
         style={{ backgroundColor: '#F1F5F9', height: 50 }}
       >
         <Ionicons name="search-outline" size={19} color={colors.textMuted} />
-        <TextInput
+        <AppTextInput
           value={query}
           onChangeText={setQuery}
           placeholder="Search for area, street, landmark…"
@@ -184,9 +184,9 @@ export function LocationSheet({
             <Ionicons name="locate" size={18} color={colors.primary} />
           )}
         </View>
-        <Text className="flex-1 text-[15px] font-semibold text-primary">
+        <AppText weight="semibold" className="flex-1 text-[15px] text-primary">
           {locating ? 'Getting your location…' : 'Use my current location'}
-        </Text>
+        </AppText>
       </Pressable>
 
       {/* Set precisely on a map (draggable pin) */}
@@ -205,9 +205,9 @@ export function LocationSheet({
         >
           <Ionicons name="map-outline" size={18} color={colors.textPrimary} />
         </View>
-        <Text className="flex-1 text-[15px] font-medium text-gray-800">
+        <AppText weight="medium" className="flex-1 text-[15px] text-gray-800">
           Set location on map
-        </Text>
+        </AppText>
         <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
       </Pressable>
 
@@ -225,9 +225,9 @@ export function LocationSheet({
                 <ActivityIndicator color={colors.primary} />
               </View>
             ) : results.length === 0 ? (
-              <Text className="py-6 text-center text-[13px] text-gray-400">
+              <AppText className="py-6 text-center text-[13px] text-gray-400">
                 No matches for “{query.trim()}”.
-              </Text>
+              </AppText>
             ) : (
               results.map((r) => (
                 <Pressable
@@ -247,19 +247,20 @@ export function LocationSheet({
                     />
                   </View>
                   <View className="flex-1">
-                    <Text
+                    <AppText
+                      weight="medium"
                       numberOfLines={1}
-                      className="text-[15px] font-medium text-gray-800"
+                      className="text-[15px] text-gray-800"
                     >
                       {r.label}
-                    </Text>
+                    </AppText>
                     {r.sub ? (
-                      <Text
+                      <AppText
                         numberOfLines={1}
                         className="mt-0.5 text-[12px] text-gray-400"
                       >
                         {r.sub}
-                      </Text>
+                      </AppText>
                     ) : null}
                   </View>
                 </Pressable>
@@ -268,9 +269,9 @@ export function LocationSheet({
           </>
         ) : (
           <>
-            <Text className="mb-1 mt-1 px-2 text-[12px] font-semibold text-gray-400">
+            <AppText weight="semibold" className="mb-1 mt-1 px-2 text-[12px] text-gray-400">
               POPULAR AREAS
-            </Text>
+            </AppText>
             {POPULAR_AREAS.map(({ label, coords }) => {
               const active = label === selected;
               return (
@@ -292,15 +293,16 @@ export function LocationSheet({
                       color={active ? colors.primary : colors.textMuted}
                     />
                   </View>
-                  <Text
+                  <AppText
+                    weight="semibold"
                     className={
                       active
-                        ? 'flex-1 text-[15px] font-semibold text-gray-900'
+                        ? 'flex-1 text-[15px] text-gray-900'
                         : 'flex-1 text-[15px] text-gray-700'
                     }
                   >
                     {label}
-                  </Text>
+                  </AppText>
                   {active ? (
                     <Ionicons
                       name="checkmark-circle"

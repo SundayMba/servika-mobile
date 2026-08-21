@@ -1,8 +1,9 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Image } from 'expo-image';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 import Svg, { Circle, Line, Path, Rect } from 'react-native-svg';
 
+import { AppText } from '@/components/ui/AppText';
 import { colors } from '@/constants/colors';
 import { artisanPhotoSource } from '@/lib/catalogue/assets';
 
@@ -122,11 +123,12 @@ export function StatusTimeline({
                 className={`h-0.5 flex-1 ${i === steps.length - 1 ? 'opacity-0' : done ? 'bg-primary' : 'bg-gray-200'}`}
               />
             </View>
-            <Text
-              className={`mt-1.5 text-center text-[9px] ${reached ? 'font-semibold text-gray-700' : 'text-gray-400'}`}
+            <AppText
+              weight={reached ? 'semibold' : 'regular'}
+              className={`mt-1.5 text-center text-[9px] ${reached ? 'text-gray-700' : 'text-gray-400'}`}
             >
               {label}
-            </Text>
+            </AppText>
           </View>
         );
       })}
@@ -167,13 +169,13 @@ export function ArtisanRow({
         </View>
       )}
       <View className="ml-3 flex-1">
-        <Text className="text-[15px] font-bold text-gray-900">{name}</Text>
-        <Text className="text-[12px] text-primary">{specialty}</Text>
+        <AppText weight="semibold" className="text-[15px] text-gray-900">{name}</AppText>
+        <AppText className="text-[12px] text-primary">{specialty}</AppText>
         <View className="mt-0.5 flex-row items-center gap-1">
           <Ionicons name="star" size={12} color={colors.primary} />
-          <Text className="text-[12px] text-gray-500">
+          <AppText className="text-[12px] text-gray-500">
             {rating.toFixed(1)} · {jobsCount} jobs completed
-          </Text>
+          </AppText>
         </View>
       </View>
       {right}
@@ -193,7 +195,7 @@ export function VerifiedBadges() {
       {items.map((it) => (
         <View key={it.label} className="flex-row items-center gap-1">
           <Ionicons name={it.icon} size={12} color={colors.primary} />
-          <Text className="text-[11px] text-gray-500">{it.label}</Text>
+          <AppText className="text-[11px] text-gray-500">{it.label}</AppText>
         </View>
       ))}
     </View>

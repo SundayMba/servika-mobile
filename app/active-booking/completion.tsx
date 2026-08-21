@@ -3,8 +3,9 @@ import { Image } from 'expo-image';
 import { useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 
+import { AppText } from '@/components/ui/AppText';
 import { appAlert } from '@/components/ui/AppAlert';
 import { PhotoViewer } from '@/components/PhotoViewer';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -77,7 +78,7 @@ export default function ServiceCompletion() {
         >
           <Ionicons name="chevron-back" size={22} color={colors.textPrimary} />
         </Pressable>
-        <Text className="text-[17px] font-bold text-gray-900">Confirm completion</Text>
+        <AppText weight="semibold" className="text-[17px] text-gray-900">Confirm completion</AppText>
       </View>
 
       <ScrollView
@@ -96,29 +97,29 @@ export default function ServiceCompletion() {
             )}
           </View>
           <View className="ml-3 flex-1">
-            <Text className="text-[16px] font-bold text-gray-900">{name}</Text>
-            <Text className="text-[13px] text-gray-500">{specialty}</Text>
+            <AppText weight="semibold" className="text-[16px] text-gray-900">{name}</AppText>
+            <AppText className="text-[13px] text-gray-500">{specialty}</AppText>
           </View>
           <View className="rounded-full bg-orange-100 px-2.5 py-1">
-            <Text className="text-[11px] font-bold text-orange-700">
+            <AppText weight="semibold" className="text-[11px] text-orange-700">
               {alreadyCompleted ? 'Completed' : 'Finished the job'}
-            </Text>
+            </AppText>
           </View>
         </View>
 
         {/* Proof of work */}
-        <Text className="mb-2 mt-6 text-[15px] font-bold text-gray-900">
+        <AppText weight="semibold" className="mb-2 mt-6 text-[15px] text-gray-900">
           Proof of work
-        </Text>
+        </AppText>
         {isLoading ? (
           <View className="items-center py-8">
             <ActivityIndicator color={colors.primary} />
           </View>
         ) : (completion?.photos.length ?? 0) === 0 ? (
           <View className="rounded-2xl border border-gray-100 bg-white p-5">
-            <Text className="text-center text-[13px] text-gray-400">
+            <AppText className="text-center text-[13px] text-gray-400">
               No photos were attached.
-            </Text>
+            </AppText>
           </View>
         ) : (
           <View className="flex-row flex-wrap gap-3">
@@ -142,17 +143,17 @@ export default function ServiceCompletion() {
 
         {completion?.note ? (
           <View className="mt-3 rounded-2xl border border-gray-100 bg-white p-4">
-            <Text className="text-[12px] font-semibold text-gray-400">NOTE FROM ARTISAN</Text>
-            <Text className="mt-1 text-[14px] leading-5 text-gray-700">{completion.note}</Text>
+            <AppText weight="semibold" className="text-[12px] text-gray-400">NOTE FROM ARTISAN</AppText>
+            <AppText className="mt-1 text-[14px] leading-5 text-gray-700">{completion.note}</AppText>
           </View>
         ) : null}
 
         <View className="mt-5 flex-row items-start gap-2 rounded-2xl bg-primary/5 p-3.5">
           <Ionicons name="information-circle-outline" size={18} color={colors.primary} />
-          <Text className="flex-1 text-[12px] leading-4 text-gray-600">
+          <AppText className="flex-1 text-[12px] leading-4 text-gray-600">
             Confirming finalises the job and lets you rate {name.split(' ')[0]}. If
             you don’t confirm within 48 hours, it confirms automatically.
-          </Text>
+          </AppText>
         </View>
 
         <Pressable
@@ -162,13 +163,13 @@ export default function ServiceCompletion() {
           className="mt-5 h-14 items-center justify-center rounded-2xl bg-primary active:opacity-80"
           style={complete.isPending ? { opacity: 0.6 } : undefined}
         >
-          <Text className="text-[15px] font-bold text-white">
+          <AppText weight="semibold" className="text-[15px] text-white">
             {complete.isPending
               ? 'Confirming…'
               : alreadyCompleted
                 ? 'Rate the artisan'
                 : 'Confirm & Rate'}
-          </Text>
+          </AppText>
         </Pressable>
 
         <Pressable
@@ -181,7 +182,7 @@ export default function ServiceCompletion() {
           className="mt-4 flex-row items-center justify-center gap-1.5"
         >
           <Ionicons name="alert-circle-outline" size={16} color="#DC2626" />
-          <Text className="text-[14px] font-semibold text-red-600">Raise an issue</Text>
+          <AppText weight="semibold" className="text-[14px] text-red-600">Raise an issue</AppText>
         </Pressable>
       </ScrollView>
       {/* Zoomable fullscreen viewer for the artisan's proof photos */}

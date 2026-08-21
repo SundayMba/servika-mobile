@@ -7,8 +7,6 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  Text,
-  TextInput,
   View,
 } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
@@ -17,6 +15,8 @@ import {
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 
+import { AppTextInput } from '@/components/ui/AppTextInput';
+import { AppText } from '@/components/ui/AppText';
 import { colors } from '@/constants/colors';
 import { useAuth } from '@/lib/auth/AuthContext';
 import {
@@ -89,11 +89,11 @@ export default function ChatScreen() {
           <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
         </Pressable>
         <View className="h-9 w-9 items-center justify-center rounded-full bg-primary/10">
-          <Text className="text-[13px] font-bold text-primary">{initials(name)}</Text>
+          <AppText weight="semibold" className="text-[13px] text-primary">{initials(name)}</AppText>
         </View>
         <View className="ml-2 flex-1">
-          <Text className="text-[15px] font-bold text-gray-900">{name}</Text>
-          <Text className="text-[11px] text-gray-400">Servika chat</Text>
+          <AppText weight="semibold" className="text-[15px] text-gray-900">{name}</AppText>
+          <AppText className="text-[11px] text-gray-400">Servika chat</AppText>
         </View>
         {artisanId ? (
           <Pressable
@@ -105,7 +105,7 @@ export default function ChatScreen() {
             className="flex-row items-center gap-1 rounded-full bg-primary px-3.5 py-2"
           >
             <Ionicons name="calendar" size={14} color={colors.white} />
-            <Text className="text-[12px] font-bold text-white">Book</Text>
+            <AppText weight="semibold" className="text-[12px] text-white">Book</AppText>
           </Pressable>
         ) : null}
       </View>
@@ -114,10 +114,10 @@ export default function ChatScreen() {
       {showSafety ? (
         <View className="mx-4 mt-2 flex-row items-start gap-2 rounded-2xl bg-primary/5 px-3 py-2.5">
           <Ionicons name="shield-checkmark" size={16} color={colors.primary} />
-          <Text className="flex-1 text-[11px] leading-4 text-gray-600">
+          <AppText className="flex-1 text-[11px] leading-4 text-gray-600">
             Keep payments and coordination on Servika. You&apos;re covered by escrow,
             reviews and dispute support. Phone numbers and emails are hidden in chat.
-          </Text>
+          </AppText>
           <Pressable hitSlop={8} onPress={() => setShowSafety(false)}>
             <Ionicons name="close" size={15} color={colors.textMuted} />
           </Pressable>
@@ -144,9 +144,9 @@ export default function ChatScreen() {
             {!messages?.length ? (
               <View className="flex-1 items-center justify-center px-8">
                 <Ionicons name="chatbubbles-outline" size={40} color={colors.textMuted} />
-                <Text className="mt-3 text-center text-[13px] text-gray-400">
+                <AppText className="mt-3 text-center text-[13px] text-gray-400">
                   No messages yet. Say hello to coordinate the job.
-                </Text>
+                </AppText>
               </View>
             ) : (
               messages.map((m) => {
@@ -163,15 +163,15 @@ export default function ChatScreen() {
                           : 'rounded-2xl rounded-bl-md bg-gray-100 px-3.5 py-2.5'
                       }
                     >
-                      <Text className={mine ? 'text-[14px] text-white' : 'text-[14px] text-gray-900'}>
+                      <AppText className={mine ? 'text-[14px] text-white' : 'text-[14px] text-gray-900'}>
                         {m.body}
-                      </Text>
+                      </AppText>
                     </View>
-                    <Text
+                    <AppText
                       className={`mt-0.5 text-[10px] text-gray-400 ${mine ? 'text-right' : 'text-left'}`}
                     >
                       {messageTime(m.createdAt)}
-                    </Text>
+                    </AppText>
                   </View>
                 );
               })
@@ -184,7 +184,7 @@ export default function ChatScreen() {
           style={{ paddingBottom: Math.max(insets.bottom, 8) }}
           className="flex-row items-center gap-2 border-t border-gray-100 px-4 pt-2"
         >
-          <TextInput
+          <AppTextInput
             value={draft}
             onChangeText={setDraft}
             placeholder="Type a message..."

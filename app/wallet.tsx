@@ -1,9 +1,10 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppText } from '@/components/ui/AppText';
 import { colors } from '@/constants/colors';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { formatNaira } from '@/lib/catalogue/assets';
@@ -48,7 +49,7 @@ export default function Wallet() {
         >
           <Ionicons name="chevron-back" size={22} color={colors.textPrimary} />
         </Pressable>
-        <Text className="ml-2 text-[20px] font-bold text-gray-900">Payments</Text>
+        <AppText weight="semibold" className="ml-2 text-[20px] text-gray-900">Payments</AppText>
       </View>
 
       {isLoading ? (
@@ -63,22 +64,22 @@ export default function Wallet() {
           {/* Totals */}
           <View className="flex-row gap-3">
             <View className="flex-1 rounded-2xl border border-gray-100 bg-white p-4">
-              <Text className="text-[12px] text-gray-500">Total spent</Text>
-              <Text className="mt-1 text-[20px] font-extrabold text-gray-900">{formatNaira(spent)}</Text>
+              <AppText className="text-[12px] text-gray-500">Total spent</AppText>
+              <AppText weight="semibold" className="mt-1 text-[20px] text-gray-900">{formatNaira(spent)}</AppText>
             </View>
             <View className="flex-1 rounded-2xl border border-gray-100 bg-white p-4">
-              <Text className="text-[12px] text-gray-500">Refunded</Text>
-              <Text className="mt-1 text-[20px] font-extrabold text-green-600">{formatNaira(refunded)}</Text>
+              <AppText className="text-[12px] text-gray-500">Refunded</AppText>
+              <AppText weight="semibold" className="mt-1 text-[20px] text-green-600">{formatNaira(refunded)}</AppText>
             </View>
           </View>
 
-          <Text className="mb-2 mt-6 text-[16px] font-bold text-gray-900">Transactions</Text>
+          <AppText weight="semibold" className="mb-2 mt-6 text-[16px] text-gray-900">Transactions</AppText>
           {!txns?.length ? (
             <View className="items-center py-16">
               <Ionicons name="receipt-outline" size={44} color={colors.textMuted} />
-              <Text className="mt-3 text-center text-[14px] text-gray-500">
+              <AppText className="mt-3 text-center text-[14px] text-gray-500">
                 No payments yet. Your booking payments and refunds will appear here.
-              </Text>
+              </AppText>
             </View>
           ) : (
             <View className="rounded-3xl border border-gray-100 bg-white px-4">
@@ -105,15 +106,15 @@ function TxnRow({ txn, last }: { txn: WalletTransaction; last: boolean }) {
         <Ionicons name={m.icon} size={18} color={m.tint} />
       </View>
       <View className="ml-3 flex-1">
-        <Text className="text-[14px] font-semibold text-gray-900">{m.label}</Text>
-        <Text numberOfLines={1} className="text-[12px] text-gray-400">
+        <AppText weight="semibold" className="text-[14px] text-gray-900">{m.label}</AppText>
+        <AppText numberOfLines={1} className="text-[12px] text-gray-400">
           {shortDate(txn.createdAt)}
-        </Text>
+        </AppText>
       </View>
-      <Text className={`text-[14px] font-bold ${positive ? 'text-green-600' : 'text-gray-900'}`}>
+      <AppText weight="semibold" className={`text-[14px] ${positive ? 'text-green-600' : 'text-gray-900'}`}>
         {positive ? '+' : '−'}
         {formatNaira(Math.abs(txn.amountNaira))}
-      </Text>
+      </AppText>
     </View>
   );
 }

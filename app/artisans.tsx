@@ -4,9 +4,10 @@ import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppText } from '@/components/ui/AppText';
 import { AuthPromptSheet } from '@/components/AuthPromptSheet';
 import { SearchSheet } from '@/components/SearchSheet';
 import { colors } from '@/constants/colors';
@@ -56,30 +57,31 @@ function ArtisanRow({
 
         <View className="flex-1">
           <View className="flex-row items-center gap-1">
-            <Text
+            <AppText
+              weight="semibold"
               numberOfLines={1}
-              className="flex-shrink text-[15px] font-bold text-gray-900"
+              className="flex-shrink text-[15px] text-gray-900"
             >
               {artisan.fullName}
-            </Text>
+            </AppText>
             <MaterialCommunityIcons name="check-decagram" size={15} color="#3B82F6" />
           </View>
 
-          <Text numberOfLines={1} className="mt-0.5 text-[12px] font-medium text-primary">
+          <AppText weight="medium" numberOfLines={1} className="mt-0.5 text-[12px] text-primary">
             {artisan.specialty}
-          </Text>
+          </AppText>
 
           <View className="mt-1.5 flex-row items-center gap-3">
             <View className="flex-row items-center gap-1">
               <Ionicons name="star" size={13} color="#FBBF24" />
-              <Text className="text-[12px] font-semibold text-gray-700">
+              <AppText weight="semibold" className="text-[12px] text-gray-700">
                 {artisan.rating.toFixed(1)}
-              </Text>
-              <Text className="text-[12px] text-gray-400">({artisan.reviewCount})</Text>
+              </AppText>
+              <AppText className="text-[12px] text-gray-400">({artisan.reviewCount})</AppText>
             </View>
             <View className="flex-row items-center gap-0.5">
               <Ionicons name="location-outline" size={13} color={colors.textMuted} />
-              <Text className="text-[12px] text-gray-500">{artisan.distanceKm} km</Text>
+              <AppText className="text-[12px] text-gray-500">{artisan.distanceKm} km</AppText>
             </View>
           </View>
 
@@ -91,15 +93,16 @@ function ArtisanRow({
                   : 'h-1.5 w-1.5 rounded-full bg-gray-300'
               }
             />
-            <Text
+            <AppText
+              weight="semibold"
               className={
                 artisan.isAvailable
-                  ? 'text-[11px] font-semibold text-green-600'
-                  : 'text-[11px] font-semibold text-gray-400'
+                  ? 'text-[11px] text-green-600'
+                  : 'text-[11px] text-gray-400'
               }
             >
               {artisan.isAvailable ? 'Available now' : 'Busy'}
-            </Text>
+            </AppText>
           </View>
         </View>
       </View>
@@ -112,7 +115,7 @@ function ArtisanRow({
           onPress={onBook}
           className="h-10 flex-1 flex-row items-center justify-center rounded-xl bg-primary"
         >
-          <Text className="text-[13px] font-bold text-white">Book Now</Text>
+          <AppText weight="semibold" className="text-[13px] text-white">Book Now</AppText>
         </Pressable>
         <Pressable
           accessibilityRole="button"
@@ -125,7 +128,7 @@ function ArtisanRow({
           className="relative h-10 flex-row items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-4"
         >
           <Ionicons name="chatbubble-ellipses-outline" size={15} color={colors.primary} />
-          <Text className="text-[13px] font-bold text-primary">Chat</Text>
+          <AppText weight="semibold" className="text-[13px] text-primary">Chat</AppText>
           {chatLocked ? (
             <View className="absolute -right-1.5 -top-1.5 h-4 w-4 items-center justify-center rounded-full border border-white bg-gray-400">
               <Ionicons name="lock-closed" size={9} color="#FFFFFF" />
@@ -161,7 +164,7 @@ export default function ArtisansList() {
         >
           <Ionicons name="chevron-back" size={22} color={colors.textPrimary} />
         </Pressable>
-        <Text className="text-[17px] font-bold text-gray-900">Nearby Artisans</Text>
+        <AppText weight="semibold" className="text-[17px] text-gray-900">Nearby Artisans</AppText>
       </View>
 
       {/* Search */}
@@ -171,7 +174,7 @@ export default function ArtisansList() {
         className="mx-5 mb-3 mt-1 h-12 flex-row items-center gap-2.5 rounded-2xl border border-gray-100/70 bg-white px-4"
       >
         <Ionicons name="search-outline" size={20} color={colors.textMuted} />
-        <Text className="flex-1 text-[14px] text-gray-400">Search artisans...</Text>
+        <AppText className="flex-1 text-[14px] text-gray-400">Search artisans...</AppText>
         <Ionicons name="options-outline" size={18} color={colors.primary} />
       </Pressable>
 
@@ -180,11 +183,11 @@ export default function ArtisansList() {
           {artisansQuery.isLoading ? (
             <ActivityIndicator color={colors.primary} />
           ) : (
-            <Text className="text-[13px] text-gray-400">
+            <AppText className="text-[13px] text-gray-400">
               {artisansQuery.isError
                 ? "Couldn't load artisans. Pull to retry."
                 : 'No artisans available yet.'}
-            </Text>
+            </AppText>
           )}
         </View>
       ) : (

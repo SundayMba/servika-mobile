@@ -1,3 +1,4 @@
+import { cssInterop } from 'nativewind';
 import { Text, type TextProps, type TextStyle } from 'react-native';
 
 import { fonts } from '@/constants/colors';
@@ -29,10 +30,22 @@ const WEIGHTS: Record<Weight, TextStyle> = {
 
 export interface AppTextProps extends TextProps {
   weight?: Weight;
+  /**
+   * This Text sits INSIDE another Text, as part of one run of prose.
+   *
+   * Suppresses the trailing space below. The clipping it guards against is a
+   * property of a Text box's own last glyph, and a nested span has no box of
+   * its own — the parent paragraph lays out the whole line. Left on, the space
+   * lands mid-sentence: "Needs:  paint", "Terms  and  Privacy".
+   */
+  inline?: boolean;
+  /** Resolved by NativeWind — see the cssInterop registration at the foot. */
+  className?: string;
 }
 
 export function AppText({
   weight = 'regular',
+  inline = false,
   style,
   children,
   ...rest
@@ -48,7 +61,23 @@ export function AppText({
           Instrument Sans, so it opened a fallback run and Android dropped every
           word after the preceding space. U+00A0 is in the font and is not
           trimmed, so the last glyph keeps its advance. */}
-      {typeof children === 'string' ? children + ' ' : children}
+      {typeof children === 'string' && !inline ? children + ' ' : children}
     </Text>
   );
 }
+
+/**
+ * Teach NativeWind to resolve `className` on AppText.
+ *
+ * The className transform only applies to components NativeWind knows about —
+ * React Native's own, and anything registered here. Without this line every
+ * `className` on an AppText is forwarded to Text as an unknown prop and
+ * silently dropped, which looks exactly like the styles never existed.
+ *
+ * The resolved styles land in `style`, after the weight's fontFamily in the
+ * array above, so a class can override colour and size but the typeface is
+ * always the app's. Font-weight utilities are deliberately not used on
+ * AppText: each Instrument Sans weight is its own family, so `font-bold` would
+ * only ask Android to synthesise a fake bold over the regular face.
+ */
+cssInterop(AppText, { className: 'style' });

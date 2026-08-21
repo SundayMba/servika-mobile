@@ -1,6 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import MapView, {
   AnimatedRegion,
   Marker,
@@ -9,6 +9,7 @@ import MapView, {
   PROVIDER_DEFAULT,
 } from 'react-native-maps';
 
+import { AppText } from '@/components/ui/AppText';
 import { colors } from '@/constants/colors';
 import { distanceKm, regionFor, type LatLng } from '@/lib/tracking/geo';
 
@@ -44,9 +45,9 @@ function PersonBadge({
           className="mb-1 rounded-full px-2.5 py-[3px]"
           style={[{ backgroundColor: color }, shadow]}
         >
-          <Text className="text-[11px] font-bold text-white" numberOfLines={1}>
+          <AppText weight="semibold" className="text-[11px] text-white" numberOfLines={1}>
             {label}
-          </Text>
+          </AppText>
         </View>
       ) : null}
       <View

@@ -8,11 +8,11 @@ import {
   ActivityIndicator,
   Pressable,
   ScrollView,
-  Text,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppText } from '@/components/ui/AppText';
 import { appAlert } from '@/components/ui/AppAlert';
 import { Button } from '@/components/ui/Button';
 import { colors } from '@/constants/colors';
@@ -47,7 +47,7 @@ function StatusChip({ status }: { status: BookingStatus }) {
   const s = statusStyle(status);
   return (
     <View className={`self-start rounded-full px-3 py-1 ${s.bg}`}>
-      <Text className={`text-[12px] font-bold ${s.text}`}>{s.label}</Text>
+      <AppText weight="semibold" className={`text-[12px] ${s.text}`}>{s.label}</AppText>
     </View>
   );
 }
@@ -61,9 +61,9 @@ function Section({
 }) {
   return (
     <View className="mt-4 rounded-2xl border border-gray-100 bg-white p-4">
-      <Text className="mb-2 text-[12px] font-bold uppercase tracking-wide text-gray-400">
+      <AppText weight="semibold" className="mb-2 text-[12px] uppercase tracking-wide text-gray-400">
         {title}
-      </Text>
+      </AppText>
       {children}
     </View>
   );
@@ -72,10 +72,10 @@ function Section({
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <View className="flex-row items-start justify-between py-1">
-      <Text className="text-[13px] text-gray-500">{label}</Text>
-      <Text className="ml-4 flex-1 text-right text-[13px] font-medium text-gray-900">
+      <AppText className="text-[13px] text-gray-500">{label}</AppText>
+      <AppText weight="medium" className="ml-4 flex-1 text-right text-[13px] text-gray-900">
         {value}
-      </Text>
+      </AppText>
     </View>
   );
 }
@@ -134,39 +134,39 @@ function DisputeCard({ dispute }: { dispute: Dispute }) {
   return (
     <View className="mt-4 rounded-2xl border border-red-100 bg-white p-4">
       <View className="flex-row items-center justify-between">
-        <Text className="text-[12px] font-bold uppercase tracking-wide text-gray-400">
+        <AppText weight="semibold" className="text-[12px] uppercase tracking-wide text-gray-400">
           Your reported issue
-        </Text>
+        </AppText>
         <View className={`rounded-full px-3 py-1 ${chip.bg}`}>
-          <Text className={`text-[12px] font-bold ${chip.text}`}>{chip.label}</Text>
+          <AppText weight="semibold" className={`text-[12px] ${chip.text}`}>{chip.label}</AppText>
         </View>
       </View>
-      <Text className="mt-2 text-[14px] leading-5 text-gray-800">
+      <AppText className="mt-2 text-[14px] leading-5 text-gray-800">
         {dispute.description}
-      </Text>
+      </AppText>
       {dispute.artisanResponse ? (
         <View className="mt-3 rounded-xl border border-primary/15 bg-primary/5 p-3">
-          <Text className="text-[11px] font-bold uppercase tracking-wide text-primary">
+          <AppText weight="semibold" className="text-[11px] uppercase tracking-wide text-primary">
             Artisan responded
-          </Text>
-          <Text className="mt-1 text-[13px] leading-5 text-gray-700">
+          </AppText>
+          <AppText className="mt-1 text-[13px] leading-5 text-gray-700">
             {dispute.artisanResponse}
-          </Text>
+          </AppText>
         </View>
       ) : null}
       {outcome ? (
         <View className="mt-3 rounded-xl bg-gray-50 p-3">
-          <Text className="text-[12px] font-semibold text-gray-700">{outcome}</Text>
+          <AppText weight="semibold" className="text-[12px] text-gray-700">{outcome}</AppText>
           {dispute.resolutionNote ? (
-            <Text className="mt-1 text-[12px] leading-4 text-gray-500">
+            <AppText className="mt-1 text-[12px] leading-4 text-gray-500">
               {dispute.resolutionNote}
-            </Text>
+            </AppText>
           ) : null}
         </View>
       ) : (
-        <Text className="mt-2 text-[12px] text-gray-400">
+        <AppText className="mt-2 text-[12px] text-gray-400">
           Our team is reviewing your report and will get back to you.
-        </Text>
+        </AppText>
       )}
     </View>
   );
@@ -330,9 +330,9 @@ export default function BookingDetailScreen() {
         >
           <Ionicons name="chevron-back" size={22} color={colors.textPrimary} />
         </Pressable>
-        <Text className="text-[17px] font-bold text-gray-900">
+        <AppText weight="semibold" className="text-[17px] text-gray-900">
           Booking Details
-        </Text>
+        </AppText>
       </View>
 
       {isLoading ? (
@@ -342,9 +342,9 @@ export default function BookingDetailScreen() {
       ) : isError || !booking ? (
         <View className="flex-1 items-center justify-center px-8">
           <Ionicons name="alert-circle-outline" size={40} color={colors.textMuted} />
-          <Text className="mt-3 text-center text-[14px] text-gray-500">
+          <AppText className="mt-3 text-center text-[14px] text-gray-500">
             We couldn’t load this booking.
-          </Text>
+          </AppText>
           <View className="mt-5 w-full gap-2.5">
             <Button label="Try again" onPress={() => refetch()} />
             <Button
@@ -360,49 +360,49 @@ export default function BookingDetailScreen() {
           contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 32 }}
         >
           <View className="flex-row items-center justify-between">
-            <Text className="text-[20px] font-bold text-gray-900">
+            <AppText weight="semibold" className="text-[20px] text-gray-900">
               {booking.serviceName}
-            </Text>
+            </AppText>
             <StatusChip status={booking.status} />
           </View>
           {booking.artisanName ? (
-            <Text className="mt-1 text-[13px] text-gray-500">
+            <AppText className="mt-1 text-[13px] text-gray-500">
               with {booking.artisanName}
-            </Text>
+            </AppText>
           ) : null}
 
           {acceptingBids ? (
             <View className="mt-6">
-              <Text className="mb-2 text-[15px] font-bold text-gray-900">
+              <AppText weight="semibold" className="mb-2 text-[15px] text-gray-900">
                 {isDirectAwaitingQuote
                   ? bids?.length
                     ? 'Quote received'
                     : 'Waiting for a quote'
                   : `Price offers${bids?.length ? ` (${bids.length})` : ''}`}
-              </Text>
+              </AppText>
               {!bids || bids.length === 0 ? (
                 <View className="items-center rounded-2xl border border-gray-100 bg-white px-4 py-7">
                   <Ionicons name="pricetags-outline" size={26} color={colors.textMuted} />
-                  <Text className="mt-2 text-[13px] font-semibold text-gray-700">
+                  <AppText weight="semibold" className="mt-2 text-[13px] text-gray-700">
                     {isDirectAwaitingQuote ? 'No quote yet' : 'Waiting for offers'}
-                  </Text>
-                  <Text className="mt-0.5 text-center text-[12px] leading-4 text-gray-400">
+                  </AppText>
+                  <AppText className="mt-0.5 text-center text-[12px] leading-4 text-gray-400">
                     {isDirectPending
                       ? `${booking.artisanName ?? 'The artisan'} is reviewing your request. They'll send a price or come inspect for free first. We'll notify you.`
                       : isDirectAwaitingQuote
                         ? `${booking.artisanName ?? 'The artisan'} is inspecting the job (free) and will send their price here. You only pay after you accept it.`
                         : 'Artisans are reviewing your photos. Offers usually arrive within a few hours, and we will notify you.'}
-                  </Text>
+                  </AppText>
                   {/* The decisive anti-leakage moment: the artisan may be standing
                       in the customer's home. Protection only exists in-app, so say
                       it exactly here, where a side deal would happen. */}
                   <View className="mt-3 rounded-xl bg-amber-50 px-3 py-2.5">
-                    <Text className="text-[12px] leading-4 text-amber-800">
+                    <AppText className="text-[12px] leading-4 text-amber-800">
                       Keep the price inside Servika. Money you pay in the app is
                       held safely until the job is done, and you can get it back
                       if something goes wrong. We cannot protect any payment made
                       outside the app.
-                    </Text>
+                    </AppText>
                   </View>
                   {isDirectPending ? (
                     <Pressable
@@ -412,9 +412,9 @@ export default function BookingDetailScreen() {
                       className="mt-4 flex-row items-center gap-1.5 rounded-full border border-primary/30 bg-primary/5 px-4 py-2 active:opacity-70"
                     >
                       <Ionicons name="megaphone-outline" size={14} color={colors.primary} />
-                      <Text className="text-[12.5px] font-bold text-primary">
+                      <AppText weight="semibold" className="text-[12.5px] text-primary">
                         {rebroadcast.isPending ? 'Opening up…' : 'Taking too long? Ask other artisans'}
-                      </Text>
+                      </AppText>
                     </Pressable>
                   ) : null}
                 </View>
@@ -438,13 +438,12 @@ export default function BookingDetailScreen() {
                             offerSort === s.key ? 'bg-primary' : 'border border-gray-200 bg-white'
                           }`}
                         >
-                          <Text
-                            className={`text-[12.5px] font-bold ${
-                              offerSort === s.key ? 'text-white' : 'text-gray-600'
-                            }`}
+                          <AppText
+                            weight="semibold"
+                            className={`text-[12.5px] ${ offerSort === s.key ? 'text-white' : 'text-gray-600' }`}
                           >
                             {s.label}
-                          </Text>
+                          </AppText>
                         </Pressable>
                       ))}
                     </ScrollView>
@@ -458,16 +457,16 @@ export default function BookingDetailScreen() {
                       <View className="mb-2.5 flex-row gap-1.5">
                         {bid.id === cheapestId ? (
                           <View className="rounded-full bg-green-100 px-2.5 py-1">
-                            <Text className="text-[10.5px] font-bold text-green-700">
+                            <AppText weight="semibold" className="text-[10.5px] text-green-700">
                               💸 Lowest price
-                            </Text>
+                            </AppText>
                           </View>
                         ) : null}
                         {bid.id === topRatedId ? (
                           <View className="rounded-full bg-amber-100 px-2.5 py-1">
-                            <Text className="text-[10.5px] font-bold text-amber-700">
+                            <AppText weight="semibold" className="text-[10.5px] text-amber-700">
                               ⭐ Top rated
-                            </Text>
+                            </AppText>
                           </View>
                         ) : null}
                       </View>
@@ -481,38 +480,38 @@ export default function BookingDetailScreen() {
                             contentFit="cover"
                           />
                         ) : (
-                          <Text className="text-[15px] font-bold text-primary">
+                          <AppText weight="semibold" className="text-[15px] text-primary">
                             {bid.artisanName.trim().charAt(0).toUpperCase()}
-                          </Text>
+                          </AppText>
                         )}
                       </View>
                       <View className="ml-3 flex-1">
                         <View className="flex-row items-center gap-1.5">
-                          <Text className="text-[14px] font-bold text-gray-900">
+                          <AppText weight="semibold" className="text-[14px] text-gray-900">
                             {bid.artisanName}
-                          </Text>
+                          </AppText>
                           {bid.hasCertificate ? (
                             <Ionicons name="ribbon" size={14} color={colors.primary} />
                           ) : null}
                         </View>
                         <View className="mt-0.5 flex-row items-center gap-1">
                           <Ionicons name="star" size={12} color="#FBBF24" />
-                          <Text className="text-[12px] text-gray-500">
+                          <AppText className="text-[12px] text-gray-500">
                             {bid.rating.toFixed(1)} ({bid.reviewCount} reviews)
                             {bid.distanceKm != null ? ` · ${bid.distanceKm} km away` : ''}
-                          </Text>
+                          </AppText>
                         </View>
                       </View>
-                      <Text className="text-[17px] font-extrabold text-primary">
+                      <AppText weight="semibold" className="text-[17px] text-primary">
                         {formatNaira(bid.amountNaira)}
-                      </Text>
+                      </AppText>
                     </View>
                     {bid.materialsNote ? (
                       <View className="mt-2.5 rounded-xl bg-background px-3 py-2">
-                        <Text className="text-[12px] leading-4 text-gray-600">
-                          <Text className="font-semibold">Needs: </Text>
+                        <AppText className="text-[12px] leading-4 text-gray-600">
+                          <AppText inline weight="semibold">Needs: </AppText>
                           {bid.materialsNote}
-                        </Text>
+                        </AppText>
                       </View>
                     ) : null}
                     <View className="mt-3 flex-row gap-2.5">
@@ -526,9 +525,9 @@ export default function BookingDetailScreen() {
                         }
                         className="h-11 flex-1 items-center justify-center rounded-xl border border-gray-200 active:opacity-70"
                       >
-                        <Text className="text-[13px] font-semibold text-gray-700">
+                        <AppText weight="semibold" className="text-[13px] text-gray-700">
                           View profile
-                        </Text>
+                        </AppText>
                       </Pressable>
                       <Pressable
                         accessibilityRole="button"
@@ -537,9 +536,9 @@ export default function BookingDetailScreen() {
                         className="h-11 flex-1 items-center justify-center rounded-xl bg-primary active:opacity-80"
                         style={acceptBidMutation.isPending ? { opacity: 0.6 } : undefined}
                       >
-                        <Text className="text-[13px] font-bold text-white">
+                        <AppText weight="semibold" className="text-[13px] text-white">
                           Accept offer
-                        </Text>
+                        </AppText>
                       </Pressable>
                     </View>
                   </View>
@@ -557,13 +556,13 @@ export default function BookingDetailScreen() {
                   <Ionicons name="close" size={20} color={colors.textMuted} />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-[14px] font-bold text-gray-900">
+                  <AppText weight="semibold" className="text-[14px] text-gray-900">
                     {booking.artisanName ?? 'This artisan'} can&apos;t take this job
-                  </Text>
-                  <Text className="text-[12px] leading-4 text-gray-500">
+                  </AppText>
+                  <AppText className="text-[12px] leading-4 text-gray-500">
                     Don&apos;t start over. Send the same request to every{' '}
                     {booking.serviceName.toLowerCase()} artisan nearby.
-                  </Text>
+                  </AppText>
                 </View>
               </View>
               <Pressable
@@ -574,17 +573,17 @@ export default function BookingDetailScreen() {
                 style={rebroadcast.isPending ? { opacity: 0.6 } : undefined}
               >
                 <Ionicons name="megaphone-outline" size={16} color="#FFFFFF" />
-                <Text className="text-[14px] font-bold text-white">
+                <AppText weight="semibold" className="text-[14px] text-white">
                   {rebroadcast.isPending ? 'Opening up…' : 'Ask other artisans instead'}
-                </Text>
+                </AppText>
               </Pressable>
             </View>
           ) : null}
 
           <Section title="Job">
-            <Text className="text-[13px] leading-5 text-gray-700">
+            <AppText className="text-[13px] leading-5 text-gray-700">
               {booking.description}
-            </Text>
+            </AppText>
           </Section>
 
           <Section title="Schedule">
@@ -601,13 +600,13 @@ export default function BookingDetailScreen() {
           </Section>
 
           <Section title="Location">
-            <Text className="text-[13px] leading-5 text-gray-900">
+            <AppText className="text-[13px] leading-5 text-gray-900">
               {booking.addressText}
-            </Text>
+            </AppText>
             {booking.locationInstructions ? (
-              <Text className="mt-1 text-[12px] leading-4 text-gray-500">
+              <AppText className="mt-1 text-[12px] leading-4 text-gray-500">
                 {booking.locationInstructions}
-              </Text>
+              </AppText>
             ) : null}
           </Section>
 
@@ -621,16 +620,16 @@ export default function BookingDetailScreen() {
             {booking.paymentState === 'Refunded' ? (
               <View className="mt-2 flex-row items-center gap-2 rounded-xl bg-green-50 px-3 py-2">
                 <Ionicons name="arrow-undo" size={15} color="#15803D" />
-                <Text className="flex-1 text-[12px] font-semibold text-green-700">
+                <AppText weight="semibold" className="flex-1 text-[12px] text-green-700">
                   Refunded{booking.refundedAmountNaira != null ? ` · ${formatNaira(booking.refundedAmountNaira)}` : ''} to your payment method
-                </Text>
+                </AppText>
               </View>
             ) : booking.paymentState === 'PartiallyRefunded' ? (
               <View className="mt-2 flex-row items-center gap-2 rounded-xl bg-green-50 px-3 py-2">
                 <Ionicons name="arrow-undo" size={15} color="#15803D" />
-                <Text className="flex-1 text-[12px] font-semibold text-green-700">
+                <AppText weight="semibold" className="flex-1 text-[12px] text-green-700">
                   {booking.refundedAmountNaira != null ? `${formatNaira(booking.refundedAmountNaira)} refunded` : 'Partially refunded'} to your payment method
-                </Text>
+                </AppText>
               </View>
             ) : booking.paymentState === 'Paid' ? (
               <Row label="Payment" value="Paid (held in escrow)" />
@@ -640,11 +639,11 @@ export default function BookingDetailScreen() {
               <>
                 <View className="mt-2 flex-row items-center gap-2 rounded-xl bg-amber-50 px-3 py-2.5">
                   <Ionicons name="cash-outline" size={16} color="#B45309" />
-                  <Text className="flex-1 text-[12px] font-semibold leading-4 text-amber-700">
+                  <AppText weight="semibold" className="flex-1 text-[12px] leading-4 text-amber-700">
                     Cash on service: pay {formatNaira(booking.initialQuoteAmountNaira)} to{' '}
                     {booking.artisanName ?? 'the artisan'} when the job is done.
                     Cash jobs have limited dispute protection.
-                  </Text>
+                  </AppText>
                 </View>
                 {!['InProgress', 'AwaitingConfirmation', 'Completed', 'Cancelled', 'Disputed'].includes(
                   booking.status,
@@ -656,9 +655,9 @@ export default function BookingDetailScreen() {
                     className="mt-2.5 flex-row items-center justify-center gap-1.5 py-1.5"
                   >
                     <Ionicons name="lock-closed" size={13} color={colors.primary} />
-                    <Text className="text-[13px] font-bold text-primary">
+                    <AppText weight="semibold" className="text-[13px] text-primary">
                       {paying ? 'Opening secure payment…' : 'Switch to secure online payment'}
-                    </Text>
+                    </AppText>
                   </Pressable>
                 ) : null}
               </>
@@ -676,15 +675,15 @@ export default function BookingDetailScreen() {
                   style={paying ? { opacity: 0.6 } : undefined}
                 >
                   <Ionicons name="lock-closed" size={16} color="#FFFFFF" />
-                  <Text className="text-[14px] font-bold text-white">
+                  <AppText weight="semibold" className="text-[14px] text-white">
                     {paying
                       ? 'Opening secure payment…'
                       : `Pay ${formatNaira(booking.initialQuoteAmountNaira)} into escrow`}
-                  </Text>
+                  </AppText>
                 </Pressable>
-                <Text className="mt-2 text-center text-[11.5px] leading-4 text-gray-400">
+                <AppText className="mt-2 text-center text-[11.5px] leading-4 text-gray-400">
                   Work starts once your payment is secured.
-                </Text>
+                </AppText>
                 {!['InProgress', 'AwaitingConfirmation', 'Completed'].includes(booking.status) ? (
                   <Pressable
                     accessibilityRole="button"
@@ -692,9 +691,9 @@ export default function BookingDetailScreen() {
                     onPress={chooseCash}
                     className="mt-1 items-center py-1"
                   >
-                    <Text className="text-[12.5px] font-semibold text-gray-500">
+                    <AppText weight="semibold" className="text-[12.5px] text-gray-500">
                       Prefer cash? Pay after the service instead
-                    </Text>
+                    </AppText>
                   </Pressable>
                 ) : null}
               </>
@@ -702,16 +701,16 @@ export default function BookingDetailScreen() {
               ['Pending'].includes(booking.status) ? (
               // Fixed-price booking waiting on the artisan to accept — payment
               // opens once they confirm (avoids charging for a job they decline).
-              <Text className="mt-1 text-[12px] leading-4 text-gray-500">
+              <AppText className="mt-1 text-[12px] leading-4 text-gray-500">
                 Waiting for {booking.artisanName ?? 'the artisan'} to accept. Once
                 they confirm, pay {formatNaira(booking.initialQuoteAmountNaira)}{' '}
                 securely. We hold it until the job is done.
-              </Text>
+              </AppText>
             ) : (
-              <Text className="mt-1 text-[12px] leading-4 text-gray-500">
+              <AppText className="mt-1 text-[12px] leading-4 text-gray-500">
                 Nothing to pay yet. You&apos;ll get a price to review first, and
                 your payment is held securely until the job is done.
-              </Text>
+              </AppText>
             )}
           </Section>
 
@@ -779,12 +778,12 @@ export default function BookingDetailScreen() {
               {myReview ? (
                 <View className="rounded-2xl border border-gray-100 bg-white p-4">
                   <View className="flex-row items-center justify-between">
-                    <Text className="text-[12px] font-bold uppercase tracking-wide text-gray-400">
+                    <AppText weight="semibold" className="text-[12px] uppercase tracking-wide text-gray-400">
                       Your review
-                    </Text>
-                    <Text className="text-[11px] text-gray-400">
+                    </AppText>
+                    <AppText className="text-[11px] text-gray-400">
                       {timeAgo(myReview.createdAt)}
-                    </Text>
+                    </AppText>
                   </View>
                   <View className="mt-2 flex-row gap-1">
                     {[1, 2, 3, 4, 5].map((n) => (
@@ -797,9 +796,9 @@ export default function BookingDetailScreen() {
                     ))}
                   </View>
                   {myReview.comment ? (
-                    <Text className="mt-2 text-[14px] leading-5 text-gray-700">
+                    <AppText className="mt-2 text-[14px] leading-5 text-gray-700">
                       {myReview.comment}
-                    </Text>
+                    </AppText>
                   ) : null}
                 </View>
               ) : (
@@ -833,9 +832,9 @@ export default function BookingDetailScreen() {
               className="mt-4 flex-row items-center justify-center gap-1.5 py-2"
             >
               <Ionicons name="flag-outline" size={16} color={colors.textMuted} />
-              <Text className="text-[13px] font-semibold text-gray-500">
+              <AppText weight="semibold" className="text-[13px] text-gray-500">
                 Report an issue with this booking
-              </Text>
+              </AppText>
             </Pressable>
           ) : null}
         </ScrollView>
@@ -848,16 +847,16 @@ export default function BookingDetailScreen() {
             <View className="h-14 w-14 items-center justify-center rounded-full bg-green-100">
               <Ionicons name="checkmark" size={28} color="#16A34A" />
             </View>
-            <Text className="mt-3 text-[18px] font-bold text-gray-900">Price agreed!</Text>
-            <Text className="mt-1 text-center text-[13px] leading-5 text-gray-500">
+            <AppText weight="semibold" className="mt-3 text-[18px] text-gray-900">Price agreed!</AppText>
+            <AppText className="mt-1 text-center text-[13px] leading-5 text-gray-500">
               {booking?.artisanName ?? 'Your artisan'} will do the job for{' '}
-              <Text className="font-bold text-gray-900">
+              <AppText inline weight="semibold" className="text-gray-900">
                 {booking?.initialQuoteAmountNaira != null
                   ? formatNaira(booking.initialQuoteAmountNaira)
                   : 'the agreed price'}
-              </Text>
+              </AppText>
               . How would you like to pay?
-            </Text>
+            </AppText>
           </View>
 
           <Pressable
@@ -870,9 +869,9 @@ export default function BookingDetailScreen() {
             className="mt-5 h-14 flex-row items-center justify-center gap-2 rounded-2xl bg-primary active:opacity-90"
           >
             <Ionicons name="lock-closed" size={17} color="#FFFFFF" />
-            <Text className="text-[15px] font-bold text-white">
+            <AppText weight="semibold" className="text-[15px] text-white">
               Pay securely, held until the job is done
-            </Text>
+            </AppText>
           </Pressable>
 
           <Pressable
@@ -882,14 +881,14 @@ export default function BookingDetailScreen() {
             className="mt-2.5 h-13 flex-row items-center justify-center gap-2 rounded-2xl border border-gray-200 py-3.5 active:opacity-70"
           >
             <Ionicons name="cash-outline" size={17} color={colors.textPrimary} />
-            <Text className="text-[14px] font-semibold text-gray-700">
+            <AppText weight="semibold" className="text-[14px] text-gray-700">
               {choosePayment.isPending ? 'Saving…' : 'Pay cash after service'}
-            </Text>
+            </AppText>
           </Pressable>
-          <Text className="mt-2.5 text-center text-[11.5px] leading-4 text-gray-400">
+          <AppText className="mt-2.5 text-center text-[11.5px] leading-4 text-gray-400">
             Online payment is protected by escrow and released to the artisan only
             when you confirm the job. Cash jobs have limited dispute protection.
-          </Text>
+          </AppText>
         </View>
       </BottomSheet>
     </SafeAreaView>

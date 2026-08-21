@@ -2,9 +2,9 @@ import {
   ActivityIndicator,
   Pressable,
   type PressableProps,
-  Text,
 } from 'react-native';
 
+import { AppText } from '@/components/ui/AppText';
 import { colors } from '@/constants/colors';
 
 type ButtonProps = Omit<PressableProps, 'children'> & {
@@ -58,15 +58,16 @@ export function Button({
           color={isPrimary ? colors.white : colors.primary}
         />
       ) : (
-        <Text
+        <AppText
+          weight="semibold"
           className={
             isPrimary
-              ? 'text-[16px] font-bold text-white'
-              : 'text-[16px] font-bold text-gray-900'
+              ? 'text-[16px] text-white'
+              : 'text-[16px] text-gray-900'
           }
         >
           {label}
-        </Text>
+        </AppText>
       )}
     </Pressable>
   );

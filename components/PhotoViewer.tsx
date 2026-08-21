@@ -1,7 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Image } from 'expo-image';
 import { useCallback, useEffect, useState } from 'react';
-import { Dimensions, FlatList, Modal, Pressable, Text, View } from 'react-native';
+import { Dimensions, FlatList, Modal, Pressable, View } from 'react-native';
 import {
   Gesture,
   GestureDetector,
@@ -13,6 +13,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import { AppText } from '@/components/ui/AppText';
 
 /** One image in the viewer. `headers` carries the Bearer token for the
  *  auth-gated booking-media endpoint. */
@@ -94,9 +95,9 @@ export function PhotoViewer({
           </Pressable>
           {photos.length > 1 ? (
             <View className="absolute top-16 self-center rounded-full bg-white/15 px-3 py-1">
-              <Text className="text-[13px] font-semibold text-white">
+              <AppText weight="semibold" className="text-[13px] text-white">
                 {index + 1} / {photos.length}
-              </Text>
+              </AppText>
             </View>
           ) : null}
         </View>

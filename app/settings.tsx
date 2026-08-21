@@ -2,9 +2,10 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
-import { Linking, Pressable, ScrollView, Text, View } from 'react-native';
+import { Linking, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppText } from '@/components/ui/AppText';
 import { appAlert } from '@/components/ui/AppAlert';
 import { authErrorMessage, deleteAccount } from '@/lib/api/auth';
 import { colors } from '@/constants/colors';
@@ -42,7 +43,7 @@ function MenuRow({
       <View className="h-9 w-9 items-center justify-center rounded-full bg-background">
         <Ionicons name={icon} size={18} color={colors.primary} />
       </View>
-      <Text className="flex-1 text-[15px] font-medium text-gray-800">{label}</Text>
+      <AppText weight="medium" className="flex-1 text-[15px] text-gray-800">{label}</AppText>
       {badge ? (
         <View
           className={
@@ -51,15 +52,16 @@ function MenuRow({
               : 'rounded-full bg-background px-2.5 py-1'
           }
         >
-          <Text
+          <AppText
+            weight="semibold"
             className={
               badgeTone === 'warning'
-                ? 'text-[11px] font-semibold text-amber-600'
-                : 'text-[11px] font-semibold text-gray-500'
+                ? 'text-[11px] text-amber-600'
+                : 'text-[11px] text-gray-500'
             }
           >
             {badge}
-          </Text>
+          </AppText>
         </View>
       ) : null}
       <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
@@ -76,9 +78,9 @@ function MenuSection({
 }) {
   return (
     <View className="mt-6">
-      <Text className="mb-2 px-1 text-[12px] font-semibold uppercase tracking-wide text-gray-400">
+      <AppText weight="semibold" className="mb-2 px-1 text-[12px] uppercase tracking-wide text-gray-400">
         {title}
-      </Text>
+      </AppText>
       <View className="rounded-3xl border border-gray-100/70 bg-white px-4">
         {children}
       </View>
@@ -157,7 +159,7 @@ export default function Settings() {
         >
           <Ionicons name="chevron-back" size={22} color={colors.textPrimary} />
         </Pressable>
-        <Text className="ml-2 text-[20px] font-bold text-gray-900">Settings</Text>
+        <AppText weight="semibold" className="ml-2 text-[20px] text-gray-900">Settings</AppText>
       </View>
 
       <ScrollView
@@ -216,14 +218,14 @@ export default function Settings() {
           style={{ opacity: loggingOut ? 0.6 : 1 }}
         >
           <Ionicons name="log-out-outline" size={20} color="#EF4444" />
-          <Text className="text-[15px] font-bold text-red-500">
+          <AppText weight="semibold" className="text-[15px] text-red-500">
             {loggingOut ? 'Logging out…' : 'Log out'}
-          </Text>
+          </AppText>
         </Pressable>
 
-        <Text className="mt-5 text-center text-[12px] text-gray-400">
+        <AppText className="mt-5 text-center text-[12px] text-gray-400">
           Servika v1.0.0
-        </Text>
+        </AppText>
       </ScrollView>
     </SafeAreaView>
   );

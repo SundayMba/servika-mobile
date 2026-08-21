@@ -7,11 +7,11 @@ import {
   ActivityIndicator,
   Pressable,
   ScrollView,
-  Text,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppText } from '@/components/ui/AppText';
 import { SearchSheet } from '@/components/SearchSheet';
 import { colors } from '@/constants/colors';
 import { categoryIcon, categoryImage } from '@/lib/catalogue/assets';
@@ -56,12 +56,13 @@ function CategoryCard({
           />
         ) : null}
       </View>
-      <Text
+      <AppText
+        weight="medium"
         numberOfLines={2}
-        className="mt-2 px-1 text-center text-[12px] font-medium text-gray-700"
+        className="mt-2 px-1 text-center text-[12px] text-gray-700"
       >
         {category.name}
-      </Text>
+      </AppText>
     </Pressable>
   );
 }
@@ -86,7 +87,7 @@ export default function Categories() {
           >
             <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
           </Pressable>
-          <Text className="text-[26px] font-bold text-gray-900">Categories</Text>
+          <AppText weight="semibold" className="text-[26px] text-gray-900">Categories</AppText>
         </View>
         <Pressable
           accessibilityRole="button"
@@ -112,9 +113,9 @@ export default function Categories() {
           </View>
         ) : isError ? (
           <View className="items-center justify-center px-6 py-16">
-            <Text className="text-center text-[14px] text-gray-400">
+            <AppText className="text-center text-[14px] text-gray-400">
               Couldn&apos;t load categories. Check your connection and try again.
-            </Text>
+            </AppText>
           </View>
         ) : (
           <View className="flex-row flex-wrap justify-between px-5 pt-1">

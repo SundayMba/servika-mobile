@@ -6,11 +6,11 @@ import {
   Pressable,
   RefreshControl,
   ScrollView,
-  Text,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppText } from '@/components/ui/AppText';
 import { colors } from '@/constants/colors';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useConversations } from '@/lib/chat/hooks';
@@ -38,7 +38,7 @@ export default function Messages() {
     <SafeAreaView className="flex-1 bg-white" edges={['top']}>
       <StatusBar style="dark" />
       <View className="px-5 pb-2 pt-2">
-        <Text className="text-[22px] font-extrabold text-gray-900">Messages</Text>
+        <AppText weight="semibold" className="text-[22px] text-gray-900">Messages</AppText>
       </View>
 
       {!signedIn ? (
@@ -96,29 +96,30 @@ function ConversationRow({
       className="flex-row items-center border-b border-gray-50 px-5 py-3.5 active:bg-gray-50"
     >
       <View className="h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-        <Text className="text-[15px] font-bold text-primary">
+        <AppText weight="semibold" className="text-[15px] text-primary">
           {initials(c.counterpartyName)}
-        </Text>
+        </AppText>
       </View>
       <View className="ml-3 flex-1">
         <View className="flex-row items-center justify-between">
-          <Text className="text-[15px] font-bold text-gray-900" numberOfLines={1}>
+          <AppText weight="semibold" className="text-[15px] text-gray-900" numberOfLines={1}>
             {c.counterpartyName}
-          </Text>
-          <Text className="ml-2 text-[11px] text-gray-400">
+          </AppText>
+          <AppText className="ml-2 text-[11px] text-gray-400">
             {timeAgo(c.lastMessageAtUtc)}
-          </Text>
+          </AppText>
         </View>
         <View className="mt-0.5 flex-row items-center justify-between">
-          <Text
-            className={`flex-1 text-[13px] ${unread ? 'font-semibold text-gray-800' : 'text-gray-500'}`}
+          <AppText
+            weight={unread ? 'semibold' : 'regular'}
+            className={`flex-1 text-[13px] ${unread ? 'text-gray-800' : 'text-gray-500'}`}
             numberOfLines={1}
           >
             {c.lastMessage}
-          </Text>
+          </AppText>
           {unread ? (
             <View className="ml-2 h-5 min-w-[20px] items-center justify-center rounded-full bg-primary px-1.5">
-              <Text className="text-[11px] font-bold text-white">{c.unreadCount}</Text>
+              <AppText weight="semibold" className="text-[11px] text-white">{c.unreadCount}</AppText>
             </View>
           ) : null}
         </View>
@@ -139,8 +140,8 @@ function Empty({
   return (
     <View className="flex-1 items-center justify-center px-10">
       <Ionicons name={icon} size={44} color={colors.textMuted} />
-      <Text className="mt-4 text-center text-[16px] font-bold text-gray-800">{title}</Text>
-      <Text className="mt-1.5 text-center text-[13px] leading-5 text-gray-500">{body}</Text>
+      <AppText weight="semibold" className="mt-4 text-center text-[16px] text-gray-800">{title}</AppText>
+      <AppText className="mt-1.5 text-center text-[13px] leading-5 text-gray-500">{body}</AppText>
     </View>
   );
 }

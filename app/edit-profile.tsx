@@ -5,13 +5,14 @@ import { useState } from 'react';
 import {
   Pressable,
   ScrollView,
-  Text,
   TextInput,
   View,
 } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppTextInput } from '@/components/ui/AppTextInput';
+import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
 import { colors } from '@/constants/colors';
 import { authErrorMessage, updateProfile } from '@/lib/api/auth';
@@ -23,8 +24,8 @@ function Field({
 }: { label: string } & React.ComponentProps<typeof TextInput>) {
   return (
     <View className="mb-4">
-      <Text className="mb-1.5 text-[13px] font-semibold text-gray-700">{label}</Text>
-      <TextInput
+      <AppText weight="semibold" className="mb-1.5 text-[13px] text-gray-700">{label}</AppText>
+      <AppTextInput
         placeholderTextColor={colors.textMuted}
         className="h-14 rounded-2xl border border-gray-200 bg-white px-4 text-[15px] text-gray-900"
         {...inputProps}
@@ -74,7 +75,7 @@ export default function EditProfile() {
         >
           <Ionicons name="chevron-back" size={22} color={colors.textPrimary} />
         </Pressable>
-        <Text className="ml-2 text-[20px] font-bold text-gray-900">Edit Profile</Text>
+        <AppText weight="semibold" className="ml-2 text-[20px] text-gray-900">Edit Profile</AppText>
       </View>
 
       <KeyboardAvoidingView
@@ -103,15 +104,15 @@ export default function EditProfile() {
 
           {/* Email is shown read-only — changing it needs re-verification. */}
           <View className="mb-4">
-            <Text className="mb-1.5 text-[13px] font-semibold text-gray-700">Email</Text>
+            <AppText weight="semibold" className="mb-1.5 text-[13px] text-gray-700">Email</AppText>
             <View className="h-14 flex-row items-center justify-between rounded-2xl border border-gray-100 bg-gray-50 px-4">
-              <Text className="text-[15px] text-gray-500">{user?.email}</Text>
+              <AppText className="text-[15px] text-gray-500">{user?.email}</AppText>
               <Ionicons name="lock-closed" size={15} color={colors.textMuted} />
             </View>
           </View>
 
           {error ? (
-            <Text className="mb-2 text-[13px] font-medium text-red-500">{error}</Text>
+            <AppText weight="medium" className="mb-2 text-[13px] text-red-500">{error}</AppText>
           ) : null}
 
           <View className="mt-3">

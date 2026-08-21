@@ -6,13 +6,13 @@ import { useEffect, useRef, useState } from 'react';
 import {
   Pressable,
   ScrollView,
-  Text,
-  TextInput,
   View,
 } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppTextInput } from '@/components/ui/AppTextInput';
+import { AppText } from '@/components/ui/AppText';
 import { appAlert } from '@/components/ui/AppAlert';
 import { BookingSteps } from '@/components/booking/BookingSteps';
 import { Button } from '@/components/ui/Button';
@@ -189,12 +189,12 @@ export default function BookingLocation() {
           <Ionicons name="chevron-back" size={22} color={colors.textPrimary} />
         </Pressable>
         <View className="items-center">
-          <Text className="text-[17px] font-bold text-gray-900">
+          <AppText weight="semibold" className="text-[17px] text-gray-900">
             Confirm Location
-          </Text>
-          <Text className="text-[12px] text-gray-500">
+          </AppText>
+          <AppText className="text-[12px] text-gray-500">
             Where should we send the artisan?
-          </Text>
+          </AppText>
         </View>
       </View>
 
@@ -229,22 +229,22 @@ export default function BookingLocation() {
               <Ionicons name="locate" size={20} color={colors.primary} />
             </View>
             <View className="flex-1">
-              <Text className="text-[14px] font-bold text-primary">
+              <AppText weight="semibold" className="text-[14px] text-primary">
                 {isLoadingLocation ? 'Getting your location…' : 'Use my current location'}
-              </Text>
-              <Text className="mt-0.5 text-[12px] text-gray-500">
+              </AppText>
+              <AppText className="mt-0.5 text-[12px] text-gray-500">
                 We&apos;ll fill in your address automatically.
-              </Text>
+              </AppText>
             </View>
             {coords ? <Ionicons name="checkmark-circle" size={20} color="#22C55E" /> : null}
           </Pressable>
 
           {/* Service address (editable) */}
           <View className="mt-4">
-            <Text className="mb-1.5 text-[13px] font-semibold text-gray-700">
+            <AppText weight="semibold" className="mb-1.5 text-[13px] text-gray-700">
               Service address
-            </Text>
-            <TextInput
+            </AppText>
+            <AppTextInput
               value={addressText}
               onChangeText={(t) => {
                 setAddressText(t);
@@ -271,13 +271,13 @@ export default function BookingLocation() {
                       <Ionicons name="location-outline" size={15} color={colors.primary} />
                     </View>
                     <View className="flex-1">
-                      <Text className="text-[14px] font-semibold text-gray-900" numberOfLines={1}>
+                      <AppText weight="semibold" className="text-[14px] text-gray-900" numberOfLines={1}>
                         {sug.label}
-                      </Text>
+                      </AppText>
                       {sug.sub ? (
-                        <Text className="text-[12px] text-gray-400" numberOfLines={1}>
+                        <AppText className="text-[12px] text-gray-400" numberOfLines={1}>
                           {sug.sub}
-                        </Text>
+                        </AppText>
                       ) : null}
                     </View>
                   </Pressable>
@@ -288,10 +288,10 @@ export default function BookingLocation() {
 
           {/* Access instructions (gate codes, directions for the artisan) */}
           <View className="mt-5">
-            <Text className="mb-1.5 text-[13px] font-semibold text-gray-700">
+            <AppText weight="semibold" className="mb-1.5 text-[13px] text-gray-700">
               Access instructions (optional)
-            </Text>
-            <TextInput
+            </AppText>
+            <AppTextInput
               value={instructions}
               onChangeText={setInstructions}
               placeholder="e.g. Gate code, floor, landmark, 'call at the gate'"

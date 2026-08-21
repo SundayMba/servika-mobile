@@ -6,7 +6,6 @@ import { useRef, useState } from 'react';
 import {
   Linking,
   ScrollView,
-  Text,
   type TextInput,
   TouchableOpacity,
   View,
@@ -14,6 +13,7 @@ import {
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AppText } from '@/components/ui/AppText';
 import { GoogleAuthButton } from '@/components/GoogleAuthButton';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -100,15 +100,15 @@ export default function Register() {
               contentFit="contain"
             />
           </View>
-          <Text className="text-[17px] font-bold text-white">Servika</Text>
+          <AppText weight="semibold" className="text-[17px] text-white">Servika</AppText>
         </View>
 
-        <Text className="mt-6 text-[27px] font-bold text-white">
+        <AppText weight="semibold" className="mt-6 text-[27px] text-white">
           Create your account
-        </Text>
-        <Text className="mt-1.5 text-[14px] leading-5 text-white/85">
+        </AppText>
+        <AppText className="mt-1.5 text-[14px] leading-5 text-white/85">
           Book verified artisans and manage repairs safely.
-        </Text>
+        </AppText>
       </View>
 
       {/* ── White sheet curving up into the orange ── */}
@@ -178,9 +178,9 @@ export default function Register() {
 
             {/* Error */}
             {error ? (
-              <Text className="mt-4 text-center text-[13px] font-medium text-red-500">
+              <AppText weight="medium" className="mt-4 text-center text-[13px] text-red-500">
                 {error}
-              </Text>
+              </AppText>
             ) : null}
 
             {/* Submit */}
@@ -202,19 +202,23 @@ export default function Register() {
                 size={15}
                 color={colors.primary}
               />
-              <Text className="ml-1 text-center text-[12px] leading-4 text-gray-500">
+              <AppText className="ml-1 text-center text-[12px] leading-4 text-gray-500">
                 By continuing, you agree to our{' '}
-                <Text
-                  className="font-semibold text-primary"
+                <AppText
+                  inline
+                  weight="semibold"
+                  className="text-primary"
                   onPress={() =>
                     Linking.openURL('https://servika.com.ng/terms').catch(() => {})
                   }
                 >
                   Terms
-                </Text>{' '}
+                </AppText>{' '}
                 and{' '}
-                <Text
-                  className="font-semibold text-primary"
+                <AppText
+                  inline
+                  weight="semibold"
+                  className="text-primary"
                   onPress={() =>
                     Linking.openURL('https://servika.com.ng/privacy').catch(
                       () => {},
@@ -222,23 +226,23 @@ export default function Register() {
                   }
                 >
                   Privacy Policy
-                </Text>
+                </AppText>
                 .
-              </Text>
+              </AppText>
             </View>
 
             {/* Footer */}
             <View className="mt-5 flex-row items-center justify-center gap-1">
-              <Text className="text-[14px] text-gray-500">
+              <AppText className="text-[14px] text-gray-500">
                 Already have an account?
-              </Text>
+              </AppText>
               <TouchableOpacity
                 hitSlop={8}
                 onPress={() => router.replace('/login')}
               >
-                <Text className="text-[14px] font-bold text-primary">
+                <AppText weight="semibold" className="text-[14px] text-primary">
                   Sign In
-                </Text>
+                </AppText>
               </TouchableOpacity>
             </View>
           </ScrollView>

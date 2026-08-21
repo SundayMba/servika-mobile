@@ -2,9 +2,10 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppText } from '@/components/ui/AppText';
 import { appAlert } from '@/components/ui/AppAlert';
 import { ArtisanRow, StatusTimeline } from '@/components/active-booking/parts';
 import { Button } from '@/components/ui/Button';
@@ -116,10 +117,10 @@ export default function ActiveBookingDashboard() {
             <Ionicons name="chevron-back" size={22} color={colors.textPrimary} />
           </Pressable>
           <View>
-            <Text className="text-[20px] font-bold text-gray-900">Active Booking</Text>
-            <Text className="text-[12px] text-gray-500">
+            <AppText weight="semibold" className="text-[20px] text-gray-900">Active Booking</AppText>
+            <AppText className="text-[12px] text-gray-500">
               Track your booking status in real time
-            </Text>
+            </AppText>
           </View>
         </View>
         <View className="flex-row gap-2">
@@ -153,35 +154,35 @@ export default function ActiveBookingDashboard() {
               <Ionicons name="flash" size={22} color={colors.primary} />
             </View>
             <View className="ml-3 flex-1">
-              <Text className="text-[16px] font-bold text-gray-900">
+              <AppText weight="semibold" className="text-[16px] text-gray-900">
                 {serviceName}
-              </Text>
+              </AppText>
             </View>
             <View className={`rounded-full px-2.5 py-1 ${chip?.bg ?? 'bg-green-100'}`}>
-              <Text className={`text-[11px] font-bold ${chip?.text ?? 'text-green-700'}`}>
+              <AppText weight="semibold" className={`text-[11px] ${chip?.text ?? 'text-green-700'}`}>
                 {chip?.label ?? 'Accepted'}
-              </Text>
+              </AppText>
             </View>
           </View>
 
           <View className="mt-3 gap-1.5">
             <View className="flex-row items-center gap-2">
               <Ionicons name="calendar-outline" size={14} color={colors.textMuted} />
-              <Text className="text-[12px] text-gray-600">
+              <AppText className="text-[12px] text-gray-600">
                 {booking ? `${formatDate(booking.preferredDate) || '—'} • ${booking.preferredTimeSlot || '—'}` : '—'}
-              </Text>
+              </AppText>
             </View>
             <View className="flex-row items-center gap-2">
               <Ionicons name="location-outline" size={14} color={colors.textMuted} />
-              <Text className="text-[12px] text-gray-600">
+              <AppText className="text-[12px] text-gray-600">
                 {booking?.addressText || '—'}
-              </Text>
+              </AppText>
             </View>
             <View className="flex-row items-center gap-2">
               <Ionicons name="receipt-outline" size={14} color={colors.textMuted} />
-              <Text className="text-[12px] text-gray-600">
+              <AppText className="text-[12px] text-gray-600">
                 Booking ID: {shortRef(params.bookingId)}
-              </Text>
+              </AppText>
             </View>
           </View>
 
@@ -209,7 +210,7 @@ export default function ActiveBookingDashboard() {
         <View className="mt-4 rounded-3xl border border-gray-100 bg-white p-4">
           <StatusTimeline steps={TRACK_STEPS} current={status ? STEP_INDEX[status] ?? 0 : 0} />
           {chip ? (
-            <Text className="mt-2 text-center text-[11px] text-gray-400">{chip.label}</Text>
+            <AppText className="mt-2 text-center text-[11px] text-gray-400">{chip.label}</AppText>
           ) : null}
         </View>
 
@@ -220,10 +221,10 @@ export default function ActiveBookingDashboard() {
         >
           <Ionicons name="navigate-circle-outline" size={22} color={colors.primary} />
           <View className="ml-3 flex-1">
-            <Text className="text-[13px] font-bold text-gray-900">Track your artisan live</Text>
-            <Text className="mt-0.5 text-[12px] leading-4 text-gray-600">
+            <AppText weight="semibold" className="text-[13px] text-gray-900">Track your artisan live</AppText>
+            <AppText className="mt-0.5 text-[12px] leading-4 text-gray-600">
               Watch their location on the map once they’re on the way.
-            </Text>
+            </AppText>
           </View>
           <Ionicons name="chevron-forward" size={18} color={colors.primary} />
         </Pressable>
@@ -254,15 +255,15 @@ export default function ActiveBookingDashboard() {
             className="mt-4 flex-row items-center justify-center gap-1.5"
           >
             <Ionicons name="close-circle-outline" size={16} color="#DC2626" />
-            <Text className="text-[14px] font-semibold text-red-600">
+            <AppText weight="semibold" className="text-[14px] text-red-600">
               {cancelBooking.isPending ? 'Cancelling…' : 'Cancel Booking'}
-            </Text>
+            </AppText>
           </Pressable>
         ) : null}
 
-        <Text className="mt-5 text-center text-[11px] text-gray-400">
+        <AppText className="mt-5 text-center text-[11px] text-gray-400">
           🛡 Secure. Trusted. Servika.
-        </Text>
+        </AppText>
       </ScrollView>
     </SafeAreaView>
   );

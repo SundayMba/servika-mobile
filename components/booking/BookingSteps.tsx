@@ -1,7 +1,8 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Fragment } from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 
+import { AppText } from '@/components/ui/AppText';
 import { colors } from '@/constants/colors';
 
 const STEPS = ['Details', 'Location', 'Confirm'];
@@ -34,26 +35,26 @@ export function BookingSteps({ current }: { current: number }) {
                 {done ? (
                   <Ionicons name="checkmark" size={16} color={colors.white} />
                 ) : (
-                  <Text
+                  <AppText
+                    weight="semibold"
                     className={
                       active
-                        ? 'text-[12px] font-bold text-white'
-                        : 'text-[12px] font-bold text-gray-500'
+                        ? 'text-[12px] text-white'
+                        : 'text-[12px] text-gray-500'
                     }
                   >
                     {step}
-                  </Text>
+                  </AppText>
                 )}
               </View>
-              <Text
+              <AppText
+                weight={active ? 'semibold' : 'medium'}
                 className={
-                  active
-                    ? 'mt-1 text-[11px] font-semibold text-gray-900'
-                    : 'mt-1 text-[11px] font-medium text-gray-400'
+                  active ? 'mt-1 text-[11px] text-gray-900' : 'mt-1 text-[11px] text-gray-400'
                 }
               >
                 {label}
-              </Text>
+              </AppText>
             </View>
 
             {/* Fixed-width connectors keep the whole group symmetric/centred. */}

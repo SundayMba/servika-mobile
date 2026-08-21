@@ -2,12 +2,13 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { forwardRef, useState } from 'react';
 import {
   Pressable,
-  Text,
   TextInput,
   type TextInputProps,
   View,
 } from 'react-native';
 
+import { AppTextInput } from '@/components/ui/AppTextInput';
+import { AppText } from '@/components/ui/AppText';
 import { colors } from '@/constants/colors';
 
 type InputProps = TextInputProps & {
@@ -33,15 +34,15 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
   return (
     <View>
       {label ? (
-        <Text className="mb-1.5 text-[13px] font-medium text-gray-700">
+        <AppText weight="medium" className="mb-1.5 text-[13px] text-gray-700">
           {label}
-        </Text>
+        </AppText>
       ) : null}
       <View className="h-14 flex-row items-center gap-3 rounded-2xl border border-gray-200 bg-white px-4">
         {icon ? (
           <Ionicons name={icon} size={20} color={colors.primary} />
         ) : null}
-        <TextInput
+        <AppTextInput
           ref={ref}
           placeholderTextColor={colors.textMuted}
           secureTextEntry={password ? hidden : false}

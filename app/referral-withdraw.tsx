@@ -3,10 +3,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, TextInput, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AppTextInput } from '@/components/ui/AppTextInput';
+import { AppText } from '@/components/ui/AppText';
 import { appAlert } from '@/components/ui/AppAlert';
 import { BottomSheet } from '@/components/BottomSheet';
 import { colors } from '@/constants/colors';
@@ -90,7 +92,7 @@ export default function ReferralWithdraw() {
           >
             <Ionicons name="chevron-back" size={22} color="#FFFFFF" />
           </Pressable>
-          <Text className="text-[16px] font-bold text-white">Withdraw Rewards</Text>
+          <AppText weight="semibold" className="text-[16px] text-white">Withdraw Rewards</AppText>
           <View className="h-10 w-10" />
         </View>
       </View>
@@ -107,27 +109,27 @@ export default function ReferralWithdraw() {
         {/* Available balance */}
         <View className="overflow-hidden rounded-3xl">
           <LinearGradient colors={['#1E293B', '#0F172A']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ padding: 20 }}>
-            <Text className="text-[13px] text-white/70">Referral rewards available</Text>
-            <Text className="mt-1 text-[30px] font-extrabold text-white">
+            <AppText className="text-[13px] text-white/70">Referral rewards available</AppText>
+            <AppText weight="semibold" className="mt-1 text-[30px] text-white">
               {formatNaira(available)}
-            </Text>
+            </AppText>
           </LinearGradient>
         </View>
 
         {/* Bank details */}
-        <Text className="mb-3 mt-6 text-[15px] font-bold text-gray-900">
+        <AppText weight="semibold" className="mb-3 mt-6 text-[15px] text-gray-900">
           Bank Account
-        </Text>
+        </AppText>
         <View className="mb-3">
-          <Text className="mb-1.5 text-[12px] font-medium text-gray-500">Bank</Text>
+          <AppText weight="medium" className="mb-1.5 text-[12px] text-gray-500">Bank</AppText>
           <Pressable
             accessibilityRole="button"
             onPress={() => setPickerOpen(true)}
             className="flex-row items-center justify-between rounded-2xl border border-gray-200 bg-white px-4 py-3.5 active:bg-gray-50"
           >
-            <Text className={`text-[15px] ${bank ? 'text-gray-900' : 'text-gray-400'}`}>
+            <AppText className={`text-[15px] ${bank ? 'text-gray-900' : 'text-gray-400'}`}>
               {bank?.name ?? 'Select your bank'}
-            </Text>
+            </AppText>
             <Ionicons name="chevron-down" size={18} color={colors.textMuted} />
           </Pressable>
         </View>
@@ -147,16 +149,16 @@ export default function ReferralWithdraw() {
         />
 
         {/* Amount */}
-        <Text className="mb-2 mt-3 text-[15px] font-bold text-gray-900">Amount</Text>
+        <AppText weight="semibold" className="mb-2 mt-3 text-[15px] text-gray-900">Amount</AppText>
         <View className="flex-row items-center rounded-2xl border border-gray-200 bg-white px-4">
-          <Text className="text-[18px] font-bold text-gray-400">₦</Text>
-          <TextInput
+          <AppText weight="semibold" className="text-[18px] text-gray-400">₦</AppText>
+          <AppTextInput weight="semibold"
             value={amount}
             onChangeText={(t) => setAmount(t.replace(/[^0-9]/g, ''))}
             keyboardType="number-pad"
             placeholder="0"
             placeholderTextColor={colors.textMuted}
-            className="ml-1 flex-1 py-3.5 text-[18px] font-bold text-gray-900"
+            className="ml-1 flex-1 py-3.5 text-[18px] text-gray-900"
           />
           <Pressable
             accessibilityRole="button"
@@ -166,12 +168,12 @@ export default function ReferralWithdraw() {
             className="rounded-xl px-3 py-1.5"
             style={{ backgroundColor: '#FFEDD5' }}
           >
-            <Text className="text-[12px] font-bold text-primary">Max</Text>
+            <AppText weight="semibold" className="text-[12px] text-primary">Max</AppText>
           </Pressable>
         </View>
 
         {error ? (
-          <Text className="mt-3 text-[13px] font-medium text-red-500">{error}</Text>
+          <AppText weight="medium" className="mt-3 text-[13px] text-red-500">{error}</AppText>
         ) : null}
 
         <Pressable
@@ -181,16 +183,16 @@ export default function ReferralWithdraw() {
           className="mt-6 h-14 items-center justify-center rounded-2xl bg-primary active:opacity-80"
           style={requestWithdrawal.isPending || available <= 0 ? { opacity: 0.6 } : undefined}
         >
-          <Text className="text-[15px] font-bold text-white">
+          <AppText weight="semibold" className="text-[15px] text-white">
             {requestWithdrawal.isPending ? 'Processing…' : 'Withdraw Now'}
-          </Text>
+          </AppText>
         </Pressable>
 
         <View className="mt-4 flex-row items-center justify-center gap-1.5">
           <Ionicons name="shield-checkmark-outline" size={14} color={colors.textMuted} />
-          <Text className="text-[12px] text-gray-400">
+          <AppText className="text-[12px] text-gray-400">
             Paid to your bank account securely.
-          </Text>
+          </AppText>
         </View>
       </KeyboardAwareScrollView>
 
@@ -228,10 +230,10 @@ function BankPickerSheet({
   return (
     <BottomSheet visible={visible} onClose={onClose}>
       <View className="px-5 pb-4 pt-1">
-        <Text className="text-[18px] font-bold text-gray-900">Choose your bank</Text>
+        <AppText weight="semibold" className="text-[18px] text-gray-900">Choose your bank</AppText>
         <View className="mt-3 flex-row items-center rounded-2xl border border-gray-200 bg-white px-3">
           <Ionicons name="search" size={16} color={colors.textMuted} />
-          <TextInput
+          <AppTextInput
             value={query}
             onChangeText={setQuery}
             placeholder="Search banks"
@@ -247,9 +249,9 @@ function BankPickerSheet({
           className="mt-3"
         >
           {isLoading ? (
-            <Text className="py-6 text-center text-[13px] text-gray-400">Loading banks…</Text>
+            <AppText className="py-6 text-center text-[13px] text-gray-400">Loading banks…</AppText>
           ) : filtered.length === 0 ? (
-            <Text className="py-6 text-center text-[13px] text-gray-400">No banks match.</Text>
+            <AppText className="py-6 text-center text-[13px] text-gray-400">No banks match.</AppText>
           ) : (
             filtered.map((b) => (
               <Pressable
@@ -261,7 +263,7 @@ function BankPickerSheet({
                 <View className="h-9 w-9 items-center justify-center rounded-full bg-primary/10">
                   <Ionicons name="business-outline" size={16} color={colors.primary} />
                 </View>
-                <Text className="ml-3 flex-1 text-[14px] font-medium text-gray-800">{b.name}</Text>
+                <AppText weight="medium" className="ml-3 flex-1 text-[14px] text-gray-800">{b.name}</AppText>
               </Pressable>
             ))
           )}
@@ -277,8 +279,8 @@ function Field({
 }: { label: string } & React.ComponentProps<typeof TextInput>) {
   return (
     <View className="mb-3">
-      <Text className="mb-1.5 text-[12px] font-medium text-gray-500">{label}</Text>
-      <TextInput
+      <AppText weight="medium" className="mb-1.5 text-[12px] text-gray-500">{label}</AppText>
+      <AppTextInput
         placeholderTextColor={colors.textMuted}
         className="rounded-2xl border border-gray-200 bg-white px-4 py-3.5 text-[15px] text-gray-900"
         {...inputProps}

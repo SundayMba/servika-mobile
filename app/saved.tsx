@@ -2,9 +2,10 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppText } from '@/components/ui/AppText';
 import { colors } from '@/constants/colors';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { artisanPhotoSource } from '@/lib/catalogue/assets';
@@ -23,16 +24,16 @@ function SavedRow({ artisan, onPress }: { artisan: ArtisanSummary; onPress: () =
         {avatar ? <Image source={avatar} contentFit="cover" style={{ flex: 1 }} /> : null}
       </View>
       <View className="flex-1">
-        <Text className="text-[15px] font-bold text-gray-900">{artisan.fullName}</Text>
-        <Text numberOfLines={1} className="mt-0.5 text-[12px] text-gray-500">
+        <AppText weight="semibold" className="text-[15px] text-gray-900">{artisan.fullName}</AppText>
+        <AppText numberOfLines={1} className="mt-0.5 text-[12px] text-gray-500">
           {artisan.specialty}
-        </Text>
+        </AppText>
         <View className="mt-1 flex-row items-center gap-1">
           <Ionicons name="star" size={12} color="#FBBF24" />
-          <Text className="text-[12px] font-semibold text-gray-700">
+          <AppText weight="semibold" className="text-[12px] text-gray-700">
             {artisan.rating.toFixed(1)}
-          </Text>
-          <Text className="text-[12px] text-gray-400">· {artisan.distanceKm} km</Text>
+          </AppText>
+          <AppText className="text-[12px] text-gray-400">· {artisan.distanceKm} km</AppText>
         </View>
       </View>
       <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
@@ -61,7 +62,7 @@ export default function SavedArtisans() {
         >
           <Ionicons name="chevron-back" size={22} color={colors.textPrimary} />
         </Pressable>
-        <Text className="ml-2 text-[20px] font-bold text-gray-900">Saved Artisans</Text>
+        <AppText weight="semibold" className="ml-2 text-[20px] text-gray-900">Saved Artisans</AppText>
       </View>
 
       {isLoading ? (
@@ -71,18 +72,18 @@ export default function SavedArtisans() {
       ) : !data?.length ? (
         <View className="flex-1 items-center justify-center px-10">
           <Ionicons name="heart-outline" size={44} color={colors.textMuted} />
-          <Text className="mt-3 text-center text-[16px] font-semibold text-gray-800">
+          <AppText weight="semibold" className="mt-3 text-center text-[16px] text-gray-800">
             No saved artisans yet
-          </Text>
-          <Text className="mt-1 text-center text-[13px] leading-5 text-gray-500">
+          </AppText>
+          <AppText className="mt-1 text-center text-[13px] leading-5 text-gray-500">
             Tap the heart on an artisan&apos;s profile to save them for quick access.
-          </Text>
+          </AppText>
           <Pressable
             accessibilityRole="button"
             onPress={() => router.push('/artisans')}
             className="mt-5 h-12 items-center justify-center rounded-2xl bg-primary px-6"
           >
-            <Text className="text-[15px] font-bold text-white">Browse artisans</Text>
+            <AppText weight="semibold" className="text-[15px] text-white">Browse artisans</AppText>
           </Pressable>
         </View>
       ) : (

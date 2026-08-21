@@ -4,12 +4,13 @@ import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import {
   SafeAreaView,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 
+import { AppText } from '@/components/ui/AppText';
 import { AuthPromptSheet } from '@/components/AuthPromptSheet';
 import { Button } from '@/components/ui/Button';
 import { colors } from '@/constants/colors';
@@ -37,7 +38,7 @@ function InfoStat({
   return (
     <View className="flex-row items-center gap-1.5">
       <Ionicons name={icon} size={14} color={colors.primary} />
-      <Text className="text-[12px] font-medium text-gray-600">{label}</Text>
+      <AppText weight="medium" className="text-[12px] text-gray-600">{label}</AppText>
     </View>
   );
 }
@@ -60,7 +61,7 @@ function Stars({ rating, size = 12 }: { rating: number; size?: number }) {
 
 function SectionTitle({ title }: { title: string }) {
   return (
-    <Text className="mb-3 text-[16px] font-bold text-gray-900">{title}</Text>
+    <AppText weight="semibold" className="mb-3 text-[16px] text-gray-900">{title}</AppText>
   );
 }
 
@@ -93,11 +94,11 @@ export default function ArtisanProfile() {
   if (isError || !artisan) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center bg-white px-6">
-        <Text className="text-[16px] font-semibold text-gray-900">
+        <AppText weight="semibold" className="text-[16px] text-gray-900">
           Artisan not found
-        </Text>
+        </AppText>
         <Pressable hitSlop={8} className="mt-3" onPress={() => router.back()}>
-          <Text className="text-[14px] font-bold text-primary">Go back</Text>
+          <AppText weight="semibold" className="text-[14px] text-primary">Go back</AppText>
         </Pressable>
       </SafeAreaView>
     );
@@ -142,9 +143,9 @@ export default function ArtisanProfile() {
             // No photo yet — a branded navy cover so the header buttons and
             // the curve below still read correctly.
             <View className="flex-1 items-center justify-center bg-[#0F172A]">
-              <Text className="text-[72px] font-extrabold text-white/10">
+              <AppText weight="semibold" className="text-[72px] text-white/10">
                 {initials}
-              </Text>
+              </AppText>
             </View>
           )}
         </View>
@@ -176,20 +177,21 @@ export default function ArtisanProfile() {
                     className="flex-1 items-center justify-center"
                     style={{ backgroundColor: `${artisan.accent}22` }}
                   >
-                    <Text
-                      className="text-[36px] font-extrabold"
+                    <AppText
+                      weight="semibold"
+                      className="text-[36px]"
                       style={{ color: artisan.accent }}
                     >
                       {initials}
-                    </Text>
+                    </AppText>
                   </View>
                 )}
               </View>
             </View>
             <View className="mt-3 flex-row items-center gap-1.5">
-              <Text className="text-[20px] font-bold text-gray-900">
+              <AppText weight="semibold" className="text-[20px] text-gray-900">
                 {artisan.fullName}
-              </Text>
+              </AppText>
               <MaterialCommunityIcons
                 name="check-decagram"
                 size={18}
@@ -200,16 +202,16 @@ export default function ArtisanProfile() {
             {/* Rating + experience */}
             <View className="mt-1.5 flex-row items-center gap-2">
               <Ionicons name="star" size={15} color="#FBBF24" />
-              <Text className="text-[13px] font-semibold text-gray-700">
+              <AppText weight="semibold" className="text-[13px] text-gray-700">
                 {artisan.rating.toFixed(1)}
-              </Text>
-              <Text className="text-[13px] text-gray-400">
+              </AppText>
+              <AppText className="text-[13px] text-gray-400">
                 ({artisan.reviewCount} reviews)
-              </Text>
-              <Text className="text-[13px] text-gray-300">•</Text>
-              <Text className="text-[13px] text-gray-500">
+              </AppText>
+              <AppText className="text-[13px] text-gray-300">•</AppText>
+              <AppText className="text-[13px] text-gray-500">
                 {artisan.experienceYears}+ years experience
-              </Text>
+              </AppText>
             </View>
 
             {/* Info row */}
@@ -246,9 +248,9 @@ export default function ArtisanProfile() {
                       size={14}
                       color={colors.primary}
                     />
-                    <Text className="text-[13px] font-medium text-gray-700">
+                    <AppText weight="medium" className="text-[13px] text-gray-700">
                       {service}
-                    </Text>
+                    </AppText>
                   </View>
                 ),
               )}
@@ -258,11 +260,11 @@ export default function ArtisanProfile() {
                   onPress={() => setServicesExpanded((v) => !v)}
                   className="flex-row items-center rounded-xl border border-primary/20 bg-primary/5 px-3.5 py-2 active:opacity-70"
                 >
-                  <Text className="text-[13px] font-semibold text-primary">
+                  <AppText weight="semibold" className="text-[13px] text-primary">
                     {servicesExpanded
                       ? 'Show less'
                       : `+${artisan.services.length - 3} more`}
-                  </Text>
+                  </AppText>
                 </Pressable>
               )}
             </View>
@@ -271,7 +273,7 @@ export default function ArtisanProfile() {
           {/* About */}
           <View className="mt-7 px-5">
             <SectionTitle title={`About ${artisan.fullName.split(' ')[0]}`} />
-            <Text
+            <AppText
               numberOfLines={aboutExpanded || aboutLines === null ? undefined : 3}
               onTextLayout={(e) => {
                 if (aboutLines === null) setAboutLines(e.nativeEvent.lines.length);
@@ -279,12 +281,12 @@ export default function ArtisanProfile() {
               className="text-[14px] leading-5 text-gray-500"
             >
               {artisan.about}
-            </Text>
+            </AppText>
             {(aboutLines ?? 0) > 3 ? (
               <Pressable hitSlop={6} onPress={() => setAboutExpanded((v) => !v)}>
-                <Text className="mt-1.5 text-[13px] font-semibold text-primary">
+                <AppText weight="semibold" className="mt-1.5 text-[13px] text-primary">
                   {aboutExpanded ? 'Read less' : 'Read more'}
-                </Text>
+                </AppText>
               </Pressable>
             ) : null}
           </View>
@@ -297,28 +299,28 @@ export default function ArtisanProfile() {
                   <Ionicons name="shield-checkmark" size={20} color="#16A34A" />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-[15px] font-bold text-gray-900">
+                  <AppText weight="semibold" className="text-[15px] text-gray-900">
                     Free inspection · No booking fee
-                  </Text>
-                  <Text className="text-[12px] font-medium text-gray-500">
+                  </AppText>
+                  <AppText weight="medium" className="text-[12px] text-gray-500">
                     You only pay a price you&apos;ve agreed
-                  </Text>
+                  </AppText>
                 </View>
               </View>
-              <Text className="mt-3 text-[12px] leading-4 text-gray-500">
+              <AppText className="mt-3 text-[12px] leading-4 text-gray-500">
                 {artisan.fullName.split(' ')[0]} reviews your request and sends a
                 quote, or inspects the job free of charge first. Your payment is
                 held securely by Servika until the work is done.
-              </Text>
+              </AppText>
             </View>
           </View>
 
           {/* Fixed-price services — book instantly at the listed price */}
           {(artisan.pricedServices?.length ?? 0) > 0 ? (
             <View className="mt-7 px-5">
-              <Text className="mb-3 text-[16px] font-bold text-gray-900">
+              <AppText weight="semibold" className="mb-3 text-[16px] text-gray-900">
                 Book a service
-              </Text>
+              </AppText>
               <View className="rounded-2xl border border-gray-100 bg-white">
                 {artisan.pricedServices.map((s, i) => (
                   <Pressable
@@ -343,34 +345,34 @@ export default function ArtisanProfile() {
                     }`}
                   >
                     <View className="flex-1 pr-3">
-                      <Text className="text-[14px] font-semibold text-gray-900">{s.name}</Text>
-                      <Text className="mt-0.5 text-[15px] font-bold text-primary">
+                      <AppText weight="semibold" className="text-[14px] text-gray-900">{s.name}</AppText>
+                      <AppText weight="semibold" className="mt-0.5 text-[15px] text-primary">
                         {formatNaira(s.priceNaira)}
-                      </Text>
+                      </AppText>
                     </View>
                     <View className="h-9 items-center justify-center rounded-full bg-primary px-4">
-                      <Text className="text-[13px] font-bold text-white">Book</Text>
+                      <AppText weight="semibold" className="text-[13px] text-white">Book</AppText>
                     </View>
                   </Pressable>
                 ))}
               </View>
-              <Text className="mt-2 text-[11.5px] leading-4 text-gray-400">
+              <AppText className="mt-2 text-[11.5px] leading-4 text-gray-400">
                 Fixed prices. Pay securely once {artisan.fullName.split(' ')[0]} accepts, held
                 until the job is done.
-              </Text>
+              </AppText>
             </View>
           ) : null}
 
           {/* Customer reviews */}
           <View className="mt-7">
             <View className="mb-3 flex-row items-center justify-between px-5">
-              <Text className="text-[16px] font-bold text-gray-900">
+              <AppText weight="semibold" className="text-[16px] text-gray-900">
                 Customer Reviews
-              </Text>
+              </AppText>
               {(reviews?.length ?? 0) > 0 ? (
-                <Text className="text-[13px] font-semibold text-gray-400">
+                <AppText weight="semibold" className="text-[13px] text-gray-400">
                   {reviews!.length} total
-                </Text>
+                </AppText>
               ) : null}
             </View>
             {reviews === undefined ? (
@@ -380,12 +382,12 @@ export default function ArtisanProfile() {
             ) : reviews.length === 0 ? (
               <View className="mx-5 items-center rounded-2xl border border-gray-100 bg-white px-4 py-7">
                 <Ionicons name="star-outline" size={26} color={colors.textMuted} />
-                <Text className="mt-2 text-[13px] font-semibold text-gray-700">
+                <AppText weight="semibold" className="mt-2 text-[13px] text-gray-700">
                   No reviews yet
-                </Text>
-                <Text className="mt-0.5 text-center text-[12px] text-gray-400">
+                </AppText>
+                <AppText className="mt-0.5 text-center text-[12px] text-gray-400">
                   Be the first to review {artisan.fullName.split(' ')[0]} after a job.
-                </Text>
+                </AppText>
               </View>
             ) : (
               <ScrollView
@@ -410,32 +412,33 @@ export default function ArtisanProfile() {
                         className="h-10 w-10 items-center justify-center rounded-full"
                         style={{ backgroundColor: `${artisan.accent}22` }}
                       >
-                        <Text
-                          className="text-[15px] font-bold"
+                        <AppText
+                          weight="semibold"
+                          className="text-[15px]"
                           style={{ color: artisan.accent }}
                         >
                           {review.customerName.trim().charAt(0).toUpperCase()}
-                        </Text>
+                        </AppText>
                       </View>
                       <View className="flex-1">
-                        <Text className="text-[14px] font-semibold text-gray-900">
+                        <AppText weight="semibold" className="text-[14px] text-gray-900">
                           {review.customerName}
-                        </Text>
+                        </AppText>
                         <View className="mt-0.5 flex-row items-center gap-2">
                           <Stars rating={review.rating} />
-                          <Text className="text-[11px] text-gray-400">
+                          <AppText className="text-[11px] text-gray-400">
                             {timeAgo(review.createdAt)}
-                          </Text>
+                          </AppText>
                         </View>
                       </View>
                     </View>
                     {review.comment ? (
-                      <Text
+                      <AppText
                         numberOfLines={3}
                         className="mt-3 text-[13px] leading-5 text-gray-500"
                       >
                         {review.comment}
-                      </Text>
+                      </AppText>
                     ) : null}
                   </View>
                 ))}
@@ -447,9 +450,9 @@ export default function ArtisanProfile() {
           {gallery.length === 0 ? null : (
           <View className="mt-7">
             <View className="mb-3 px-5">
-              <Text className="text-[16px] font-bold text-gray-900">
+              <AppText weight="semibold" className="text-[16px] text-gray-900">
                 Work Gallery
-              </Text>
+              </AppText>
             </View>
             <ScrollView
               horizontal

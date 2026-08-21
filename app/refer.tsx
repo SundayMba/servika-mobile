@@ -5,9 +5,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, Share, Text, View } from 'react-native';
+import { Pressable, ScrollView, Share, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AppText } from '@/components/ui/AppText';
 import { colors } from '@/constants/colors';
 import { formatNaira } from '@/lib/catalogue/assets';
 import { timeAgo } from '@/lib/notifications/hooks';
@@ -80,7 +81,7 @@ export default function Refer() {
           >
             <Ionicons name="chevron-back" size={22} color="#FFFFFF" />
           </Pressable>
-          <Text className="text-[16px] font-bold text-white">Refer & Earn</Text>
+          <AppText weight="semibold" className="text-[16px] text-white">Refer & Earn</AppText>
           <View className="h-10 w-10" />
         </View>
 
@@ -91,13 +92,13 @@ export default function Refer() {
           >
             <Ionicons name="gift" size={32} color={colors.primary} />
           </View>
-          <Text className="mt-4 text-center text-[22px] font-extrabold text-white">
+          <AppText weight="semibold" className="mt-4 text-center text-[22px] text-white">
             Earn {formatNaira(data.rewardNaira)} per artisan
-          </Text>
-          <Text className="mt-1.5 text-center text-[13px] leading-5 text-white/60">
+          </AppText>
+          <AppText className="mt-1.5 text-center text-[13px] leading-5 text-white/60">
             Bring skilled artisans onto Servika and help them get started. You
             get paid when they complete their first job.
-          </Text>
+          </AppText>
         </View>
       </View>
 
@@ -118,24 +119,24 @@ export default function Refer() {
             }}
           >
             <View className="flex-1 items-center py-4">
-              <Text className="text-[20px] font-extrabold text-gray-900">
+              <AppText weight="semibold" className="text-[20px] text-gray-900">
                 {formatNaira(data.availableNaira)}
-              </Text>
-              <Text className="mt-0.5 text-[11px] text-gray-500">Available</Text>
+              </AppText>
+              <AppText className="mt-0.5 text-[11px] text-gray-500">Available</AppText>
             </View>
             <View className="my-3 w-px bg-gray-100" />
             <View className="flex-1 items-center py-4">
-              <Text className="text-[20px] font-extrabold text-gray-900">
+              <AppText weight="semibold" className="text-[20px] text-gray-900">
                 {formatNaira(data.paidOutNaira)}
-              </Text>
-              <Text className="mt-0.5 text-[11px] text-gray-500">Paid out</Text>
+              </AppText>
+              <AppText className="mt-0.5 text-[11px] text-gray-500">Paid out</AppText>
             </View>
             <View className="my-3 w-px bg-gray-100" />
             <View className="flex-1 items-center py-4">
-              <Text className="text-[20px] font-extrabold text-gray-900">
+              <AppText weight="semibold" className="text-[20px] text-gray-900">
                 {data.pendingCount}
-              </Text>
-              <Text className="mt-0.5 text-[11px] text-gray-500">Pending</Text>
+              </AppText>
+              <AppText className="mt-0.5 text-[11px] text-gray-500">Pending</AppText>
             </View>
           </View>
 
@@ -155,22 +156,23 @@ export default function Refer() {
               size={18}
               color={data.availableNaira > 0 ? '#FFFFFF' : colors.textMuted}
             />
-            <Text
-              className="text-[14px] font-bold"
+            <AppText
+              weight="semibold"
+              className="text-[14px]"
               style={{
                 color: data.availableNaira > 0 ? '#FFFFFF' : colors.textMuted,
               }}
             >
               Withdraw {formatNaira(data.availableNaira)}
-            </Text>
+            </AppText>
           </Pressable>
         </View>
 
         {/* ── Referral code ── */}
         <View className="mt-6 px-5">
-          <Text className="mb-2 text-[13px] font-semibold text-gray-500">
+          <AppText weight="semibold" className="mb-2 text-[13px] text-gray-500">
             YOUR REFERRAL CODE
-          </Text>
+          </AppText>
           <View className="overflow-hidden rounded-3xl border border-dashed border-primary/40 bg-white">
             <LinearGradient
               colors={['#FFF4EC', '#FFFFFF']}
@@ -178,9 +180,9 @@ export default function Refer() {
               end={{ x: 1, y: 1 }}
             >
               <View className="flex-row items-center justify-between px-5 py-4">
-                <Text className="text-[24px] font-extrabold tracking-widest text-gray-900">
+                <AppText weight="semibold" className="text-[24px] tracking-widest text-gray-900">
                   {data.code}
-                </Text>
+                </AppText>
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel="Copy referral code"
@@ -193,12 +195,13 @@ export default function Refer() {
                     size={15}
                     color={copied ? '#15803D' : colors.primary}
                   />
-                  <Text
-                    className="text-[12px] font-bold"
+                  <AppText
+                    weight="semibold"
+                    className="text-[12px]"
                     style={{ color: copied ? '#15803D' : colors.primary }}
                   >
                     {copied ? 'Copied' : 'Copy'}
-                  </Text>
+                  </AppText>
                 </Pressable>
               </View>
             </LinearGradient>
@@ -211,17 +214,17 @@ export default function Refer() {
             className="mt-3 h-12 flex-row items-center justify-center gap-2 rounded-2xl bg-[#0F172A]"
           >
             <Ionicons name="share-social" size={18} color="#FFFFFF" />
-            <Text className="text-[14px] font-bold text-white">
+            <AppText weight="semibold" className="text-[14px] text-white">
               Share invite
-            </Text>
+            </AppText>
           </Pressable>
         </View>
 
         {/* ── How it works ── */}
         <View className="mt-7 px-5">
-          <Text className="mb-3 text-[17px] font-bold text-gray-900">
+          <AppText weight="semibold" className="mb-3 text-[17px] text-gray-900">
             How it works
-          </Text>
+          </AppText>
           <View className="rounded-3xl border border-gray-100 bg-white px-4 py-2">
             {REFERRAL_STEPS.map((step, i) => (
               <View
@@ -239,12 +242,12 @@ export default function Refer() {
                   />
                 </View>
                 <View className="flex-1 pt-0.5">
-                  <Text className="text-[14px] font-semibold text-gray-900">
+                  <AppText weight="semibold" className="text-[14px] text-gray-900">
                     {step.title}
-                  </Text>
-                  <Text className="mt-0.5 text-[12px] leading-4 text-gray-500">
+                  </AppText>
+                  <AppText className="mt-0.5 text-[12px] leading-4 text-gray-500">
                     {step.body}
-                  </Text>
+                  </AppText>
                 </View>
               </View>
             ))}
@@ -253,9 +256,9 @@ export default function Refer() {
 
         {/* ── Referred artisans ── */}
         <View className="mt-7 px-5">
-          <Text className="mb-3 text-[17px] font-bold text-gray-900">
+          <AppText weight="semibold" className="mb-3 text-[17px] text-gray-900">
             Your referrals ({data.referred.length})
-          </Text>
+          </AppText>
           <View className="rounded-3xl border border-gray-100 bg-white px-4 py-1">
             {data.referred.map((artisan, i) => (
               <ReferralRow
@@ -293,23 +296,23 @@ function ReferralRow({
         className="h-10 w-10 items-center justify-center rounded-full"
         style={{ backgroundColor: '#F1F5F9' }}
       >
-        <Text className="text-[13px] font-bold text-gray-600">{initials}</Text>
+        <AppText weight="semibold" className="text-[13px] text-gray-600">{initials}</AppText>
       </View>
       <View className="flex-1 px-3">
-        <Text className="text-[14px] font-semibold text-gray-900">
+        <AppText weight="semibold" className="text-[14px] text-gray-900">
           {artisan.name}
-        </Text>
-        <Text className="mt-0.5 text-[11px] text-gray-400">
+        </AppText>
+        <AppText className="mt-0.5 text-[11px] text-gray-400">
           {artisan.trade} · {timeAgo(artisan.createdAtUtc)}
-        </Text>
+        </AppText>
       </View>
       <View
         className="rounded-full px-2.5 py-1"
         style={{ backgroundColor: chip.tint }}
       >
-        <Text className="text-[11px] font-bold" style={{ color: chip.color }}>
+        <AppText weight="semibold" className="text-[11px]" style={{ color: chip.color }}>
           {chip.label}
-        </Text>
+        </AppText>
       </View>
     </View>
   );

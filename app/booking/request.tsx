@@ -6,13 +6,13 @@ import { useState } from 'react';
 import {
   Pressable,
   ScrollView,
-  Text,
-  TextInput,
   View,
 } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppTextInput } from '@/components/ui/AppTextInput';
+import { AppText } from '@/components/ui/AppText';
 import { BookingSteps } from '@/components/booking/BookingSteps';
 import { BottomSheet } from '@/components/BottomSheet';
 import { Button } from '@/components/ui/Button';
@@ -40,9 +40,9 @@ function fmtTime(d: Date): string {
 
 function FieldLabel({ children }: { children: string }) {
   return (
-    <Text className="mb-1.5 text-[13px] font-semibold text-gray-700">
+    <AppText weight="semibold" className="mb-1.5 text-[13px] text-gray-700">
       {children}
-    </Text>
+    </AppText>
   );
 }
 
@@ -64,13 +64,13 @@ function SelectField({
       onPress={onPress}
       className="h-14 flex-row items-center justify-between rounded-2xl border border-gray-200 bg-white px-4"
     >
-      <Text
+      <AppText
         className={
           value ? 'text-[15px] text-gray-900' : 'text-[15px] text-gray-400'
         }
       >
         {value ?? placeholder}
-      </Text>
+      </AppText>
       <Ionicons name={icon} size={18} color={colors.textMuted} />
     </Pressable>
   );
@@ -104,9 +104,9 @@ function UrgencyOption({
           size={18}
           color={selected ? colors.primary : colors.textMuted}
         />
-        <Text className="text-[14px] font-semibold text-gray-900">{title}</Text>
+        <AppText weight="semibold" className="text-[14px] text-gray-900">{title}</AppText>
       </View>
-      <Text className="mt-1 text-[12px] text-gray-500">{subtitle}</Text>
+      <AppText className="mt-1 text-[12px] text-gray-500">{subtitle}</AppText>
     </Pressable>
   );
 }
@@ -232,10 +232,10 @@ export default function BookingRequest() {
           <Ionicons name="chevron-back" size={22} color={colors.textPrimary} />
         </Pressable>
         <View className="items-center">
-          <Text className="text-[17px] font-bold text-gray-900">
+          <AppText weight="semibold" className="text-[17px] text-gray-900">
             Request Service
-          </Text>
-          <Text className="text-[12px] text-gray-500">{serviceName}</Text>
+          </AppText>
+          <AppText className="text-[12px] text-gray-500">{serviceName}</AppText>
         </View>
       </View>
 
@@ -272,7 +272,7 @@ export default function BookingRequest() {
           {/* Describe the job */}
           <View className="mt-4">
             <FieldLabel>Describe the job</FieldLabel>
-            <TextInput
+            <AppTextInput
               value={description}
               onChangeText={setDescription}
               placeholder="Tell the artisan what you need done..."
@@ -335,19 +335,20 @@ export default function BookingRequest() {
                       />
                     </View>
                     <View className="flex-1">
-                      <Text
+                      <AppText
+                        weight="semibold"
                         numberOfLines={1}
                         className={
                           selected
-                            ? 'text-[13px] font-bold text-gray-900'
-                            : 'text-[13px] font-semibold text-gray-800'
+                            ? 'text-[13px] text-gray-900'
+                            : 'text-[13px] text-gray-800'
                         }
                       >
                         {p.label}
-                      </Text>
-                      <Text numberOfLines={1} className="text-[11px] text-gray-400">
+                      </AppText>
+                      <AppText numberOfLines={1} className="text-[11px] text-gray-400">
                         {p.range}
-                      </Text>
+                      </AppText>
                     </View>
                   </Pressable>
                 );
@@ -357,9 +358,9 @@ export default function BookingRequest() {
             {/* Exact window */}
             <View className="my-3 flex-row items-center gap-3">
               <View className="h-px flex-1 bg-gray-200" />
-              <Text className="text-[11px] font-medium text-gray-400">
+              <AppText weight="medium" className="text-[11px] text-gray-400">
                 OR CHOOSE AN EXACT WINDOW
-              </Text>
+              </AppText>
               <View className="h-px flex-1 bg-gray-200" />
             </View>
             <View className="flex-row items-center gap-2.5">
@@ -373,16 +374,17 @@ export default function BookingRequest() {
                     : 'h-14 flex-1 justify-center rounded-2xl border border-gray-200 bg-white px-4'
                 }
               >
-                <Text className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+                <AppText weight="semibold" className="text-[10px] uppercase tracking-wide text-gray-400">
                   From
-                </Text>
-                <Text
+                </AppText>
+                <AppText
+                  weight={fromTime ? 'semibold' : 'regular'}
                   className={
-                    fromTime ? 'text-[15px] font-semibold text-gray-900' : 'text-[15px] text-gray-400'
+                    fromTime ? 'text-[15px] text-gray-900' : 'text-[15px] text-gray-400'
                   }
                 >
                   {fromTime ? fmtTime(fromTime) : 'e.g. 9:00 AM'}
-                </Text>
+                </AppText>
               </Pressable>
               <Ionicons name="arrow-forward" size={16} color={colors.textMuted} />
               <Pressable
@@ -395,16 +397,17 @@ export default function BookingRequest() {
                     : 'h-14 flex-1 justify-center rounded-2xl border border-gray-200 bg-white px-4'
                 }
               >
-                <Text className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+                <AppText weight="semibold" className="text-[10px] uppercase tracking-wide text-gray-400">
                   To
-                </Text>
-                <Text
+                </AppText>
+                <AppText
+                  weight={toTime ? 'semibold' : 'regular'}
                   className={
-                    toTime ? 'text-[15px] font-semibold text-gray-900' : 'text-[15px] text-gray-400'
+                    toTime ? 'text-[15px] text-gray-900' : 'text-[15px] text-gray-400'
                   }
                 >
                   {toTime ? fmtTime(toTime) : 'e.g. 11:00 AM'}
-                </Text>
+                </AppText>
               </Pressable>
             </View>
             {showTimePicker ? (
@@ -457,14 +460,14 @@ export default function BookingRequest() {
         visible={serviceSheetOpen}
         onClose={() => setServiceSheetOpen(false)}
       >
-        <Text className="mb-1 text-[18px] font-bold text-gray-900">
+        <AppText weight="semibold" className="mb-1 text-[18px] text-gray-900">
           Select a service
-        </Text>
-        <Text className="mb-4 text-[13px] text-gray-500">
+        </AppText>
+        <AppText className="mb-4 text-[13px] text-gray-500">
           {artisanId
             ? `What ${artisan?.fullName ?? 'this artisan'} can help you with.`
             : 'Your request goes to artisans in this category.'}
-        </Text>
+        </AppText>
         <ScrollView
           style={{ maxHeight: 380 }}
           showsVerticalScrollIndicator={false}
@@ -482,15 +485,16 @@ export default function BookingRequest() {
                 }}
                 className="flex-row items-center justify-between border-b border-gray-100 py-3.5"
               >
-                <Text
+                <AppText
+                  weight={selected ? 'semibold' : 'regular'}
                   className={
                     selected
-                      ? 'text-[15px] font-semibold text-primary'
+                      ? 'text-[15px] text-primary'
                       : 'text-[15px] text-gray-800'
                   }
                 >
                   {option.label}
-                </Text>
+                </AppText>
                 {selected ? (
                   <Ionicons name="checkmark-circle" size={20} color={colors.primary} />
                 ) : null}

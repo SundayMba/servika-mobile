@@ -1,8 +1,9 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
+import { AppText } from '@/components/ui/AppText';
 import { appAlert } from '@/components/ui/AppAlert';
 import { authErrorMessage, googleLogin } from '@/lib/api/auth';
 import { useAuth } from '@/lib/auth/AuthContext';
@@ -104,7 +105,7 @@ export function GoogleAuthButton() {
       {/* Divider */}
       <View className="flex-row items-center gap-3">
         <View className="h-px flex-1 bg-gray-200" />
-        <Text className="text-[12px] text-gray-400">or continue with</Text>
+        <AppText className="text-[12px] text-gray-400">or continue with</AppText>
         <View className="h-px flex-1 bg-gray-200" />
       </View>
 
@@ -127,7 +128,7 @@ export function GoogleAuthButton() {
         ) : (
           <GoogleG size={20} />
         )}
-        <Text className="text-[15px] font-semibold text-gray-800">Google</Text>
+        <AppText weight="semibold" className="text-[15px] text-gray-800">Google</AppText>
       </Pressable>
     </View>
   );
