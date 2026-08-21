@@ -1,8 +1,9 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
+import { appAlert } from '@/components/ui/AppAlert';
 import { authErrorMessage, googleLogin } from '@/lib/api/auth';
 import { useAuth } from '@/lib/auth/AuthContext';
 
@@ -86,7 +87,7 @@ export function GoogleAuthButton() {
         code === 12501
       )
         return;
-      Alert.alert(
+      appAlert(
         'Google sign-in failed',
         authErrorMessage(
           e,

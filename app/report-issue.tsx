@@ -3,7 +3,6 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
 import {
-  Alert,
   Pressable,
   ScrollView,
   Text,
@@ -13,6 +12,7 @@ import {
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { appAlert } from '@/components/ui/AppAlert';
 import { colors } from '@/constants/colors';
 import { ISSUE_TYPES } from '@/lib/active-booking/mock';
 import { authErrorMessage } from '@/lib/api/auth';
@@ -33,13 +33,13 @@ export default function ReportIssue() {
 
   const submit = async () => {
     if (!selected) {
-      Alert.alert('Select an issue', 'Please choose what went wrong.');
+      appAlert('Select an issue', 'Please choose what went wrong.');
       return;
     }
 
     if (!bookingId) {
       // A dispute must be tied to a booking — never pretend one was filed.
-      Alert.alert(
+      appAlert(
         'Open the booking first',
         'To report an issue, open the booking it concerns and tap "Report an issue" there.',
         [
@@ -57,13 +57,13 @@ export default function ReportIssue() {
 
     try {
       await raiseDispute.mutateAsync({ category: selected, description });
-      Alert.alert(
+      appAlert(
         'Issue reported',
         'Thank you. Our team will review your dispute and get back to you.',
         [{ text: 'Done', onPress: () => router.back() }],
       );
     } catch (e) {
-      Alert.alert('Could not submit', authErrorMessage(e, 'Please try again.'));
+      appAlert('Could not submit', authErrorMessage(e, 'Please try again.'));
     }
   };
 

@@ -2,7 +2,6 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
   ScrollView,
   Text,
@@ -10,6 +9,7 @@ import {
   View,
 } from 'react-native';
 
+import { appAlert } from '@/components/ui/AppAlert';
 import { BottomSheet } from '@/components/BottomSheet';
 import { colors } from '@/constants/colors';
 import {
@@ -124,7 +124,7 @@ export function LocationSheet({
       const area = await resolveCurrentArea();
       choose(area.label, { latitude: area.lat, longitude: area.lng });
     } catch (e) {
-      Alert.alert(
+      appAlert(
         'Location unavailable',
         e instanceof Error ? e.message : 'Could not get your location.',
       );

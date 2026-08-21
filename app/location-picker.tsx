@@ -5,7 +5,6 @@ import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Keyboard,
   Pressable,
   Text,
@@ -23,6 +22,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { appAlert } from '@/components/ui/AppAlert';
 import { colors } from '@/constants/colors';
 import { setSelectedArea } from '@/lib/location/areaStore';
 import {
@@ -215,7 +215,7 @@ export default function LocationPicker() {
       });
       const { latitude, longitude } = pos.coords;
       if (!inNigeria(latitude, longitude)) {
-        Alert.alert(
+        appAlert(
           'Outside Nigeria',
           "Your current location isn't in Nigeria. Search or drag the map to pick a spot.",
         );

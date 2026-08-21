@@ -2,9 +2,10 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
-import { Alert, Linking, Pressable, ScrollView, Text, View } from 'react-native';
+import { Linking, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { appAlert } from '@/components/ui/AppAlert';
 import { authErrorMessage, deleteAccount } from '@/lib/api/auth';
 import { colors } from '@/constants/colors';
 import { useAuth } from '@/lib/auth/AuthContext';
@@ -92,7 +93,7 @@ export default function Settings() {
 
   // Play-store requirement: users must be able to delete their account.
   const handleDeleteAccount = () => {
-    Alert.alert(
+    appAlert(
       'Delete account?',
       'This permanently deletes your account, bookings and messages. It cannot be undone.',
       [
@@ -101,7 +102,7 @@ export default function Settings() {
           text: 'Continue',
           style: 'destructive',
           onPress: () =>
-            Alert.alert('Are you absolutely sure?', 'Your account will be gone forever.', [
+            appAlert('Are you absolutely sure?', 'Your account will be gone forever.', [
               { text: 'Keep my account', style: 'cancel' },
               {
                 text: 'Delete forever',
@@ -112,7 +113,7 @@ export default function Settings() {
                     await signOut();
                     router.replace('/home');
                   } catch (e) {
-                    Alert.alert('Could not delete', authErrorMessage(e, 'Please try again.'));
+                    appAlert('Could not delete', authErrorMessage(e, 'Please try again.'));
                   }
                 },
               },
@@ -123,7 +124,7 @@ export default function Settings() {
   };
 
   const handleLogout = () => {
-    Alert.alert('Log out', 'Are you sure you want to log out?', [
+    appAlert('Log out', 'Are you sure you want to log out?', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Log out',

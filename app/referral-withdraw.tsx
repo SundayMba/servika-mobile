@@ -3,10 +3,11 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useMemo, useState } from 'react';
-import { Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { appAlert } from '@/components/ui/AppAlert';
 import { BottomSheet } from '@/components/BottomSheet';
 import { colors } from '@/constants/colors';
 import { authErrorMessage } from '@/lib/api/auth';
@@ -62,7 +63,7 @@ export default function ReferralWithdraw() {
         accountNumber: accountNumber.trim(),
         accountName: accountName.trim(),
       });
-      Alert.alert(
+      appAlert(
         'Withdrawal requested',
         `${formatNaira(amountNaira)} is on its way to your ${bank.name} account. Bank transfers usually arrive within minutes. We'll notify you once it lands.`,
         [{ text: 'OK', onPress: () => router.back() }],

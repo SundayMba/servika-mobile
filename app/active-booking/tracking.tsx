@@ -3,9 +3,10 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Location from 'expo-location';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { appAlert } from '@/components/ui/AppAlert';
 import { ArtisanRow, VerifiedBadges } from '@/components/active-booking/parts';
 import { BottomSheet } from '@/components/BottomSheet';
 import { Button } from '@/components/ui/Button';
@@ -84,7 +85,7 @@ export default function LiveTracking() {
       booking?.paymentState === 'Paid'
         ? ' Your payment will be refunded in full.'
         : '';
-    Alert.alert('Cancel booking?', `${name} will be notified.${refundNote}`, [
+    appAlert('Cancel booking?', `${name} will be notified.${refundNote}`, [
       { text: 'Keep booking', style: 'cancel' },
       {
         text: 'Cancel booking',
@@ -96,7 +97,7 @@ export default function LiveTracking() {
               router.back();
             },
             onError: (err) =>
-              Alert.alert('Could not cancel', authErrorMessage(err, 'Please try again.')),
+              appAlert('Could not cancel', authErrorMessage(err, 'Please try again.')),
           }),
       },
     ]);

@@ -4,7 +4,6 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
 import {
-  Alert,
   Pressable,
   ScrollView,
   Text,
@@ -14,6 +13,7 @@ import {
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { appAlert } from '@/components/ui/AppAlert';
 import { BookingSteps } from '@/components/booking/BookingSteps';
 import { Button } from '@/components/ui/Button';
 import { colors } from '@/constants/colors';
@@ -143,7 +143,7 @@ export default function BookingLocation() {
         error instanceof Error
           ? error.message
           : 'Unable to retrieve your current location.';
-      Alert.alert('Location Error', message);
+      appAlert('Location Error', message);
     } finally {
       setIsLoadingLocation(false);
     }

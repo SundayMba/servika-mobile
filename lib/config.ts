@@ -8,8 +8,28 @@
  */
 const DEFAULT_API_URL = 'http://localhost:5046';
 
+const configured = process.env.EXPO_PUBLIC_API_URL;
+
+/**
+ * EXPO_PUBLIC_* values are inlined at bundle time, so a release built without
+ * this variable ships pointing at localhost — every request then fails with a
+ * network error indistinguishable from the user having no signal, and the app
+ * sails through review because the failure only appears on a real device.
+ *
+ * Failing here is deliberate and loud: the first launch of a misconfigured
+ * build dies immediately, in QA, instead of quietly in customers' hands. Set
+ * the variable per profile in eas.json.
+ */
+if (!configured && !__DEV__) {
+  throw new Error(
+    'EXPO_PUBLIC_API_URL was not set when this bundle was built. ' +
+      'Set it in the build profile (eas.json) and rebuild — a release must ' +
+      'never fall back to localhost.',
+  );
+}
+
 export const config = {
-  apiBaseUrl: process.env.EXPO_PUBLIC_API_URL ?? DEFAULT_API_URL,
+  apiBaseUrl: configured ?? DEFAULT_API_URL,
   apiVersion: 'v1',
 } as const;
 

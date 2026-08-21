@@ -6,7 +6,6 @@ import { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
   ScrollView,
   Text,
@@ -14,6 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { appAlert } from '@/components/ui/AppAlert';
 import { Button } from '@/components/ui/Button';
 import { colors } from '@/constants/colors';
 import { config } from '@/lib/config';
@@ -231,14 +231,14 @@ export default function BookingDetailScreen() {
       // Settlement lands via the webhook — refetch to pick up the new state.
       refetch();
     } catch (err) {
-      Alert.alert('Payment failed', authErrorMessage(err, 'Please try again.'));
+      appAlert('Payment failed', authErrorMessage(err, 'Please try again.'));
     } finally {
       setPaying(false);
     }
   };
 
   const confirmAcceptBid = (bid: Bid) => {
-    Alert.alert(
+    appAlert(
       'Accept this offer?',
       `${bid.artisanName} will do the job for ${formatNaira(bid.amountNaira)}.`,
       [
@@ -252,7 +252,7 @@ export default function BookingDetailScreen() {
                 // Price agreed → straight to the payment moment.
                 onSuccess: () => setPaySheetOpen(true),
                 onError: (err) =>
-                  Alert.alert(
+                  appAlert(
                     'Could not accept',
                     authErrorMessage(err, 'Please try again.'),
                   ),
@@ -269,12 +269,12 @@ export default function BookingDetailScreen() {
       {
         onSuccess: () => setPaySheetOpen(false),
         onError: (err) =>
-          Alert.alert('Could not update', authErrorMessage(err, 'Please try again.')),
+          appAlert('Could not update', authErrorMessage(err, 'Please try again.')),
       },
     );
 
   const confirmRebroadcast = () => {
-    Alert.alert(
+    appAlert(
       'Ask other artisans?',
       `Your request will be opened to all ${booking?.serviceName?.toLowerCase() ?? ''} artisans nearby, with the same details. Nothing to re-type.`,
       [
@@ -284,7 +284,7 @@ export default function BookingDetailScreen() {
           onPress: () =>
             rebroadcast.mutate(id, {
               onError: (err) =>
-                Alert.alert('Could not re-post', authErrorMessage(err, 'Please try again.')),
+                appAlert('Could not re-post', authErrorMessage(err, 'Please try again.')),
             }),
         },
       ],
@@ -292,7 +292,7 @@ export default function BookingDetailScreen() {
   };
 
   const confirmCancel = () => {
-    Alert.alert(
+    appAlert(
       'Cancel booking?',
       booking?.paymentState === 'Paid'
         ? 'This will withdraw your request. Your payment will be refunded in full.'
@@ -305,7 +305,7 @@ export default function BookingDetailScreen() {
           onPress: () =>
             cancel(id, {
               onError: (err) =>
-                Alert.alert(
+                appAlert(
                   'Could not cancel',
                   authErrorMessage(err, 'Please try again.'),
                 ),

@@ -1,6 +1,4 @@
-from pathlib import Path
-
-content = """# AGENTS.md — Servika Senior Engineering Master Prompt
+# AGENTS.md — Servika Senior Engineering Master Prompt
 
 You are working on **Servika**, a premium high-fidelity artisan/service marketplace platform.
 

@@ -16,15 +16,21 @@ import { QueryProvider } from '@/lib/query/QueryProvider';
 import { AuthProvider } from '@/lib/auth/AuthContext';
 import { PhoneGateProvider } from '@/lib/phone/PhoneGate';
 import { ApiStatusBadge } from '@/components/ApiStatusBadge';
-import { useNotificationObserver } from '@/lib/push/useNotificationObserver';
+import { NotificationObserver } from '@/components/NotificationObserver';
+import { AppAlertHost } from '@/components/ui/AppAlert';
+import { AppErrorBoundary } from '@/components/AppErrorBoundary';
 
 ExpoSplashScreen.preventAutoHideAsync();
+
+// expo-router mounts whatever a route file exports as `ErrorBoundary` around
+// that segment; exported from the root layout it wraps the entire app, so a
+// throw during render shows a screen the customer can act on instead of a
+// blank window. Named export, not default — the default export is the layout.
+export { AppErrorBoundary as ErrorBoundary };
 
 export default function RootLayout() {
   const [splashDone, setSplashDone] = useState(false);
   const [splashPainted, setSplashPainted] = useState(false);
-  // Deep-link a tapped push notification to its booking.
-  useNotificationObserver();
 
   // Instrument Sans, for onboarding. Three weights only — the ones the design
   // uses — since each is a separate file in the bundle. They ship with the app
@@ -70,6 +76,14 @@ export default function RootLayout() {
         </Stack>
         {/* Dev-only API connectivity indicator (Slice 0 rails check). */}
         <ApiStatusBadge />
+        {/* Servika's own alert dialog. Mounted once here, above the Stack, so
+            appAlert() works from any screen and any callback — including ones
+            that fire after the calling screen has already navigated away. */}
+        <AppAlertHost />
+        {/* Deep-links a tapped push notification to its booking or chat. A
+            component rather than a hook call up here, because it needs the
+            auth status this layout is the one providing. */}
+        <NotificationObserver />
         {/* Animated splash OVERLAYS the app while it boots beneath — its fade
             reveals the real first screen (no blank window after the animation).
             The native splash hides only once this has painted (onReady). */}

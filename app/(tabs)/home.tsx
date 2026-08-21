@@ -3,7 +3,6 @@ import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useMemo, useState, type ComponentProps } from 'react';
 import {
-  Alert,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -14,6 +13,7 @@ import {
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { appAlert } from '@/components/ui/AppAlert';
 import { AuthPromptSheet } from '@/components/AuthPromptSheet';
 import { SearchSheet } from '@/components/SearchSheet';
 import { ActiveBookingCarousel } from '@/components/home/ActiveBookingCarousel';
@@ -472,7 +472,7 @@ export default function Home() {
             // The artisan surface is the separate Servika Pro app now; until
             // it's on the stores, this card explains where to earn.
             onPress={() =>
-              Alert.alert(
+              appAlert(
                 'Servika Pro',
                 'Artisans work from the Servika Pro app. Get verified, receive jobs near you and cash out your earnings. Coming to the app stores soon.',
               )

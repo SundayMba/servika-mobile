@@ -2,9 +2,10 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef } from 'react';
-import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { appAlert } from '@/components/ui/AppAlert';
 import { ArtisanRow, StatusTimeline } from '@/components/active-booking/parts';
 import { Button } from '@/components/ui/Button';
 import { colors } from '@/constants/colors';
@@ -84,7 +85,7 @@ export default function ActiveBookingDashboard() {
   const canCancel = status === 'Pending' || status === 'Accepted';
   const cancel = () => {
     if (!bookingId) return;
-    Alert.alert('Cancel booking?', 'This will withdraw your request.', [
+    appAlert('Cancel booking?', 'This will withdraw your request.', [
       { text: 'Keep booking', style: 'cancel' },
       {
         text: 'Cancel booking',
@@ -92,7 +93,7 @@ export default function ActiveBookingDashboard() {
         onPress: () =>
           cancelBooking.mutate(bookingId, {
             onSuccess: () => router.replace('/bookings'),
-            onError: (e) => Alert.alert('Could not cancel', authErrorMessage(e, 'Please try again.')),
+            onError: (e) => appAlert('Could not cancel', authErrorMessage(e, 'Please try again.')),
           }),
       },
     ]);

@@ -3,8 +3,9 @@ import { Image } from 'expo-image';
 import { useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 
+import { appAlert } from '@/components/ui/AppAlert';
 import { PhotoViewer } from '@/components/PhotoViewer';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -60,7 +61,7 @@ export default function ServiceCompletion() {
       await complete.mutateAsync(bookingId);
       goRate();
     } catch (e) {
-      Alert.alert('Could not confirm', authErrorMessage(e, 'Please try again.'));
+      appAlert('Could not confirm', authErrorMessage(e, 'Please try again.'));
     }
   };
 

@@ -3,7 +3,6 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
 import {
-  Alert,
   Pressable,
   ScrollView,
   Text,
@@ -13,6 +12,7 @@ import {
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { appAlert } from '@/components/ui/AppAlert';
 import { ArtisanRow } from '@/components/active-booking/parts';
 import { Button } from '@/components/ui/Button';
 import { colors } from '@/constants/colors';
@@ -71,7 +71,7 @@ export default function ServiceReview() {
 
   const submit = async () => {
     if (!params.bookingId) {
-      Alert.alert('Something went wrong', 'This review is missing its booking.');
+      appAlert('Something went wrong', 'This review is missing its booking.');
       return;
     }
     try {
@@ -79,11 +79,11 @@ export default function ServiceReview() {
         bookingId: params.bookingId,
         body: { rating: overall, comment: text.trim() || null },
       });
-      Alert.alert('Thank you!', 'Your review has been submitted.', [
+      appAlert('Thank you!', 'Your review has been submitted.', [
         { text: 'Done', onPress: () => router.replace('/bookings') },
       ]);
     } catch (err) {
-      Alert.alert(
+      appAlert(
         'Could not submit review',
         authErrorMessage(err, 'Please try again in a moment.'),
       );

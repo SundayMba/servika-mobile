@@ -104,6 +104,9 @@ export default function BookingSummary() {
     setErrorMsg(null);
     setSubmitting(true);
     try {
+      // Encoded here rather than on the photos screen, so the string exists for
+      // the length of one request instead of three screens (see mediaStore).
+      const videoBase64 = await bookingMedia.readVideoBase64();
       const body: CreateBookingRequest = {
         categorySlug,
         artisanId: isOpen ? null : (params.artisanId ?? null),
@@ -122,7 +125,7 @@ export default function BookingSummary() {
         // base64 blobs are too big for route params).
         assessmentMode: bookingMedia.get().assessment,
         mediaBase64: bookingMedia.get().photosBase64,
-        videoBase64: bookingMedia.get().videoBase64,
+        videoBase64,
       };
       const booking = await createBooking(body);
       bookingMedia.reset();

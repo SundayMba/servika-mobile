@@ -7,7 +7,6 @@ import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
   ScrollView,
   Text,
@@ -15,12 +14,18 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { appAlert } from '@/components/ui/AppAlert';
 import { Button } from '@/components/ui/Button';
 import { colors } from '@/constants/colors';
 import { bookingMedia, type AssessmentChoice } from '@/lib/booking/mediaStore';
 
 const MAX_PHOTOS = 4;
-const MAX_VIDEO_BYTES = 25 * 1024 * 1024; // keep the upload sane on mobile data
+// 8 MB, not 25. The clip is base64'd into the create-booking JSON, so 25 MB
+// became a ~33 MB string plus copies from JSON.stringify and axios — on the
+// order of 100 MB of transient allocation on a phone that may not have it, and
+// a third more mobile data than the file itself. 8 MB comfortably holds the
+// 30-second clip the picker is already limited to.
+const MAX_VIDEO_BYTES = 8 * 1024 * 1024;
 
 /** Compress + base64 one picked image (photos only need to be legible). */
 async function toBase64(uri: string): Promise<string | null> {
@@ -36,21 +41,18 @@ async function toBase64(uri: string): Promise<string | null> {
   }
 }
 
-/** Read a picked video file into base64 via RN's built-in fetch + FileReader. */
-async function videoToBase64(uri: string): Promise<string | null> {
-  const res = await fetch(uri);
-  const blob = await res.blob();
-  if (blob.size > MAX_VIDEO_BYTES) return 'TOO_BIG';
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const dataUri = String(reader.result ?? '');
-      const comma = dataUri.indexOf(',');
-      resolve(comma >= 0 ? dataUri.slice(comma + 1) : null);
-    };
-    reader.onerror = () => resolve(null);
-    reader.readAsDataURL(blob);
-  });
+/** Byte size of a picked file, without reading its contents into the heap.
+ *  The picker reports `fileSize` on most assets; the blob is a native handle,
+ *  so falling back to it costs a stat, not a copy. */
+async function fileSize(uri: string, reported?: number | null): Promise<number | null> {
+  if (typeof reported === 'number' && reported > 0) return reported;
+  try {
+    const res = await fetch(uri);
+    const blob = await res.blob();
+    return blob.size;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -75,7 +77,7 @@ export default function BookingPhotos() {
   const isOpen = params.open === '1' && !params.artisanId;
 
   const [photos, setPhotos] = useState<{ uri: string; base64: string }[]>([]);
-  const [video, setVideo] = useState<{ uri: string; base64: string } | null>(null);
+  const [video, setVideo] = useState<{ uri: string } | null>(null);
   const [assessment, setAssessment] = useState<AssessmentChoice>('Inspection');
   const [working, setWorking] = useState(false);
 
@@ -84,7 +86,7 @@ export default function BookingPhotos() {
   const pickPhotos = async () => {
     const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!granted) {
-      Alert.alert('Permission needed', 'Allow photo access to attach pictures of the issue.');
+      appAlert('Permission needed', 'Allow photo access to attach pictures of the issue.');
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -111,7 +113,7 @@ export default function BookingPhotos() {
   const pickVideo = async () => {
     const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!granted) {
-      Alert.alert('Permission needed', 'Allow media access to attach a clip.');
+      appAlert('Permission needed', 'Allow media access to attach a clip.');
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -123,16 +125,18 @@ export default function BookingPhotos() {
 
     setWorking(true);
     try {
-      const base64 = await videoToBase64(result.assets[0].uri);
-      if (base64 === 'TOO_BIG') {
-        Alert.alert('Clip too large', 'Choose a shorter clip (up to ~30 seconds).');
+      const asset = result.assets[0];
+      const size = await fileSize(asset.uri, asset.fileSize);
+      if (size === null) {
+        appAlert('Could not read the video', 'Try a different clip.');
         return;
       }
-      if (!base64) {
-        Alert.alert('Could not read the video', 'Try a different clip.');
+      if (size > MAX_VIDEO_BYTES) {
+        appAlert('Clip too large', 'Choose a shorter clip (up to ~30 seconds).');
         return;
       }
-      setVideo({ uri: result.assets[0].uri, base64 });
+      // Only the URI is kept. It is encoded once, at submit — see mediaStore.
+      setVideo({ uri: asset.uri });
     } finally {
       setWorking(false);
     }
@@ -140,14 +144,14 @@ export default function BookingPhotos() {
 
   const handleContinue = () => {
     if (bidding && photos.length === 0 && !video) {
-      Alert.alert(
+      appAlert(
         'Add the job details',
         'For price offers, artisans need at least one photo (or a short clip) of the job.',
       );
       return;
     }
     bookingMedia.setPhotos(photos.map((p) => p.base64), photos.map((p) => p.uri));
-    bookingMedia.setVideo(video?.base64 ?? null, video?.uri ?? null);
+    bookingMedia.setVideo(video?.uri ?? null);
     bookingMedia.setAssessment(isOpen ? assessment : 'Inspection');
     router.push({
       pathname: '/booking/location',

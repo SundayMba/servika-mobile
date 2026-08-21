@@ -34,8 +34,11 @@ yarn-error.*
 .DS_Store
 *.pem
 
-# local env files
-.env*.local
+# local env files — every .env variant, not just the two that existed when
+# this was written. .env.production is the natural next file to create and
+# the one most likely to hold live credentials.
+.env*
+!.env.example
 
 # typescript
 *.tsbuildinfo
@@ -46,7 +49,6 @@ app-example
 /ios
 /android
 
-.env
 # Windows-only: newer ninja for the Android C++ build (see plugins/withWindowsNinja.js).
 # Obtain with `pip install ninja`. Binary, so not committed.
 .tools/
