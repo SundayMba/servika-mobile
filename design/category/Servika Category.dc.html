@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  body { margin: 0; background: #E7E7E4; -webkit-font-smoothing: antialiased; }
+  * { box-sizing: border-box; }
+  a { color: #E4620A; text-decoration: none; }
+  a:hover { color: #A63F04; }
+</style>
+</helmet>
+
+<!--
+  Category detail (app/category/[id].tsx), rebuilt from source rather than
+  traced: #F2F4F8 ground, 48pt search, 64pt avatars, the primary/5 promo card.
+  This screen has NOT had the v2 pass — it is still the system font, #F97316 and
+  the old shadowless-but-grey card language, so it now sits a generation behind
+  Home and onboarding. That gap is the thing to design against.
+-->
+
+<div style="padding: 56px 48px 64px; font-family: 'Instrument Sans', system-ui, sans-serif; color: #14171B;">
+
+  <div style="max-width: 1180px; margin: 0 auto 40px; display: flex; flex-direction: column; gap: 10px;">
+    <div style="font-size: 11.5px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: #E4620A;">Servika · customer app</div>
+    <h1 style="margin: 0; font-size: 38px; font-weight: 600; line-height: 1.04; letter-spacing: -.035em;">Category detail, as it ships today</h1>
+    <p style="margin: 0; max-width: 680px; font-size: 15px; line-height: 1.6; color: #5B6472; text-wrap: pretty;">What you tapped through to from Home. Both states are drawn: one artisan (what the Electrical category actually returns right now) and empty, which is what most categories will show at launch.</p>
+  </div>
+
+  <div style="display: flex; gap: 56px; justify-content: center; flex-wrap: wrap; align-items: flex-start;">
+
+    <!-- ─────────── With results ─────────── -->
+    <div style="display: flex; flex-direction: column; gap: 16px; align-items: center;">
+      <div style="position: relative; width: 390px; height: 844px; overflow: hidden; border-radius: 38px; background: #F2F4F8; box-shadow: 0 44px 72px -32px rgba(20,23,27,.42), 0 0 0 1px rgba(20,23,27,.07); font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;">
+
+        <div style="height: 46px;"></div>
+
+        <div style="position: relative; display: flex; align-items: center; justify-content: center; padding: 8px 20px;">
+          <div style="position: absolute; left: 20px; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: #FFFFFF;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#111827" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+          </div>
+          <span style="font-size: 17px; font-weight: 700; color: #111827;">Electrical</span>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 10px; height: 48px; margin: 4px 20px 12px; padding: 0 16px; border-radius: 16px; background: #FFFFFF; border: 1px solid rgba(243,244,246,.7);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.6-3.6" /></svg>
+          <span style="font-size: 14px; color: #9CA3AF;">Search artisans &amp; services...</span>
+        </div>
+
+        <div style="padding: 12px 20px 20px;">
+
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px; padding: 16px; border-radius: 16px; border: 1px solid rgba(249,115,22,.2); background: rgba(249,115,22,.05);">
+            <div style="display: grid; place-items: center; width: 44px; height: 44px; flex: none; border-radius: 50%; background: rgba(249,115,22,.1);">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11v2a1 1 0 0 0 1 1h3l7 4V6L7 10H4a1 1 0 0 0-1 1z" /><path d="M18 8.5a4 4 0 0 1 0 7" /></svg>
+            </div>
+            <div style="flex: 1 1 auto; min-width: 0;">
+              <div style="font-size: 14px; font-weight: 700; color: #111827;">Not sure who to pick?</div>
+              <div style="font-size: 12px; line-height: 16px; color: #6B7280;">Post a request and the first available electrical pro takes it.</div>
+            </div>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
+          </div>
+
+          <div style="margin-bottom: 12px; font-size: 13px; font-weight: 600; color: #6B7280;">1 artisan available</div>
+
+          <div style="display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 16px; border: 1px solid rgba(243,244,246,.7); background: #FFFFFF;">
+            <div style="width: 64px; height: 64px; flex: none; border-radius: 12px; overflow: hidden; background: #F2F4F8;">
+              <img src="assets/artisan-electrician.webp" alt="" style="width: 100%; height: 100%; object-fit: cover;" />
+            </div>
+            <div style="flex: 1 1 auto; min-width: 0;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 15px; font-weight: 700; color: #111827;">Ukeme Ikot</span>
+                <span style="display: block; width: 8px; height: 8px; border-radius: 50%; background: #22C55E;"></span>
+              </div>
+              <div style="margin-top: 2px; font-size: 12px; color: #6B7280;">Electrical</div>
+              <div style="display: flex; align-items: center; gap: 12px; margin-top: 4px;">
+                <span style="display: flex; align-items: center; gap: 4px;">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="#FBBF24" aria-hidden="true"><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.5 9.2l5.9-.9z" /></svg>
+                  <span style="font-size: 12px; font-weight: 600; color: #374151;">0.0</span>
+                </span>
+                <span style="display: flex; align-items: center; gap: 2px;">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" aria-hidden="true"><path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11z" /><circle cx="12" cy="10" r="2.5" /></svg>
+                  <span style="font-size: 12px; color: #6B7280;">0 km</span>
+                </span>
+              </div>
+            </div>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
+          </div>
+
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 3px; align-items: center;">
+        <span style="font-size: 13px; font-weight: 600;">Category · with results</span>
+        <span style="font-size: 12.5px; color: #7C8592;">app/category/[id].tsx</span>
+      </div>
+    </div>
+
+    <!-- ─────────── Empty ─────────── -->
+    <div style="display: flex; flex-direction: column; gap: 16px; align-items: center;">
+      <div style="position: relative; width: 390px; height: 844px; overflow: hidden; border-radius: 38px; background: #F2F4F8; box-shadow: 0 44px 72px -32px rgba(20,23,27,.42), 0 0 0 1px rgba(20,23,27,.07); font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;">
+
+        <div style="height: 46px;"></div>
+
+        <div style="position: relative; display: flex; align-items: center; justify-content: center; padding: 8px 20px;">
+          <div style="position: absolute; left: 20px; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: #FFFFFF;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#111827" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+          </div>
+          <span style="font-size: 17px; font-weight: 700; color: #111827;">Welding</span>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 10px; height: 48px; margin: 4px 20px 12px; padding: 0 16px; border-radius: 16px; background: #FFFFFF; border: 1px solid rgba(243,244,246,.7);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.6-3.6" /></svg>
+          <span style="font-size: 14px; color: #9CA3AF;">Search artisans &amp; services...</span>
+        </div>
+
+        <div style="padding: 12px 20px 20px;">
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px; padding: 16px; border-radius: 16px; border: 1px solid rgba(249,115,22,.2); background: rgba(249,115,22,.05);">
+            <div style="display: grid; place-items: center; width: 44px; height: 44px; flex: none; border-radius: 50%; background: rgba(249,115,22,.1);">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11v2a1 1 0 0 0 1 1h3l7 4V6L7 10H4a1 1 0 0 0-1 1z" /><path d="M18 8.5a4 4 0 0 1 0 7" /></svg>
+            </div>
+            <div style="flex: 1 1 auto; min-width: 0;">
+              <div style="font-size: 14px; font-weight: 700; color: #111827;">Not sure who to pick?</div>
+              <div style="font-size: 12px; line-height: 16px; color: #6B7280;">Post a request and the first available welding pro takes it.</div>
+            </div>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
+          </div>
+
+          <div style="margin-bottom: 12px; font-size: 13px; font-weight: 600; color: #6B7280;">0 artisans available</div>
+
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; margin-top: 40px; padding: 0 32px; text-align: center;">
+            <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2" /><path d="M2.5 20a6.5 6.5 0 0 1 13 0" /><circle cx="17" cy="9" r="2.4" /><path d="M16 14.5a5.5 5.5 0 0 1 5.5 5.5" /></svg>
+            <div style="margin-top: 12px; font-size: 15px; font-weight: 600; color: #1F2937;">No artisans yet</div>
+            <div style="margin-top: 4px; font-size: 13px; line-height: 20px; color: #6B7280;">We're onboarding welding pros in your area. Check back soon.</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 3px; align-items: center;">
+        <span style="font-size: 13px; font-weight: 600;">Category · empty</span>
+        <span style="font-size: 12.5px; color: #7C8592;">Most categories at launch</span>
+      </div>
+    </div>
+
+    <!-- ─────────── Notes ─────────── -->
+    <div style="width: 320px; display: flex; flex-direction: column; gap: 18px; padding-top: 8px;">
+      <div style="padding: 20px; border-radius: 18px; background: #FFFFFF; border: 1px solid rgba(20,23,27,.07);">
+        <div style="font-size: 11.5px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: #E4620A;">Worth deciding</div>
+        <ol style="margin: 12px 0 0; padding-left: 18px; display: flex; flex-direction: column; gap: 10px; font-size: 13.5px; line-height: 1.5; color: #374151;">
+          <li><b>It is a generation behind.</b> System font, #F97316, #F2F4F8 ground — Home and onboarding now run Instrument Sans, #E4620A and the sand ground. Bringing this across is mostly mechanical.</li>
+          <li><b>The empty state is the common case.</b> With one artisan in the catalogue, most categories land on the right-hand frame. It currently apologises; it could capture demand instead — the promo card above already does exactly that.</li>
+          <li><b>Two competing calls to action.</b> "Post a request" sits above the list it is an alternative to. When the list is empty they are redundant.</li>
+          <li><b>The row is sparse.</b> 0.0 rating and 0 km read as broken rather than new. Worth deciding what an unrated, distance-unknown artisan shows.</li>
+        </ol>
+      </div>
+      <div style="padding: 20px; border-radius: 18px; background: #FFFFFF; border: 1px solid rgba(20,23,27,.07);">
+        <div style="font-size: 11.5px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: #E4620A;">Not drawn</div>
+        <p style="margin: 12px 0 0; font-size: 13.5px; line-height: 1.5; color: #374151;">The loading state is a bare spinner today. Home now uses skeletons; this screen should match.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{}">
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

@@ -8,6 +8,7 @@ import {
 import { Stack } from 'expo-router';
 import * as ExpoSplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SplashScreen } from '../components/SplashScreen';
 import { colors } from '@/constants/colors';
@@ -43,6 +44,9 @@ export default function RootLayout() {
   }, [splashPainted, fontsLoaded]);
 
   return (
+    // Gesture handler needs a root view above everything that uses a gesture —
+    // without it the swipe-back detector never receives touches on Android.
+    <GestureHandlerRootView style={{ flex: 1 }}>
     <KeyboardProvider>
     <QueryProvider>
       <AuthProvider>
@@ -79,5 +83,6 @@ export default function RootLayout() {
       </AuthProvider>
     </QueryProvider>
     </KeyboardProvider>
+    </GestureHandlerRootView>
   );
 }

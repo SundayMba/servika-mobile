@@ -3,22 +3,27 @@ import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AuthPromptSheet } from '@/components/AuthPromptSheet';
 import { SearchSheet } from '@/components/SearchSheet';
+import { AppText } from '@/components/ui/AppText';
+import { SwipeBack } from '@/components/ui/SwipeBack';
 import { colors } from '@/constants/colors';
 import { useAuthGate } from '@/lib/auth/useAuthGate';
 import { artisanPhotoSource } from '@/lib/catalogue/assets';
 import { useCategories, useCategoryArtisans } from '@/lib/catalogue/hooks';
 import type { ArtisanSummary } from '@/lib/catalogue/types';
+
+/**
+ * Category detail, per the "Servika Category v2" canvas — the same system as
+ * Home and onboarding: Instrument Sans at 500/600, the deeper orange, warm sand
+ * ground and hairline-bordered white surfaces in place of the grey card look.
+ */
+
+const GUTTER = 22;
 
 function ArtisanRow({
   artisan,
@@ -28,42 +33,63 @@ function ArtisanRow({
   onPress: () => void;
 }) {
   const avatar = artisanPhotoSource(artisan.photoUrl, artisan.imageKey);
+  // "New" rather than 0.0 — an unrated artisan is new, not badly rated. Keyed
+  // off reviewCount, since a real 0.0 average is possible once reviews exist.
+  const unrated = artisan.reviewCount === 0;
+
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={`${artisan.fullName}, ${artisan.specialty}`}
       onPress={onPress}
-      className="mb-3 flex-row items-center gap-3 rounded-2xl border border-gray-100/70 bg-white p-3 active:opacity-80"
+      android_ripple={{ color: 'rgba(20,23,27,0.06)' }}
+      style={styles.row}
     >
-      <View className="h-16 w-16 overflow-hidden rounded-xl bg-background">
+      <View style={styles.avatar}>
         {avatar ? (
-          <Image source={avatar} contentFit="cover" style={{ flex: 1 }} />
+          <Image source={avatar} contentFit="cover" contentPosition="top" style={StyleSheet.absoluteFill} />
         ) : null}
       </View>
-      <View className="flex-1">
-        <View className="flex-row items-center gap-1.5">
-          <Text className="text-[15px] font-bold text-gray-900">{artisan.fullName}</Text>
+
+      <View style={styles.rowBody}>
+        <View style={styles.nameRow}>
+          <AppText weight="semibold" numberOfLines={1} style={styles.name}>
+            {artisan.fullName}
+          </AppText>
           {artisan.isAvailable ? (
-            <View className="h-2 w-2 rounded-full bg-green-500" />
+            <View style={styles.statusPill}>
+              <View style={styles.statusDot} />
+              <AppText weight="semibold" style={styles.statusLabel}>
+                Available
+              </AppText>
+            </View>
           ) : null}
         </View>
-        <Text numberOfLines={1} className="mt-0.5 text-[12px] text-gray-500">
-          {artisan.specialty}
-        </Text>
-        <View className="mt-1 flex-row items-center gap-3">
-          <View className="flex-row items-center gap-1">
-            <Ionicons name="star" size={12} color="#FBBF24" />
-            <Text className="text-[12px] font-semibold text-gray-700">
-              {artisan.rating.toFixed(1)}
-            </Text>
+
+        <View style={styles.metaRow}>
+          <AppText weight="medium" numberOfLines={1} style={styles.specialty}>
+            {artisan.specialty}
+          </AppText>
+          <View style={styles.metaItem}>
+            <Ionicons name="star" size={12} color={colors.accentDeep} />
+            <AppText weight="medium" style={styles.metaValue}>
+              {unrated ? 'New' : artisan.rating.toFixed(1)}
+            </AppText>
           </View>
-          <View className="flex-row items-center gap-0.5">
-            <Ionicons name="location-outline" size={12} color={colors.textMuted} />
-            <Text className="text-[12px] text-gray-500">{artisan.distanceKm} km</Text>
-          </View>
+          {/* Distance only when we actually have one. The comp shows an area
+              name in its place, but we do not know where an artisan is when the
+              distance is unknown, and printing the browsing area here would
+              assert a location the API never gave us. */}
+          {artisan.distanceKm > 0 ? (
+            <View style={styles.metaItemTight}>
+              <Ionicons name="location-outline" size={12} color={colors.inkSubtle} />
+              <AppText style={styles.metaMuted}>{`${artisan.distanceKm} km`}</AppText>
+            </View>
+          ) : null}
         </View>
       </View>
-      <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+
+      <Ionicons name="chevron-forward" size={17} color={colors.inkSubtle} />
     </Pressable>
   );
 }
@@ -81,135 +107,376 @@ export default function CategoryListing() {
 
   if (isLoading) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator color={colors.primary} />
+      <SafeAreaView style={styles.centred}>
+        <ActivityIndicator color={colors.accentDeep} />
       </SafeAreaView>
     );
   }
 
   if (!category) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-white px-6">
-        <Text className="text-[16px] font-semibold text-gray-900">
+      <SafeAreaView style={styles.centred}>
+        <AppText weight="semibold" style={styles.notFound}>
           Category not found
-        </Text>
-        <Pressable hitSlop={8} className="mt-3" onPress={() => router.back()}>
-          <Text className="text-[14px] font-bold text-primary">Go back</Text>
+        </AppText>
+        <Pressable hitSlop={8} style={styles.notFoundAction} onPress={() => router.back()}>
+          <AppText weight="semibold" style={styles.notFoundLink}>
+            Go back
+          </AppText>
         </Pressable>
       </SafeAreaView>
     );
   }
 
+  const count = artisans?.length ?? 0;
+  const service = category.name.toLowerCase();
+
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={['top', 'bottom']}>
-      <StatusBar style="dark" />
+    <SwipeBack>
+      <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
+        <StatusBar style="dark" />
 
-      {/* Header */}
-      <View className="flex-row items-center justify-center px-5 py-2">
+        <View style={styles.header}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+            hitSlop={8}
+            onPress={() => router.back()}
+            android_ripple={{ color: 'rgba(20,23,27,0.06)', borderless: true }}
+            style={styles.back}
+          >
+            <Ionicons name="chevron-back" size={20} color={colors.ink} />
+          </Pressable>
+          <AppText weight="semibold" style={styles.title}>
+            {category.name}
+          </AppText>
+        </View>
+
         <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-          hitSlop={8}
-          onPress={() => router.back()}
-          className="absolute left-5 h-10 w-10 items-center justify-center rounded-full bg-white"
+          accessibilityRole="search"
+          accessibilityLabel="Search artisans and services"
+          onPress={() => setSearchVisible(true)}
+          style={styles.search}
         >
-          <Ionicons name="chevron-back" size={22} color={colors.textPrimary} />
-        </Pressable>
-        <Text className="text-[17px] font-bold text-gray-900">{category.name}</Text>
-      </View>
-
-      {/* Search */}
-      <Pressable
-        accessibilityRole="search"
-        onPress={() => setSearchVisible(true)}
-        className="mx-5 mb-3 mt-1 h-12 flex-row items-center gap-2.5 rounded-2xl border border-gray-100/70 bg-white px-4"
-      >
-        <Ionicons name="search-outline" size={20} color={colors.textMuted} />
-        <Text className="flex-1 text-[14px] text-gray-400">
-          Search artisans &amp; services...
-        </Text>
-      </Pressable>
-
-      {/* Artisan listing */}
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ padding: 20, paddingTop: 12 }}
-      >
-        {/* Post an open request — matched with the first available pro. */}
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={`Post an open ${category.name} request`}
-          onPress={() =>
-            guard(() =>
-              router.push({
-                pathname: '/booking/request',
-                params: { categorySlug: id, open: '1', service: category.name },
-              }),
-            )
-          }
-          className="mb-4 flex-row items-center gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-4 active:opacity-80"
-        >
-          <View className="h-11 w-11 items-center justify-center rounded-full bg-primary/10">
-            <Ionicons name="megaphone-outline" size={22} color={colors.primary} />
-          </View>
-          <View className="flex-1">
-            <Text className="text-[14px] font-bold text-gray-900">
-              Not sure who to pick?
-            </Text>
-            <Text className="text-[12px] leading-4 text-gray-500">
-              Post a request and the first available {category.name.toLowerCase()} pro takes it.
-            </Text>
-          </View>
-          <Ionicons name="chevron-forward" size={18} color={colors.primary} />
+          <Ionicons name="search-outline" size={19} color={colors.inkSubtle} />
+          <AppText numberOfLines={1} style={styles.searchLabel}>
+            Search artisans &amp; services...
+          </AppText>
         </Pressable>
 
-        <Text className="mb-3 text-[13px] font-semibold text-gray-500">
-          {loadingArtisans
-            ? 'Finding artisans…'
-            : `${artisans?.length ?? 0} artisan${(artisans?.length ?? 0) === 1 ? '' : 's'} available`}
-        </Text>
-
-        {loadingArtisans ? (
-          <ActivityIndicator color={colors.primary} className="mt-6" />
-        ) : !artisans?.length ? (
-          <View className="mt-10 items-center px-8">
-            <Ionicons name="people-outline" size={44} color={colors.textMuted} />
-            <Text className="mt-3 text-center text-[15px] font-semibold text-gray-800">
-              No artisans yet
-            </Text>
-            <Text className="mt-1 text-center text-[13px] leading-5 text-gray-500">
-              We&apos;re onboarding {category.name.toLowerCase()} pros in your area. Check back soon.
-            </Text>
-          </View>
-        ) : (
-          artisans.map((artisan) => (
-            <ArtisanRow
-              key={artisan.id}
-              artisan={artisan}
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.body}>
+          <Animated.View entering={FadeInDown.duration(420)} style={styles.stack}>
+            {/* Post an open request — matched with the first available pro. */}
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Post an open ${category.name} request`}
               onPress={() =>
-                router.push({ pathname: '/artisan/[id]', params: { id: artisan.id } })
+                guard(() =>
+                  router.push({
+                    pathname: '/booking/request',
+                    params: { categorySlug: id, open: '1', service: category.name },
+                  }),
+                )
               }
-            />
-          ))
-        )}
-      </ScrollView>
+              android_ripple={{ color: 'rgba(20,23,27,0.06)' }}
+              style={styles.promo}
+            >
+              <View style={styles.promoIcon}>
+                <Ionicons name="megaphone-outline" size={21} color={colors.accentDeep} />
+              </View>
+              <View style={styles.promoCopy}>
+                <AppText weight="semibold" style={styles.promoTitle}>
+                  Not sure who to pick?
+                </AppText>
+                <AppText style={styles.promoSub}>
+                  {`Post a request and the first available ${service} pro takes it.`}
+                </AppText>
+              </View>
+              <Ionicons name="chevron-forward" size={17} color={colors.accentDeep} />
+            </Pressable>
 
-      {/* Search (open to guests) */}
-      <SearchSheet visible={searchVisible} onClose={() => setSearchVisible(false)} />
-      <AuthPromptSheet
-        visible={promptVisible}
-        onClose={hidePrompt}
-        title="Sign up to continue"
-        message="Create an account to post a request and get matched with a pro."
-        onSignUp={() => {
-          hidePrompt();
-          router.push('/register');
-        }}
-        onLogin={() => {
-          hidePrompt();
-          router.push('/login');
-        }}
-      />
-    </SafeAreaView>
+            <AppText weight="medium" style={styles.count}>
+              {loadingArtisans
+                ? 'Finding artisans…'
+                : `${count} artisan${count === 1 ? '' : 's'} available`}
+            </AppText>
+
+            {loadingArtisans ? (
+              <ActivityIndicator color={colors.accentDeep} style={styles.loading} />
+            ) : count === 0 ? (
+              <View style={styles.empty}>
+                <View style={styles.emptyIcon}>
+                  <Ionicons name="people-outline" size={30} color={colors.accentDeep} />
+                </View>
+                <AppText weight="semibold" style={styles.emptyTitle}>
+                  No artisans yet
+                </AppText>
+                <AppText style={styles.emptyBody}>
+                  {`We're onboarding ${service} pros in your area. Check back soon.`}
+                </AppText>
+              </View>
+            ) : (
+              artisans?.map((artisan) => (
+                <ArtisanRow
+                  key={artisan.id}
+                  artisan={artisan}
+                  onPress={() =>
+                    router.push({ pathname: '/artisan/[id]', params: { id: artisan.id } })
+                  }
+                />
+              ))
+            )}
+          </Animated.View>
+        </ScrollView>
+
+        {/* Search (open to guests) */}
+        <SearchSheet visible={searchVisible} onClose={() => setSearchVisible(false)} />
+        <AuthPromptSheet
+          visible={promptVisible}
+          onClose={hidePrompt}
+          title="Sign up to continue"
+          message="Create an account to post a request and get matched with a pro."
+          onSignUp={() => {
+            hidePrompt();
+            router.push('/register');
+          }}
+          onLogin={() => {
+            hidePrompt();
+            router.push('/login');
+          }}
+        />
+      </SafeAreaView>
+    </SwipeBack>
   );
 }
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: colors.sand,
+  },
+  centred: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: GUTTER,
+    backgroundColor: colors.sand,
+  },
+  notFound: {
+    fontSize: 16,
+    color: colors.ink,
+  },
+  notFoundAction: {
+    marginTop: 12,
+  },
+  notFoundLink: {
+    fontSize: 14,
+    color: colors.accentDeep,
+  },
+
+  header: {
+    height: 44,
+    paddingHorizontal: GUTTER,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  back: {
+    position: 'absolute',
+    left: GUTTER,
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 22,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.hairline,
+  },
+  title: {
+    fontSize: 17,
+    color: colors.ink,
+  },
+
+  search: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    height: 54,
+    marginTop: 14,
+    marginHorizontal: GUTTER,
+    paddingHorizontal: 16,
+    borderRadius: 17,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.hairline,
+  },
+  searchLabel: {
+    flexShrink: 1,
+    fontSize: 14.5,
+    color: colors.inkSubtle,
+  },
+
+  body: {
+    padding: GUTTER,
+    paddingBottom: 32,
+  },
+  stack: {
+    gap: 16,
+  },
+
+  promo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 16,
+    borderRadius: 20,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.hairline,
+  },
+  promoIcon: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 14,
+    backgroundColor: '#FFF1E4',
+  },
+  promoCopy: {
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 0,
+    gap: 2,
+  },
+  promoTitle: {
+    fontSize: 14,
+    color: colors.ink,
+  },
+  promoSub: {
+    fontSize: 11.5,
+    lineHeight: 16,
+    color: colors.inkSubtle,
+  },
+
+  count: {
+    paddingHorizontal: 4,
+    fontSize: 12.5,
+    color: colors.inkSubtle,
+  },
+  loading: {
+    marginTop: 24,
+  },
+
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 12,
+    borderRadius: 20,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.hairline,
+  },
+  avatar: {
+    width: 64,
+    height: 64,
+    borderRadius: 16,
+    overflow: 'hidden',
+    backgroundColor: colors.sand,
+  },
+  rowBody: {
+    // Stretch rather than hug: a shrink-wrapped Text box gets its final glyph
+    // clipped by Android, which is what bit every label on Home.
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 0,
+    gap: 3,
+  },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  name: {
+    flexShrink: 1,
+    fontSize: 15.5,
+    color: colors.ink,
+  },
+  statusPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 999,
+    backgroundColor: '#E6F5EE',
+  },
+  statusDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 999,
+    backgroundColor: colors.online,
+  },
+  statusLabel: {
+    fontSize: 9.5,
+    letterSpacing: 0.19,
+    color: colors.onlineInk,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  metaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  metaItemTight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  specialty: {
+    flexShrink: 1,
+    fontSize: 12.5,
+    color: colors.accentDeep,
+  },
+  metaValue: {
+    fontSize: 12.5,
+    color: colors.inkMuted,
+  },
+  metaMuted: {
+    fontSize: 12.5,
+    color: colors.inkSubtle,
+  },
+
+  empty: {
+    alignItems: 'center',
+    marginTop: 44,
+    paddingHorizontal: 32,
+  },
+  emptyIcon: {
+    width: 68,
+    height: 68,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+    borderRadius: 22,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.hairline,
+  },
+  emptyTitle: {
+    fontSize: 19,
+    color: colors.ink,
+  },
+  emptyBody: {
+    maxWidth: 250,
+    marginTop: 4,
+    fontSize: 13.5,
+    lineHeight: 20,
+    color: colors.inkMuted,
+    textAlign: 'center',
+  },
+});
