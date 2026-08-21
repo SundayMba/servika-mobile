@@ -9,6 +9,7 @@ import {
   ScrollView,
   StyleSheet,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -65,6 +66,14 @@ const TAB_BAR_HEIGHT = 60;
 
 const GUTTER = 22;
 
+/**
+ * The canvas is drawn at 390pt. Phones are commonly narrower — this one is 360 —
+ * so display type is scaled to the viewport rather than being fixed, which keeps
+ * the proportions of the comp and stops long headings running into the edge.
+ */
+const DESIGN_WIDTH = 390;
+const typeScale = (width: number) => Math.min(width / DESIGN_WIDTH, 1);
+
 // "Why Servika" trust strip — speaks to the three core problems (trust, secure
 // payment, social proof). Static copy; no backend needed.
 const TRUST_POINTS: {
@@ -100,13 +109,18 @@ const TRUST_POINTS: {
 function SectionHeader({
   title,
   onViewAll,
+  scale,
 }: {
   title: string;
   onViewAll?: () => void;
+  scale: number;
 }) {
   return (
-    <View style={styles.sectionHeader}>
-      <AppText weight="semibold" maxFontSizeMultiplier={1} style={styles.sectionTitle}>
+    <View style={[styles.sectionHeader, { paddingHorizontal: GUTTER }]}>
+      <AppText
+        weight="semibold"
+        style={[styles.sectionTitle, { fontSize: Math.round(18 * scale) }]}
+      >
         {title}
       </AppText>
       {onViewAll ? (
@@ -145,6 +159,8 @@ export default function Home() {
   const area = useSelectedArea();
   const areaCoords = useSelectedCoords();
   const [refreshing, setRefreshing] = useState(false);
+  const { width } = useWindowDimensions();
+  const scale = typeScale(width);
   const { user } = useAuth();
   const { isAuthenticated, guard, promptVisible, hidePrompt } = useAuthGate();
   const { openWithArtisan } = useOpenChat();
@@ -228,7 +244,7 @@ export default function Home() {
                 weight="semibold"
                 numberOfLines={1}
                 maxFontSizeMultiplier={1}
-                style={styles.hello}
+                style={[styles.hello, { fontSize: Math.round(27 * scale) }]}
               >
                 {`Hi, ${firstName}`}
               </AppText>
@@ -315,12 +331,11 @@ export default function Home() {
 
         {/* ── Popular Services ── */}
         <View style={styles.section}>
-          <View style={styles.gutter}>
-            <SectionHeader
-              title="Popular Services"
-              onViewAll={() => router.push('/categories')}
-            />
-          </View>
+          <SectionHeader
+            title="Popular Services"
+            onViewAll={() => router.push('/categories')}
+            scale={scale}
+          />
           {servicesPending ? (
             <ServiceGridSkeleton />
           ) : popularServices.length === 0 ? (
@@ -348,12 +363,11 @@ export default function Home() {
 
         {/* ── Nearby Artisans ── */}
         <View style={styles.sectionTight}>
-          <View style={styles.gutter}>
-            <SectionHeader
-              title="Nearby Artisans"
-              onViewAll={() => router.push('/artisans')}
-            />
-          </View>
+          <SectionHeader
+            title="Nearby Artisans"
+            onViewAll={() => router.push('/artisans')}
+            scale={scale}
+          />
           {artisansPending ? (
             <ArtisanCarouselSkeleton />
           ) : (artisansQuery.data?.length ?? 0) === 0 ? (
@@ -540,7 +554,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   hello: {
-    fontSize: 27,
+    fontSize: 25,
     letterSpacing: -1.08,
     color: colors.ink,
   },
@@ -551,7 +565,9 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   location: {
+    // Room to grow before it truncates — the column is far wider than the label.
     flexShrink: 1,
+    flexGrow: 1,
     fontSize: 13.5,
     color: colors.inkMuted,
   },
@@ -610,15 +626,24 @@ const styles = StyleSheet.create({
   },
   sectionHeader: {
     flexDirection: 'row',
-    alignItems: 'baseline',
+    // Not 'baseline': Yoga measures a baseline-aligned Text short on Android and
+    // clips its final glyph ("Popular Service|s"). The same string renders
+    // complete in a plain Text, so this was never a font problem. At 18pt beside
+    // a 13pt link, centre and baseline are visually indistinguishable anyway.
+    alignItems: 'center',
     justifyContent: 'space-between',
   },
   sectionTitle: {
-    // Not flexShrink: the row has room to spare, and shrinking sizes the Text to
-    // its measured width — which on Android is a shade narrower than this face
-    // paints, so the last glyph gets nipped ("Popular Service|s").
-    flexShrink: 0,
-    fontSize: 18,
+    // Takes the row's remaining width instead of shrink-wrapping to its own
+    // measured width. That measurement runs a shade narrower than this face
+    // actually paints, and Android clips whatever overflows the box — which is
+    // why padding, tracking, trailing characters and a smaller size all failed
+    // to reach it. A stretched box has width to spare, so nothing is clipped.
+    // The same string always rendered whole inside a column, where a Text
+    // stretches by default; only the row shrink-wrapped it.
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 0,
     color: colors.ink,
   },
   viewAll: {
@@ -729,13 +754,14 @@ const styles = StyleSheet.create({
   signUp: {
     height: 42,
     paddingHorizontal: 20,
-    alignItems: 'center',
+    alignItems: 'stretch',
     justifyContent: 'center',
     borderRadius: 13,
     backgroundColor: colors.accentDeep,
   },
   signUpLabel: {
     fontSize: 13.5,
+    textAlign: 'center',
     letterSpacing: -0.135,
     color: colors.white,
   },

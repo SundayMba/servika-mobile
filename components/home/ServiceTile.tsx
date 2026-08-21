@@ -71,7 +71,9 @@ const styles = StyleSheet.create({
     height: 44,
   },
   label: {
-    fontSize: 11.5,
+    // 11, not the comp's 11.5: a quarter of a 360pt screen is 79pt and
+    // "Fridge Repair" just misses at 11.5, ellipsising in the last column.
+    fontSize: 11,
     letterSpacing: -0.115,
     color: colors.inkMuted,
   },

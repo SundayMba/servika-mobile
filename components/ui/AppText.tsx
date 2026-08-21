@@ -39,20 +39,16 @@ export function AppText({
 }: AppTextProps) {
   return (
     <Text
-      // The layout is drawn at 390pt and phones are commonly 360; letting the
-      // device's text-size setting compound on top of that clips tight rows.
-      // A modest cap keeps the setting respected without breaking the grid —
-      // pass your own value for body copy that can afford to grow.
-      maxFontSizeMultiplier={1.1}
       style={[WEIGHTS[weight], style]}
       {...rest}
     >
-      {/* Instrument Sans reports a narrower advance to Android than it paints,
-          so the final glyph is clipped inside the text layout — "Get help no|w",
-          "Popular Service|s". Neither padding nor tracking reaches it. A single
-          trailing U+0020 does, and unlike the U+2009 this replaced, the space
-          glyph IS in the font, so no fallback run opens and no text is dropped. */}
-      {typeof children === 'string' ? children + ' ' : children}
+      {/* A trailing NO-BREAK SPACE (U+00A0), and it has to be that one.
+          Android trims a plain U+0020 at end of line, so it reserves no width
+          and the final glyph still gets clipped; U+2009 is absent from
+          Instrument Sans, so it opened a fallback run and Android dropped every
+          word after the preceding space. U+00A0 is in the font and is not
+          trimmed, so the last glyph keeps its advance. */}
+      {typeof children === 'string' ? children + ' ' : children}
     </Text>
   );
 }

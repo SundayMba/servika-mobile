@@ -263,13 +263,17 @@ const styles = StyleSheet.create({
     paddingBottom: 30,
     // The art occupies the right of the card, so the copy keeps to the left —
     // wide enough that "24/7 Available" and "Get help now" both fit on one line.
-    width: '72%',
+    width: '78%',
   },
   pill: {
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
     flexShrink: 0,
+    // Wide enough for the label outright. Left to size itself the pill gets
+    // squeezed by the copy column and the label truncates, so the container
+    // expands to fit the words rather than the words shrinking to fit it.
+    minWidth: 172,
     gap: 7,
     paddingHorizontal: 12,
     paddingVertical: 5,
@@ -296,6 +300,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
   },
   pillLabel: {
+    // Fills the pill's remaining width instead of keeping the narrow width it
+    // was measured at inside the copy column. minWidth widens the pill but does
+    // not reach the Text, which is why the label kept truncating in a pill that
+    // plainly had room to spare.
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 0,
     fontSize: 11.5,
     // A hair of positive tracking, not negative: Android lays a tightly-tracked
     // run out short and clips the final glyph. 0.2pt is invisible and gives it
@@ -311,16 +322,23 @@ const styles = StyleSheet.create({
   cta: {
     alignSelf: 'flex-start',
     flexShrink: 0,
+    // 'stretch', so the label fills the button's content box instead of
+    // shrink-wrapping to its own measured width — the button's 18pt padding
+    // then becomes the slack the final glyph needs. Same fix as the section
+    // headings: Android clips whatever overflows a shrink-wrapped text box.
+    alignItems: 'stretch',
     height: 40,
     paddingHorizontal: 18,
-    alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 13,
     overflow: 'hidden',
     backgroundColor: colors.white,
   },
   ctaLabel: {
-    fontSize: 13.5,
+    // 13, not 13.5 — "Get help now" ran the full width of the button at the
+    // comp's size once Instrument Sans rendered it on device.
+    fontSize: 13,
+    textAlign: 'center',
     // No negative tracking on a 13.5pt label: combined with this face's short
     // advance on Android it clips the final glyph ("Get help no|w"). The 26pt
     // headline below keeps its tracking, where there is room for it.
