@@ -212,17 +212,21 @@ export default function Home() {
   const bookingsPending = refreshing || bookingsQuery.isLoading;
 
   return (
-    <View style={styles.screen}>
+    <View style={[styles.screen, { paddingTop: insets.top }]}>
       <StatusBar style="dark" />
 
+      {/* The status-bar band is part of the screen, not of the scroll content,
+          so nothing ever scrolls up underneath the clock and battery. */}
       <ScrollView
         showsVerticalScrollIndicator={false}
         onScrollBeginDrag={() => setScrolling(true)}
         onMomentumScrollBegin={() => setScrolling(true)}
         onScrollEndDrag={() => setScrolling(false)}
         onMomentumScrollEnd={() => setScrolling(false)}
+        // Child 1 is the search bar: it pins to the top while the rest scrolls.
+        stickyHeaderIndices={[1]}
         contentContainerStyle={{
-          paddingTop: insets.top + 12,
+          paddingTop: 12,
           paddingBottom: bottomPadding,
           gap: 26,
         }}
@@ -236,7 +240,7 @@ export default function Home() {
           />
         }
       >
-        {/* ── Greeting, location, bell, search — all scroll with the page ── */}
+        {/* ── Greeting, location, bell — scroll with the page ── */}
         <View style={styles.top}>
           <View style={styles.greetingRow}>
             <View style={styles.greeting}>
@@ -278,7 +282,10 @@ export default function Home() {
               {unreadCount > 0 ? <View style={styles.bellDot} /> : null}
             </Pressable>
           </View>
+        </View>
 
+        {/* ── Search — sticky. Its own sand ground hides what scrolls beneath it. ── */}
+        <View style={styles.searchBand}>
           <Pressable
             accessibilityRole="search"
             accessibilityLabel="Search services and artisans"
@@ -591,6 +598,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accentDeep,
     borderWidth: 1.5,
     borderColor: colors.white,
+  },
+  searchBand: {
+    paddingHorizontal: GUTTER,
+    // The container gap spaces it like any section; a little extra ground
+    // below so content sliding under the pinned bar disappears cleanly.
+    paddingBottom: 8,
+    backgroundColor: colors.sand,
   },
   search: {
     flexDirection: 'row',

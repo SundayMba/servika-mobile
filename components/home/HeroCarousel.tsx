@@ -54,7 +54,10 @@ export function HeroCarousel({
 
     if (phase === 'typing') {
       if (sub.length < full.length) {
-        timer = setTimeout(() => setSub(full.slice(0, sub.length + 1)), TYPE_MS);
+        timer = setTimeout(
+          () => setSub(full.slice(0, sub.length + 1)),
+          TYPE_MS,
+        );
       } else {
         timer = setTimeout(() => setPhase('holding'), HOLD_MS);
       }
@@ -62,7 +65,10 @@ export function HeroCarousel({
       timer = setTimeout(() => setPhase('deleting'), 0);
     } else {
       if (sub.length > 0) {
-        timer = setTimeout(() => setSub(full.slice(0, sub.length - 1)), DELETE_MS);
+        timer = setTimeout(
+          () => setSub(full.slice(0, sub.length - 1)),
+          DELETE_MS,
+        );
       } else {
         timer = setTimeout(() => {
           // Just advance the monotonic counter — the slide position eases
@@ -90,8 +96,16 @@ export function HeroCarousel({
   useEffect(() => {
     const loop = Animated.loop(
       Animated.sequence([
-        Animated.timing(cursor, { toValue: 0, duration: 480, useNativeDriver: true }),
-        Animated.timing(cursor, { toValue: 1, duration: 480, useNativeDriver: true }),
+        Animated.timing(cursor, {
+          toValue: 0,
+          duration: 480,
+          useNativeDriver: true,
+        }),
+        Animated.timing(cursor, {
+          toValue: 1,
+          duration: 480,
+          useNativeDriver: true,
+        }),
       ]),
     );
     loop.start();
@@ -102,8 +116,16 @@ export function HeroCarousel({
   useEffect(() => {
     const loop = Animated.loop(
       Animated.sequence([
-        Animated.timing(pulse, { toValue: 1, duration: 1100, useNativeDriver: true }),
-        Animated.timing(pulse, { toValue: 0, duration: 1100, useNativeDriver: true }),
+        Animated.timing(pulse, {
+          toValue: 1,
+          duration: 1100,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulse, {
+          toValue: 0,
+          duration: 1100,
+          useNativeDriver: true,
+        }),
       ]),
     );
     loop.start();
@@ -117,13 +139,7 @@ export function HeroCarousel({
     // The card surface is the parent's now: the hero artwork is cut out of its
     // baked-in orange (tools/build-hero-art.mjs), so it composites over whatever
     // colour the card is rather than requiring an exact match.
-    <View
-      style={[
-        styles.root,
-        { height },
-        bare ? null : styles.card,
-      ]}
-    >
+    <View style={[styles.root, { height }, bare ? null : styles.card]}>
       {/* ── Rotating working-artisan images (right side, bleeds to edge) ──
           Each artisan owns a permanent layer (source never swaps) positioned
           off a single, monotonic `pos` value that eases toward `step`. At every
@@ -143,7 +159,8 @@ export function HeroCarousel({
           if (i !== entering && !(step > 0 && i === leaving)) return null;
 
           // Default: parked just off the left edge (fully clipped, hidden).
-          let translateX: Animated.AnimatedInterpolation<number> | number = -boxW;
+          let translateX: Animated.AnimatedInterpolation<number> | number =
+            -boxW;
           let opacity = 0;
 
           if (i === entering) {
@@ -167,7 +184,10 @@ export function HeroCarousel({
           return (
             <Animated.View
               key={artisan.id}
-              style={[StyleSheet.absoluteFill, { opacity, transform: [{ translateX }] }]}
+              style={[
+                StyleSheet.absoluteFill,
+                { opacity, transform: [{ translateX }] },
+              ]}
             >
               <Image
                 source={artisan.image}
@@ -190,9 +210,17 @@ export function HeroCarousel({
               style={[
                 styles.pillPulse,
                 {
-                  opacity: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.5, 0] }),
+                  opacity: pulse.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0.5, 0],
+                  }),
                   transform: [
-                    { scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 2.4] }) },
+                    {
+                      scale: pulse.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [1, 2.4],
+                      }),
+                    },
                   ],
                 },
               ]}
@@ -204,7 +232,11 @@ export function HeroCarousel({
           </AppText>
         </View>
 
-        <AppText weight="semibold" maxFontSizeMultiplier={1} style={styles.title}>
+        <AppText
+          weight="semibold"
+          maxFontSizeMultiplier={1}
+          style={styles.title}
+        >
           Emergency{'\n'}
           {sub}
           <Animated.Text style={{ opacity: cursor }}>|</Animated.Text>
@@ -228,7 +260,10 @@ export function HeroCarousel({
         {WORKING_ARTISANS.map((artisan, i) => (
           <View
             key={artisan.id}
-            style={[styles.dot, i === index ? styles.dotActive : styles.dotIdle]}
+            style={[
+              styles.dot,
+              i === index ? styles.dotActive : styles.dotIdle,
+            ]}
           />
         ))}
       </View>
@@ -273,7 +308,7 @@ const styles = StyleSheet.create({
     // Wide enough for the label outright. Left to size itself the pill gets
     // squeezed by the copy column and the label truncates, so the container
     // expands to fit the words rather than the words shrinking to fit it.
-    minWidth: 172,
+    minWidth: 120,
     gap: 7,
     paddingHorizontal: 12,
     paddingVertical: 5,

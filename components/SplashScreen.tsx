@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Dimensions, StyleSheet } from 'react-native';
+import { Dimensions, StyleSheet, Text } from 'react-native';
 import Animated, {
   Easing,
   runOnJS,
@@ -11,7 +11,6 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { AppText } from '@/components/ui/AppText';
 import { colors } from '@/constants/colors';
 
 // The native splash is a blank ORANGE screen (transparent image in app.json),
@@ -126,8 +125,8 @@ export function SplashScreen({ onReady, onFinish }: Props) {
         resizeMode="contain"
       />
       <Animated.View style={[styles.textBlock, textStyle]}>
-        <AppText style={styles.brandName}>Servika</AppText>
-        <AppText style={styles.tagline}>Trusted repairs near you</AppText>
+        <Text style={styles.brandName}>Servika</Text>
+        <Text style={styles.tagline}>Trusted repairs near you</Text>
       </Animated.View>
     </Animated.View>
   );
