@@ -2,7 +2,12 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Image } from 'expo-image';
 import { memo } from 'react';
-import { Pressable, StyleSheet, View, type ImageSourcePropType } from 'react-native';
+import {
+  Pressable,
+  StyleSheet,
+  View,
+  type ImageSourcePropType,
+} from 'react-native';
 
 import { AppText } from '@/components/ui/AppText';
 import { colors } from '@/constants/colors';
@@ -51,14 +56,18 @@ function ArtisanCardBase({
           <View
             style={[
               styles.badgeDot,
-              { backgroundColor: artisan.available ? colors.online : '#D1D5DB' },
+              {
+                backgroundColor: artisan.available ? colors.online : '#D1D5DB',
+              },
             ]}
           />
           <AppText
             weight="semibold"
             style={[
               styles.badgeLabel,
-              { color: artisan.available ? colors.onlineInk : colors.inkSubtle },
+              {
+                color: artisan.available ? colors.onlineInk : colors.inkSubtle,
+              },
             ]}
           >
             {artisan.available ? 'Available' : 'Busy'}
@@ -90,8 +99,14 @@ function ArtisanCardBase({
               </AppText>
             </View>
             <View style={styles.metaItemTight}>
-              <Ionicons name="location-outline" size={12} color={colors.inkSubtle} />
-              <AppText style={styles.metaMuted}>{`${artisan.distanceKm} km`}</AppText>
+              <Ionicons
+                name="location-outline"
+                size={12}
+                color={colors.inkSubtle}
+              />
+              <AppText
+                style={styles.metaMuted}
+              >{`${artisan.distanceKm} km`}</AppText>
             </View>
           </View>
         </View>
@@ -134,7 +149,9 @@ export const ArtisanCard = memo(ArtisanCardBase);
 
 const styles = StyleSheet.create({
   card: {
-    width: 226,
+    // Narrower than the design's 226: real artisans upload portraits, and a
+    // wide box crops them to a strip. Nearer to square keeps head and shoulders.
+    width: 200,
     borderRadius: 22,
     overflow: 'hidden',
     backgroundColor: colors.white,
@@ -142,7 +159,7 @@ const styles = StyleSheet.create({
     borderColor: colors.hairline,
   },
   media: {
-    height: 158,
+    height: 176,
     backgroundColor: colors.sand,
     // Android will not clip a child to the parent's radius once the parent has
     // a border, so the image corners have to be rounded here. Inset by the
@@ -153,8 +170,8 @@ const styles = StyleSheet.create({
   },
   badge: {
     position: 'absolute',
-    left: 10,
-    top: 10,
+    left: 2,
+    top: 3,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
@@ -173,9 +190,9 @@ const styles = StyleSheet.create({
     letterSpacing: 0.19,
   },
   body: {
-    padding: 13,
-    paddingBottom: 14,
-    gap: 10,
+    padding: 11,
+    paddingBottom: 12,
+    gap: 8,
   },
   identity: {
     gap: 3,
@@ -230,7 +247,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     flexShrink: 1,
     flexBasis: 0,
-    height: 42,
+    height: 38,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 13,
@@ -246,7 +263,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    height: 42,
+    height: 38,
     paddingHorizontal: 12,
     borderRadius: 13,
     borderWidth: 1,
