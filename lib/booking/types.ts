@@ -108,6 +108,12 @@ export interface BookingDetail {
   /** "Online" (escrow, default) or "Cash" (pay the artisan after service). */
   paymentMethod: 'Online' | 'Cash';
   initialQuoteAmountNaira: number | null;
+  /** Labour / materials split of the agreed price when the accepted quote was itemised. */
+  agreedWorkmanshipNaira?: number | null;
+  agreedMaterialsNaira?: number | null;
+  /** The artisan's request to release materials money from escrow before completion. */
+  materialsAdvanceStatus?: 'None' | 'Requested' | 'Approved' | 'Declined';
+  materialsAdvanceNaira?: number | null;
   /** Amount returned to the customer if refunded (full or partial), else null. */
   refundedAmountNaira?: number | null;
   commissionRate: number;
@@ -125,6 +131,12 @@ export interface BookingDetail {
 }
 
 /** An artisan's price offer on an open RemoteQuote request. */
+export interface BidMaterialLine {
+  name: string;
+  quantity: number;
+  unitPriceNaira: number;
+}
+
 export interface Bid {
   id: string;
   bookingId: string;
@@ -134,8 +146,20 @@ export interface Bid {
   reviewCount: number;
   hasCertificate: boolean;
   photoUrl: string | null;
+  /** Total the customer pays: workmanshipNaira + materialsNaira. */
   amountNaira: number;
+  /** Labour part of the quote (the part that gets bargained). */
+  workmanshipNaira: number;
+  /** Sum of the itemised material lines. */
+  materialsNaira: number;
+  /** Itemised materials/parts; empty for a labour-only quote. */
+  materials: BidMaterialLine[];
   materialsNote: string | null;
+  /** Your pending counter-offer on workmanship, if any. */
+  pendingCounterNaira: number | null;
+  pendingCounterNote: string | null;
+  counterRounds: number;
+  maxCounterRounds: number;
   status: 'Active' | 'Accepted' | 'Closed';
   createdAtUtc: string;
   /** Km from the job to the artisan's base, when both are known. */

@@ -1,5 +1,4 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import * as WebBrowser from 'expo-web-browser';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -9,6 +8,7 @@ import {
   Pressable,
   ScrollView,
   View,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -17,7 +17,6 @@ import { appAlert } from '@/components/ui/AppAlert';
 import { Button } from '@/components/ui/Button';
 import { colors } from '@/constants/colors';
 import { config } from '@/lib/config';
-import { initializePayment } from '@/lib/api/payments';
 import { authErrorMessage } from '@/lib/api/auth';
 import {
   canCancel,
@@ -36,7 +35,10 @@ import {
   useCancelBooking,
   useChoosePaymentMethod,
   useRebroadcast,
+  useDecideMaterialsAdvance,
+  useCounterBid,
 } from '@/lib/booking/hooks';
+import { payForBooking } from '@/lib/payments/checkout';
 import type { Bid, BookingStatus } from '@/lib/booking/types';
 import { formatNaira } from '@/lib/catalogue/assets';
 import { useBookingDispute } from '@/lib/disputes/hooks';
@@ -65,6 +67,51 @@ function Section({
         {title}
       </AppText>
       {children}
+    </View>
+  );
+}
+
+/**
+ * The itemised part of an offer: labour vs materials, each material line, and
+ * the artisan's free-text note. Nothing renders for a plain single-price quote.
+ */
+function QuoteBreakdown({ bid }: { bid: Bid }) {
+  const itemised = bid.materials.length > 0 || (bid.materialsNaira > 0 && bid.workmanshipNaira > 0);
+  if (!itemised && !bid.materialsNote) return null;
+  return (
+    <View className="mt-2.5 rounded-xl bg-background px-3 py-2">
+      {itemised ? (
+        <>
+          <View className="flex-row justify-between">
+            <AppText className="text-[12px] text-gray-600">Workmanship</AppText>
+            <AppText weight="medium" className="text-[12px] text-gray-800">
+              {formatNaira(bid.workmanshipNaira)}
+            </AppText>
+          </View>
+          <View className="mt-1 flex-row justify-between">
+            <AppText className="text-[12px] text-gray-600">Materials</AppText>
+            <AppText weight="medium" className="text-[12px] text-gray-800">
+              {formatNaira(bid.materialsNaira)}
+            </AppText>
+          </View>
+          {bid.materials.map((m, i) => (
+            <View key={i} className="mt-0.5 flex-row justify-between pl-3">
+              <AppText numberOfLines={1} className="flex-1 text-[11.5px] text-gray-500">
+                {m.quantity} × {m.name}
+              </AppText>
+              <AppText className="text-[11.5px] text-gray-500">
+                {formatNaira(m.quantity * m.unitPriceNaira)}
+              </AppText>
+            </View>
+          ))}
+        </>
+      ) : null}
+      {bid.materialsNote ? (
+        <AppText className={`text-[12px] leading-4 text-gray-600${itemised ? ' mt-1.5' : ''}`}>
+          <AppText inline weight="semibold">Note: </AppText>
+          {bid.materialsNote}
+        </AppText>
+      ) : null}
     </View>
   );
 }
@@ -215,6 +262,43 @@ export default function BookingDetailScreen() {
       : null;
   const acceptBidMutation = useAcceptBid();
   const choosePayment = useChoosePaymentMethod();
+  const decideAdvance = useDecideMaterialsAdvance();
+  // Counter-offer (bargaining on workmanship) sheet.
+  const counterBidMutation = useCounterBid();
+  const [counterFor, setCounterFor] = useState<Bid | null>(null);
+  const [counterAmount, setCounterAmount] = useState('');
+  const [counterNote, setCounterNote] = useState('');
+  const [counterError, setCounterError] = useState<string | null>(null);
+  const openCounter = (bid: Bid) => {
+    setCounterFor(bid);
+    setCounterAmount(bid.pendingCounterNaira != null ? String(bid.pendingCounterNaira) : '');
+    setCounterNote(bid.pendingCounterNote ?? '');
+    setCounterError(null);
+  };
+  const sendCounter = () => {
+    if (!counterFor) return;
+    const workmanshipNaira = Number(counterAmount) || 0;
+    if (workmanshipNaira <= 0) {
+      setCounterError('Enter the workmanship price you would pay.');
+      return;
+    }
+    if (workmanshipNaira === counterFor.workmanshipNaira) {
+      setCounterError('That is already their price. Accept the offer instead.');
+      return;
+    }
+    counterBidMutation.mutate(
+      { bookingId: id, bidId: counterFor.id, workmanshipNaira, note: counterNote.trim() || null },
+      {
+        onSuccess: () => setCounterFor(null),
+        onError: (err) => setCounterError(authErrorMessage(err, 'Could not send your offer.')),
+      },
+    );
+  };
+  const decideMaterials = (decision: 'approve' | 'decline') =>
+    decideAdvance.mutate(
+      { bookingId: id, decision },
+      { onError: (err) => appAlert('Could not update', authErrorMessage(err, 'Please try again.')) },
+    );
   const rebroadcast = useRebroadcast();
   // Opens after a quote is accepted: escrow (recommended) vs cash after service.
   const [paySheetOpen, setPaySheetOpen] = useState(false);
@@ -224,12 +308,24 @@ export default function BookingDetailScreen() {
     if (!booking || paying) return;
     setPaying(true);
     try {
-      const init = await initializePayment(booking.id);
-      if (init.authorizationUrl && /^https?:/i.test(init.authorizationUrl)) {
-        await WebBrowser.openBrowserAsync(init.authorizationUrl);
-      }
-      // Settlement lands via the webhook — refetch to pick up the new state.
+      // In-app checkout sheet, then wait for the webhook to mark it Paid.
+      const outcome = await payForBooking(booking.id);
       refetch();
+      if (outcome.status === 'paid') {
+        router.push({
+          pathname: '/payment/success',
+          params: {
+            bookingId: booking.id,
+            amount: String(outcome.init.amountNaira),
+            reference: outcome.init.reference,
+          },
+        });
+      } else if (/^https?:/i.test(outcome.init.authorizationUrl ?? '')) {
+        appAlert(
+          'Payment not confirmed',
+          'If you completed the payment, it can take a moment to reflect. Pull down to refresh; you will also get a notification once it lands.',
+        );
+      }
     } catch (err) {
       appAlert('Payment failed', authErrorMessage(err, 'Please try again.'));
     } finally {
@@ -506,13 +602,32 @@ export default function BookingDetailScreen() {
                         {formatNaira(bid.amountNaira)}
                       </AppText>
                     </View>
-                    {bid.materialsNote ? (
-                      <View className="mt-2.5 rounded-xl bg-background px-3 py-2">
-                        <AppText className="text-[12px] leading-4 text-gray-600">
-                          <AppText inline weight="semibold">Needs: </AppText>
-                          {bid.materialsNote}
+                    <QuoteBreakdown bid={bid} />
+                    {bid.pendingCounterNaira != null ? (
+                      <View className="mt-2.5 flex-row items-center gap-2 rounded-xl bg-blue-50 px-3 py-2">
+                        <Ionicons name="swap-horizontal" size={14} color="#2563EB" />
+                        <AppText className="flex-1 text-[12px] leading-4 text-gray-700">
+                          <AppText inline weight="semibold">Your offer: </AppText>
+                          {formatNaira(bid.pendingCounterNaira)} workmanship
+                          {bid.materialsNaira > 0 ? ` (${formatNaira(bid.pendingCounterNaira + bid.materialsNaira)} total)` : ''}
+                          {' '}· waiting for {bid.artisanName.split(' ')[0]}
                         </AppText>
                       </View>
+                    ) : null}
+                    {bid.status === 'Active' && bid.counterRounds < bid.maxCounterRounds ? (
+                      <Pressable
+                        accessibilityRole="button"
+                        onPress={() => openCounter(bid)}
+                        className="mt-2.5 flex-row items-center gap-1.5 self-start py-1"
+                      >
+                        <Ionicons name="pricetags-outline" size={14} color={colors.primary} />
+                        <AppText weight="semibold" className="text-[12.5px] text-primary">
+                          {bid.pendingCounterNaira != null ? 'Change your offer' : 'Make an offer on the price'}
+                        </AppText>
+                        <AppText className="text-[11px] text-gray-400">
+                          {' '}· {bid.maxCounterRounds - bid.counterRounds} left
+                        </AppText>
+                      </Pressable>
                     ) : null}
                     <View className="mt-3 flex-row gap-2.5">
                       <Pressable
@@ -612,10 +727,66 @@ export default function BookingDetailScreen() {
 
           <Section title="Pricing">
             {booking.initialQuoteAmountNaira != null ? (
-              <Row
-                label={booking.pricingModel === 'Fixed' ? 'Fixed price' : 'Agreed price'}
-                value={formatNaira(booking.initialQuoteAmountNaira)}
-              />
+              <>
+                <Row
+                  label={booking.pricingModel === 'Fixed' ? 'Fixed price' : 'Agreed price'}
+                  value={formatNaira(booking.initialQuoteAmountNaira)}
+                />
+                {booking.agreedMaterialsNaira != null && booking.agreedMaterialsNaira > 0 ? (
+                  <>
+                    <Row label="Workmanship" value={formatNaira(booking.agreedWorkmanshipNaira ?? 0)} />
+                    <Row label="Materials" value={formatNaira(booking.agreedMaterialsNaira)} />
+                  </>
+                ) : null}
+              </>
+            ) : null}
+            {booking.materialsAdvanceStatus === 'Requested' && booking.materialsAdvanceNaira != null ? (
+              <View className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                <View className="flex-row items-center gap-2">
+                  <Ionicons name="cart-outline" size={16} color="#B45309" />
+                  <AppText weight="semibold" className="flex-1 text-[14px] text-gray-900">
+                    Release {formatNaira(booking.materialsAdvanceNaira)} for materials?
+                  </AppText>
+                </View>
+                <AppText className="mt-2 text-[12.5px] leading-4 text-gray-600">
+                  {booking.artisanName ?? 'Your artisan'} asked for this from the{' '}
+                  {formatNaira(booking.agreedMaterialsNaira ?? 0)} materials cost you agreed, to buy
+                  the parts now. Approving sends it to them today; your{' '}
+                  {formatNaira(booking.agreedWorkmanshipNaira ?? 0)} workmanship payment stays held
+                  until you confirm the job. Released materials money cannot be refunded.
+                </AppText>
+                <View className="mt-3 flex-row gap-2.5">
+                  <Pressable
+                    accessibilityRole="button"
+                    disabled={decideAdvance.isPending}
+                    onPress={() => decideMaterials('decline')}
+                    className="h-11 flex-1 items-center justify-center rounded-xl border border-gray-200 bg-white active:opacity-80"
+                  >
+                    <AppText weight="semibold" className="text-[13.5px] text-gray-700">Not now</AppText>
+                  </Pressable>
+                  <Pressable
+                    accessibilityRole="button"
+                    disabled={decideAdvance.isPending}
+                    onPress={() =>
+                      appAlert(
+                        'Release materials money?',
+                        `${formatNaira(booking.materialsAdvanceNaira ?? 0)} goes to ${booking.artisanName ?? 'the artisan'} now and cannot be refunded.`,
+                        [
+                          { text: 'Cancel', style: 'cancel' },
+                          { text: 'Release', onPress: () => decideMaterials('approve') },
+                        ],
+                      )
+                    }
+                    className="h-11 flex-1 items-center justify-center rounded-xl bg-primary active:opacity-90"
+                    style={decideAdvance.isPending ? { opacity: 0.6 } : undefined}
+                  >
+                    <AppText weight="semibold" className="text-[13.5px] text-white">Approve</AppText>
+                  </Pressable>
+                </View>
+              </View>
+            ) : null}
+            {booking.materialsAdvanceStatus === 'Approved' && booking.materialsAdvanceNaira != null ? (
+              <Row label="Materials released" value={formatNaira(booking.materialsAdvanceNaira)} />
             ) : null}
             {booking.paymentState === 'Refunded' ? (
               <View className="mt-2 flex-row items-center gap-2 rounded-xl bg-green-50 px-3 py-2">
@@ -841,6 +1012,73 @@ export default function BookingDetailScreen() {
       )}
 
       {/* ── Payment moment: how to settle the agreed price ── */}
+      {/* ── Counter-offer: bargain on workmanship only; materials are per item ── */}
+      <BottomSheet visible={!!counterFor} onClose={() => setCounterFor(null)}>
+        <View className="px-5 pb-6 pt-1">
+          <AppText weight="semibold" className="text-[18px] text-gray-900">
+            Make an offer
+          </AppText>
+          <AppText className="mt-1 text-[13px] leading-5 text-gray-500">
+            {counterFor?.artisanName} quoted {formatNaira(counterFor?.workmanshipNaira ?? 0)} for
+            workmanship
+            {counterFor && counterFor.materialsNaira > 0
+              ? ` plus ${formatNaira(counterFor.materialsNaira)} in materials (priced per item, not negotiable)`
+              : ''}
+            . Propose what you would pay for the work; they can accept, decline, or send a new price.
+          </AppText>
+          <AppText weight="medium" className="mb-1.5 mt-5 text-[12px] text-gray-500">
+            Your workmanship offer (₦)
+          </AppText>
+          <View className="flex-row items-center rounded-2xl border border-gray-200 bg-white px-4">
+            <AppText weight="semibold" className="text-[18px] text-gray-400">₦</AppText>
+            <TextInput
+              value={counterAmount}
+              onChangeText={(t) => setCounterAmount(t.replace(/[^0-9]/g, ''))}
+              keyboardType="number-pad"
+              placeholder="0"
+              placeholderTextColor="#9CA3AF"
+              className="ml-1 flex-1 py-3.5 text-[18px] font-bold text-gray-900"
+            />
+          </View>
+          {counterFor && counterFor.materialsNaira > 0 ? (
+            <AppText className="mt-2 text-[12px] text-gray-500">
+              Total you would pay: {formatNaira((Number(counterAmount) || 0) + counterFor.materialsNaira)}
+            </AppText>
+          ) : null}
+          <AppText weight="medium" className="mb-1.5 mt-4 text-[12px] text-gray-500">
+            Message (optional)
+          </AppText>
+          <TextInput
+            value={counterNote}
+            onChangeText={setCounterNote}
+            placeholder="e.g. That's my budget for this job."
+            placeholderTextColor="#9CA3AF"
+            maxLength={200}
+            className="rounded-2xl border border-gray-200 bg-white px-4 py-3 text-[14px] text-gray-900"
+          />
+          {counterError ? (
+            <AppText weight="medium" className="mt-3 text-[13px] text-red-500">{counterError}</AppText>
+          ) : null}
+          <Pressable
+            accessibilityRole="button"
+            disabled={counterBidMutation.isPending}
+            onPress={sendCounter}
+            className="mt-5 h-14 items-center justify-center rounded-2xl bg-primary active:opacity-90"
+            style={counterBidMutation.isPending ? { opacity: 0.6 } : undefined}
+          >
+            <AppText weight="semibold" className="text-[15px] text-white">
+              {counterBidMutation.isPending ? 'Sending…' : 'Send offer'}
+            </AppText>
+          </Pressable>
+          {counterFor ? (
+            <AppText className="mt-3 text-center text-[11.5px] leading-4 text-gray-400">
+              Offer {counterFor.counterRounds + 1} of {counterFor.maxCounterRounds}. If they accept,
+              the price is agreed and you pay securely in the app.
+            </AppText>
+          ) : null}
+        </View>
+      </BottomSheet>
+
       <BottomSheet visible={paySheetOpen} onClose={() => setPaySheetOpen(false)}>
         <View className="px-5 pb-6 pt-1">
           <View className="items-center">

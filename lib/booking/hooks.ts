@@ -11,6 +11,8 @@ import {
   getBookings,
   getJobCompletion,
   rebroadcastBooking,
+  decideMaterialsAdvance,
+  counterBid,
 } from '@/lib/api/bookings';
 
 /**
@@ -120,6 +122,41 @@ export function useRebroadcast() {
 }
 
 /** Pick escrow ("online") or "cash" for the agreed price. */
+/** Make a counter-offer on an offer's workmanship; refreshes the offers list. */
+export function useCounterBid() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      bookingId,
+      bidId,
+      workmanshipNaira,
+      note,
+    }: {
+      bookingId: string;
+      bidId: string;
+      workmanshipNaira: number;
+      note?: string | null;
+    }) => counterBid(bookingId, bidId, { workmanshipNaira, note }),
+    onSuccess: (bid) => {
+      queryClient.invalidateQueries({ queryKey: ['booking-bids', bid.bookingId] });
+      queryClient.invalidateQueries({ queryKey: ['booking', bid.bookingId] });
+    },
+  });
+}
+
+/** Approve/decline the artisan's materials-advance request; updates the booking in place. */
+export function useDecideMaterialsAdvance() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ bookingId, decision }: { bookingId: string; decision: 'approve' | 'decline' }) =>
+      decideMaterialsAdvance(bookingId, decision),
+    onSuccess: (booking) => {
+      queryClient.setQueryData(['booking', booking.id], booking);
+      queryClient.invalidateQueries({ queryKey: ['bookings'] });
+    },
+  });
+}
+
 export function useChoosePaymentMethod() {
   const queryClient = useQueryClient();
   return useMutation({

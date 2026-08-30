@@ -63,6 +63,19 @@ export async function getBookingBids(bookingId: string): Promise<Bid[]> {
   return data;
 }
 
+/** Counter an offer's workmanship price; the artisan accepts, declines, or re-quotes. */
+export async function counterBid(
+  bookingId: string,
+  bidId: string,
+  body: { workmanshipNaira: number; note?: string | null },
+): Promise<Bid> {
+  const { data } = await apiClient.post<Bid>(
+    `${BASE}/${bookingId}/bids/${bidId}/counter`,
+    body,
+  );
+  return data;
+}
+
 /** Accept one bid — assigns that artisan at their offered price. */
 export async function acceptBid(
   bookingId: string,
@@ -83,6 +96,17 @@ export async function rebroadcastBooking(bookingId: string): Promise<BookingDeta
 }
 
 /** Choose how the agreed price gets settled: escrow ("online") or "cash". */
+/** Approve or decline the artisan's request to release materials money early. */
+export async function decideMaterialsAdvance(
+  bookingId: string,
+  decision: 'approve' | 'decline',
+): Promise<BookingDetail> {
+  const { data } = await apiClient.post<BookingDetail>(
+    `${BASE}/${bookingId}/materials-advance/${decision}`,
+  );
+  return data;
+}
+
 export async function choosePaymentMethod(
   bookingId: string,
   method: 'online' | 'cash',
