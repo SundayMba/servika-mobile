@@ -1,25 +1,25 @@
 import { useEffect } from 'react';
-import { Dimensions, StyleSheet, Text } from 'react-native';
+import { Dimensions, Image, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   Easing,
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
-  withSequence,
-  withSpring,
   withTiming,
 } from 'react-native-reanimated';
 
 import { colors } from '@/constants/colors';
 
-// The native splash is a blank ORANGE screen (transparent image in app.json),
-// so this animated splash is the only branding anyone sees. The orange logo
-// wouldn't read on orange, so it lives in a white rounded tile — the same
-// treatment as the Pro app, in the customer brand color.
+// OPay-style static splash. The NATIVE splash (app.json) is this same white
+// logo tile, 96pt, dead-centre on brand orange. This screen draws the tile at
+// exactly that spot and adds the wordmark and tagline beneath it, so when JS
+// comes up nothing moves: the text simply appears under a logo that was
+// already there. Then it holds briefly and fades into the app.
 const LOGO = require('@assets/images/logo/splash-tile.webp');
 const LOGO_SIZE = 96;
-const RING_SIZE = 190;
+const HOLD_MS = 900;
+const FADE_MS = 220;
 
 interface Props {
   /** Fired on the first painted frame — safe to hide the native splash. */
@@ -27,20 +27,8 @@ interface Props {
   onFinish: () => void;
 }
 
-/**
- * Animated brand splash (Cowrywise-style): the logo takes over from the static
- * native splash, pops with a spring, a soft halo ring ripples out, the brand
- * text slides up — then the whole screen scales and fades into the app.
- */
 export function SplashScreen({ onReady, onFinish }: Props) {
-  const logoScale = useSharedValue(0.55);
-  const logoOpacity = useSharedValue(0);
-  const ringScale = useSharedValue(0.5);
-  const ringOpacity = useSharedValue(0);
-  const textOpacity = useSharedValue(0);
-  const textShift = useSharedValue(16);
   const screenOpacity = useSharedValue(1);
-  const screenScale = useSharedValue(1);
 
   useEffect(() => {
     // Two frames in, this component has definitely painted over the native splash.
@@ -48,47 +36,11 @@ export function SplashScreen({ onReady, onFinish }: Props) {
       requestAnimationFrame(() => onReady?.()),
     );
 
-    // The native splash is a blank brand-colored screen, so the logo
-    // animates IN: fade + overshoot pop, like the app coming alive.
-    logoOpacity.value = withDelay(0, withTiming(1, { duration: 200 }));
-    logoScale.value = withDelay(
-      0,
-      withSequence(
-        withTiming(1.12, { duration: 280, easing: Easing.out(Easing.quad) }),
-        withSpring(1, { damping: 9, stiffness: 160 }),
-      ),
-    );
-
-    // Halo ring ripples out behind the logo.
-    ringOpacity.value = withDelay(
-      140,
-      withSequence(
-        withTiming(0.5, { duration: 180 }),
-        withTiming(0, { duration: 620, easing: Easing.out(Easing.quad) }),
-      ),
-    );
-    ringScale.value = withDelay(
-      140,
-      withTiming(1.45, { duration: 800, easing: Easing.out(Easing.quad) }),
-    );
-
-    // Brand text slides up into place.
-    textOpacity.value = withDelay(300, withTiming(1, { duration: 260 }));
-    textShift.value = withDelay(
-      300,
-      withTiming(0, { duration: 320, easing: Easing.out(Easing.cubic) }),
-    );
-
-    // Exit: the splash scales slightly and melts into the app.
-    screenScale.value = withDelay(
-      1500,
-      withTiming(1.05, { duration: 240, easing: Easing.in(Easing.quad) }),
-    );
     screenOpacity.value = withDelay(
-      1500,
+      HOLD_MS,
       withTiming(
         0,
-        { duration: 240, easing: Easing.in(Easing.quad) },
+        { duration: FADE_MS, easing: Easing.in(Easing.quad) },
         (done) => {
           if (done) runOnJS(onFinish)();
         },
@@ -101,38 +53,24 @@ export function SplashScreen({ onReady, onFinish }: Props) {
 
   const screenStyle = useAnimatedStyle(() => ({
     opacity: screenOpacity.value,
-    transform: [{ scale: screenScale.value }],
-  }));
-  const logoStyle = useAnimatedStyle(() => ({
-    opacity: logoOpacity.value,
-    transform: [{ scale: logoScale.value }],
-  }));
-  const ringStyle = useAnimatedStyle(() => ({
-    opacity: ringOpacity.value,
-    transform: [{ scale: ringScale.value }],
-  }));
-  const textStyle = useAnimatedStyle(() => ({
-    opacity: textOpacity.value,
-    transform: [{ translateY: textShift.value }],
   }));
 
   return (
     <Animated.View style={[styles.container, screenStyle]}>
-      <Animated.View style={[styles.ring, ringStyle]} />
-      <Animated.Image
-        source={LOGO}
-        style={[styles.logo, logoStyle]}
-        resizeMode="contain"
-      />
-      <Animated.View style={[styles.textBlock, textStyle]}>
+      <Image source={LOGO} style={styles.logo} resizeMode="contain" />
+      <View style={styles.textBlock}>
         <Text style={styles.brandName}>Servika</Text>
-        <Text style={styles.tagline}>Trusted repairs near you</Text>
-      </Animated.View>
+        <Text style={styles.tagline}>Verified artisans. Trusted service.</Text>
+      </View>
+      <Text style={styles.footer}>Payments held securely until the job is done</Text>
     </Animated.View>
   );
 }
 
-const { height: SCREEN_H } = Dimensions.get('window');
+// The OS centres its icon on the full screen (status bar included), so measure
+// the same way — `window` excludes the status bar on Android and would sit the
+// tile a few points high.
+const { height: SCREEN_H } = Dimensions.get('screen');
 
 const styles = StyleSheet.create({
   container: {
@@ -143,21 +81,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     alignItems: 'center',
   },
-  // Dead-centre — exactly where the native splash draws the logo.
+  // Dead-centre — exactly where the native splash draws the tile.
   logo: {
     position: 'absolute',
     top: SCREEN_H / 2 - LOGO_SIZE / 2,
     width: LOGO_SIZE,
     height: LOGO_SIZE,
-  },
-  ring: {
-    position: 'absolute',
-    top: SCREEN_H / 2 - RING_SIZE / 2,
-    width: RING_SIZE,
-    height: RING_SIZE,
-    borderRadius: RING_SIZE / 2,
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
   },
   textBlock: {
     position: 'absolute',
@@ -173,6 +102,12 @@ const styles = StyleSheet.create({
   tagline: {
     marginTop: 6,
     fontSize: 14,
+    color: 'rgba(255,255,255,0.85)',
+  },
+  footer: {
+    position: 'absolute',
+    bottom: 56,
+    fontSize: 12.5,
     color: 'rgba(255,255,255,0.75)',
   },
 });
