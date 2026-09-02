@@ -68,4 +68,23 @@ export interface ArtisanServiceOffering {
   id: string;
   name: string;
   priceNaira: number;
+  /** API path of the service's showcase photo, or null. */
+  photoUrl: string | null;
+}
+
+/** One card on the Home fixed-price rail (GET /api/v1/services/featured). */
+export interface FeaturedService {
+  serviceId: string;
+  name: string;
+  priceNaira: number;
+  /** The service's showcase photo, or null → fall back to the artisan's photo. */
+  photoUrl: string | null;
+  artisanId: string;
+  artisanName: string;
+  rating: number;
+  reviewCount: number;
+  hasCertificate: boolean;
+  artisanPhotoUrl: string | null;
+  isAvailable: boolean;
+  distanceKm: number | null;
 }

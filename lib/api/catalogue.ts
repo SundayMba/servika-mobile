@@ -1,5 +1,6 @@
 import { apiClient } from '@/lib/api/client';
 import type {
+  FeaturedService,
   ArtisanDetail,
   ArtisanSummary,
   Category,
@@ -36,5 +37,16 @@ export async function getArtisans(
 
 export async function getArtisan(id: string): Promise<ArtisanDetail> {
   const { data } = await apiClient.get<ArtisanDetail>(`/api/v1/artisans/${id}`);
+  return data;
+}
+
+/** Fixed-price services across verified artisans, for the Home rail. */
+export async function getFeaturedServices(coords?: {
+  latitude: number;
+  longitude: number;
+}): Promise<FeaturedService[]> {
+  const { data } = await apiClient.get<FeaturedService[]>('/api/v1/services/featured', {
+    params: coords ? { lat: coords.latitude, lng: coords.longitude } : undefined,
+  });
   return data;
 }

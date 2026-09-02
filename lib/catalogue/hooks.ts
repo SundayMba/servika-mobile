@@ -1,5 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
-import { getArtisan, getArtisans, getCategories } from '@/lib/api/catalogue';
+import { getArtisan, getArtisans, getCategories,
+  getFeaturedServices,
+} from '@/lib/api/catalogue';
 import type { LatLng } from '@/lib/tracking/geo';
 
 /**
@@ -70,5 +72,17 @@ export function useArtisan(id: string | undefined) {
     queryKey: ['artisan', id],
     queryFn: () => getArtisan(id as string),
     enabled: !!id,
+  });
+}
+
+/** The Home fixed-price rail, keyed on the selected area (rounded ~100m). */
+export function useFeaturedServices(coords?: { latitude: number; longitude: number }) {
+  const key = coords
+    ? [Math.round(coords.latitude * 1000) / 1000, Math.round(coords.longitude * 1000) / 1000]
+    : null;
+  return useQuery({
+    queryKey: ['featured-services', key],
+    queryFn: () => getFeaturedServices(coords),
+    staleTime: 60_000,
   });
 }

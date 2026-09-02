@@ -20,6 +20,7 @@ import { ActiveBookingCarousel } from '@/components/home/ActiveBookingCarousel';
 import { ArtisanCard } from '@/components/home/ArtisanCard';
 import { HeroCarousel } from '@/components/home/HeroCarousel';
 import { LocationSheet } from '@/components/home/LocationSheet';
+import { FixedPriceRail } from '@/components/home/FixedPriceRail';
 import { ServiceTile } from '@/components/home/ServiceTile';
 import {
   ActiveBookingSkeleton,
@@ -33,7 +34,9 @@ import { useAuthGate } from '@/lib/auth/useAuthGate';
 import { useBookings } from '@/lib/booking/hooks';
 import type { BookingStatus } from '@/lib/booking/types';
 import { artisanPhotoSource, categoryImage } from '@/lib/catalogue/assets';
-import { useCategories, useNearbyArtisans } from '@/lib/catalogue/hooks';
+import { useCategories, useNearbyArtisans,
+  useFeaturedServices,
+} from '@/lib/catalogue/hooks';
 import { useOpenChat } from '@/lib/chat/hooks';
 import {
   setSelectedArea,
@@ -169,6 +172,7 @@ export default function Home() {
   const firstName = user?.fullName.trim().split(/\s+/)[0] || 'Guest';
 
   const categoriesQuery = useCategories();
+  const featuredQuery = useFeaturedServices(areaCoords ?? undefined);
   const artisansQuery = useNearbyArtisans(areaCoords);
   // Only signed-in customers have bookings; skip the (auth-only) call for guests.
   const bookingsQuery = useBookings(undefined, { enabled: isAuthenticated });
@@ -367,6 +371,32 @@ export default function Home() {
             </View>
           )}
         </View>
+
+        {/* ── Fixed prices near you: book a published service in one tap ── */}
+        {(featuredQuery.data?.length ?? 0) > 0 ? (
+          <View style={styles.sectionTight}>
+            <SectionHeader title="Fixed prices near you" scale={scale} />
+            <FixedPriceRail
+              items={featuredQuery.data ?? []}
+              onBook={(item) =>
+                guard(() =>
+                  router.push({
+                    pathname: '/booking/request',
+                    params: {
+                      service: item.name,
+                      artisanId: item.artisanId,
+                      artisanServiceId: item.serviceId,
+                      fixedPrice: String(item.priceNaira),
+                    },
+                  }),
+                )
+              }
+              onArtisan={(item) =>
+                router.push({ pathname: '/artisan/[id]', params: { id: item.artisanId } })
+              }
+            />
+          </View>
+        ) : null}
 
         {/* ── Nearby Artisans ── */}
         <View style={styles.sectionTight}>
