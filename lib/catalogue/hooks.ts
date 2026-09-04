@@ -1,6 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
-import { getArtisan, getArtisans, getCategories,
+import {
+  getArtisan,
+  getArtisans,
+  getCategories,
   getFeaturedServices,
+  getNearbyServices,
+  getService,
 } from '@/lib/api/catalogue';
 import type { LatLng } from '@/lib/tracking/geo';
 
@@ -77,12 +82,36 @@ export function useArtisan(id: string | undefined) {
 
 /** The Home fixed-price rail, keyed on the selected area (rounded ~100m). */
 export function useFeaturedServices(coords?: { latitude: number; longitude: number }) {
-  const key = coords
-    ? [Math.round(coords.latitude * 1000) / 1000, Math.round(coords.longitude * 1000) / 1000]
-    : null;
+  const key = coordsKey(coords);
   return useQuery({
     queryKey: ['featured-services', key],
     queryFn: () => getFeaturedServices(coords),
+    staleTime: 60_000,
+  });
+}
+
+/** Coords rounded to ~100 m so a wobbling GPS fix doesn't refetch every tick. */
+function coordsKey(coords?: LatLng | null) {
+  return coords
+    ? [Math.round(coords.latitude * 1000) / 1000, Math.round(coords.longitude * 1000) / 1000]
+    : null;
+}
+
+/** The "Services close to you" screen: every bookable fixed-price service, ranked. */
+export function useNearbyServices(coords?: LatLng | null) {
+  return useQuery({
+    queryKey: ['nearby-services', coordsKey(coords)],
+    queryFn: () => getNearbyServices(coords ?? undefined),
+    staleTime: 60_000,
+  });
+}
+
+/** One fixed-price service for its profile page (distance from the selected area). */
+export function useService(id: string | undefined, coords?: LatLng | null) {
+  return useQuery({
+    queryKey: ['service', id, coordsKey(coords)],
+    queryFn: () => getService(id as string, coords ?? undefined),
+    enabled: !!id,
     staleTime: 60_000,
   });
 }

@@ -50,3 +50,19 @@ export async function getFeaturedServices(coords?: {
   });
   return data;
 }
+
+/** Every bookable fixed-price service, same ranking as the rail but uncapped. */
+export async function getNearbyServices(coords?: LatLng): Promise<FeaturedService[]> {
+  const { data } = await apiClient.get<FeaturedService[]>('/api/v1/services/nearby', {
+    params: coords ? { lat: coords.latitude, lng: coords.longitude } : undefined,
+  });
+  return data;
+}
+
+/** One fixed-price service with its provider summary (404 → the service profile's not-found state). */
+export async function getService(id: string, coords?: LatLng): Promise<FeaturedService> {
+  const { data } = await apiClient.get<FeaturedService>(`/api/v1/services/${id}`, {
+    params: coords ? { lat: coords.latitude, lng: coords.longitude } : undefined,
+  });
+  return data;
+}

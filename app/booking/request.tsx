@@ -17,6 +17,7 @@ import { BookingSteps } from '@/components/booking/BookingSteps';
 import { BottomSheet } from '@/components/BottomSheet';
 import { Button } from '@/components/ui/Button';
 import { colors } from '@/constants/colors';
+import { formatNaira } from '@/lib/catalogue/assets';
 import { useArtisan, useCategories } from '@/lib/catalogue/hooks';
 import { formatDate } from '@/lib/booking/display';
 
@@ -132,6 +133,10 @@ export default function BookingRequest() {
   // "Service needed" is a real dropdown: booking a specific artisan offers THAT
   // artisan's services; an open request offers the service categories (changing
   // one also retargets which artisans see the post, via the category slug).
+  // A fixed-price booking is for ONE published service at ONE price — the
+  // service field locks, and the category dropdown never opens (its options are
+  // the artisan's quote-based services, not this listing).
+  const isFixedService = !!artisanServiceId;
   const [serviceSheetOpen, setServiceSheetOpen] = useState(false);
   const [serviceChoice, setServiceChoice] = useState<{
     label: string;
@@ -262,12 +267,22 @@ export default function BookingRequest() {
           <SelectField
             value={serviceName}
             placeholder="Select a service"
+            icon={isFixedService ? 'lock-closed-outline' : undefined}
             onPress={
-              serviceOptions.length > 0
+              !isFixedService && serviceOptions.length > 0
                 ? () => setServiceSheetOpen(true)
                 : undefined
             }
           />
+          {isFixedService && fixedPrice ? (
+            <View className="mt-2 flex-row items-center gap-1.5">
+              <Ionicons name="pricetag" size={13} color="#15803D" />
+              <AppText weight="medium" className="text-[12px] text-green-700">
+                Fixed price · {formatNaira(Number(fixedPrice))}. Set by the artisan, no
+                quote needed
+              </AppText>
+            </View>
+          ) : null}
 
           {/* Describe the job */}
           <View className="mt-4">

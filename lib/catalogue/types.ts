@@ -87,4 +87,6 @@ export interface FeaturedService {
   artisanPhotoUrl: string | null;
   isAvailable: boolean;
   distanceKm: number | null;
+  /** The artisan's primary category — fallback artwork when there is no photo. */
+  categorySlug: string | null;
 }

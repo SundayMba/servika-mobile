@@ -20,7 +20,11 @@ import { ActiveBookingCarousel } from '@/components/home/ActiveBookingCarousel';
 import { ArtisanCard } from '@/components/home/ArtisanCard';
 import { HeroCarousel } from '@/components/home/HeroCarousel';
 import { LocationSheet } from '@/components/home/LocationSheet';
-import { FixedPriceRail } from '@/components/home/FixedPriceRail';
+import {
+  FixedPriceRail,
+  padWithExamples,
+  toFixedPriceCard,
+} from '@/components/home/FixedPriceRail';
 import { ServiceTile } from '@/components/home/ServiceTile';
 import {
   ActiveBookingSkeleton,
@@ -111,27 +115,37 @@ const TRUST_POINTS: {
 
 function SectionHeader({
   title,
+  subtitle,
   onViewAll,
   scale,
 }: {
   title: string;
+  /** One quiet line under the title, e.g. the rail's promise. */
+  subtitle?: string;
   onViewAll?: () => void;
   scale: number;
 }) {
   return (
-    <View style={[styles.sectionHeader, { paddingHorizontal: GUTTER }]}>
-      <AppText
-        weight="semibold"
-        style={[styles.sectionTitle, { fontSize: Math.round(18 * scale) }]}
-      >
-        {title}
-      </AppText>
-      {onViewAll ? (
-        <Pressable hitSlop={8} onPress={onViewAll} accessibilityRole="button">
-          <AppText weight="medium" style={styles.viewAll}>
-            View all
-          </AppText>
-        </Pressable>
+    <View>
+      <View style={[styles.sectionHeader, { paddingHorizontal: GUTTER }]}>
+        <AppText
+          weight="semibold"
+          style={[styles.sectionTitle, { fontSize: Math.round(18 * scale) }]}
+        >
+          {title}
+        </AppText>
+        {onViewAll ? (
+          <Pressable hitSlop={8} onPress={onViewAll} accessibilityRole="button">
+            <AppText weight="medium" style={styles.viewAll}>
+              View all
+            </AppText>
+          </Pressable>
+        ) : null}
+      </View>
+      {subtitle ? (
+        <AppText style={[styles.sectionSubtitle, { paddingHorizontal: GUTTER }]}>
+          {subtitle}
+        </AppText>
       ) : null}
     </View>
   );
@@ -372,31 +386,31 @@ export default function Home() {
           )}
         </View>
 
-        {/* ── Fixed prices near you: book a published service in one tap ── */}
-        {(featuredQuery.data?.length ?? 0) > 0 ? (
-          <View style={styles.sectionTight}>
-            <SectionHeader title="Fixed prices near you" scale={scale} />
-            <FixedPriceRail
-              items={featuredQuery.data ?? []}
-              onBook={(item) =>
-                guard(() =>
-                  router.push({
-                    pathname: '/booking/request',
-                    params: {
-                      service: item.name,
-                      artisanId: item.artisanId,
-                      artisanServiceId: item.serviceId,
-                      fixedPrice: String(item.priceNaira),
-                    },
-                  }),
-                )
+        {/* ── Services close to you: fixed-price listings, booked in one tap.
+            Live listings when there are any nearby, padded with example cards
+            so the section (and its promise) is always on the page. A live card
+            opens the service profile; booking is gated there. ── */}
+        <View style={styles.sectionTight}>
+          <SectionHeader
+            title="Services close to you"
+            subtitle="The price you see is the price you pay."
+            onViewAll={() => router.push('/services')}
+            scale={scale}
+          />
+          <FixedPriceRail
+            items={padWithExamples((featuredQuery.data ?? []).map(toFixedPriceCard))}
+            onPress={(item) => {
+              const live = item.service;
+              if (live) {
+                router.push({ pathname: '/service/[id]', params: { id: live.serviceId } });
+              } else if (item.categorySlug) {
+                router.push({ pathname: '/category/[id]', params: { id: item.categorySlug } });
+              } else {
+                router.push('/categories');
               }
-              onArtisan={(item) =>
-                router.push({ pathname: '/artisan/[id]', params: { id: item.artisanId } })
-              }
-            />
-          </View>
-        ) : null}
+            }}
+          />
+        </View>
 
         {/* ── Nearby Artisans ── */}
         <View style={styles.sectionTight}>
@@ -694,6 +708,11 @@ const styles = StyleSheet.create({
     flexShrink: 0,
     fontSize: 13,
     color: colors.accentDeep,
+  },
+  sectionSubtitle: {
+    marginTop: 2,
+    fontSize: 13,
+    color: colors.inkMuted,
   },
   sectionEmpty: {
     alignItems: 'center',
