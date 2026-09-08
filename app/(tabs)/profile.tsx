@@ -34,7 +34,7 @@ const ACTIVE_STATUSES = [
 ];
 
 /** Clearance for the floating tab bar (see components/navigation/TabBar). */
-const TAB_BAR_HEIGHT = 76;
+const TAB_BAR_HEIGHT = 60;
 
 type IconName = keyof typeof Ionicons.glyphMap;
 

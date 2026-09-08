@@ -44,7 +44,7 @@ import { etaMinutes, formatDistance, type LatLng } from '@/lib/tracking/geo';
  */
 
 // Height of the custom bottom tab bar (excluding the safe-area inset).
-const TAB_BAR_HEIGHT = 76;
+const TAB_BAR_HEIGHT = 60;
 
 const { height: WINDOW_H } = Dimensions.get('window');
 
