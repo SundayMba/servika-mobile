@@ -261,6 +261,23 @@ export default function ServiceProfile() {
             and Servika holds it safely until the job is done.
           </AppText>
 
+          {/* What the price covers, in the artisan's own words */}
+          {(service.includes && service.includes.length > 0) || service.description || service.durationMinutes ? (
+            <View style={styles.coversCard}>
+              <AppText weight="semibold" style={styles.coversTitle}>
+                What {formatNaira(service.priceNaira)} covers{service.durationMinutes ? ` · about ${service.durationMinutes >= 60 ? `${Math.round(service.durationMinutes / 60)} ${Math.round(service.durationMinutes / 60) === 1 ? 'hour' : 'hours'}` : `${service.durationMinutes} min`}` : ''}
+              </AppText>
+              {(service.includes ?? []).map((line) => (
+                <View key={line} style={styles.coversLine}>
+                  <Ionicons name="checkmark-circle" size={16} color="#15803D" />
+                  <AppText style={styles.coversText}>{line}</AppText>
+                </View>
+              ))}
+              {service.description ? <AppText style={styles.coversNote}>{service.description}</AppText> : null}
+              <AppText style={styles.coversFoot}>Anything not listed is a separate quote. If the job turns out bigger, {firstName} stops and messages you first.</AppText>
+            </View>
+          ) : null}
+
           {/* Provider */}
           <Pressable
             accessibilityRole="button"
@@ -658,6 +675,12 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     color: colors.inkMuted,
   },
+  coversCard: { marginTop: 18, gap: 8, padding: 14, borderRadius: 18, backgroundColor: '#F6FBF7', borderWidth: 1, borderColor: '#DCF0E3' },
+  coversTitle: { fontSize: 15, color: colors.ink },
+  coversLine: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
+  coversText: { flex: 1, fontSize: 14, lineHeight: 20, color: colors.ink },
+  coversNote: { fontSize: 13.5, lineHeight: 20, color: colors.inkMuted },
+  coversFoot: { fontSize: 12.5, lineHeight: 18, color: colors.inkMuted },
   provider: {
     marginTop: 18,
     flexDirection: 'row',

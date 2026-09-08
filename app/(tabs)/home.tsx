@@ -17,6 +17,7 @@ import { appAlert } from '@/components/ui/AppAlert';
 import { AuthPromptSheet } from '@/components/AuthPromptSheet';
 import { SearchSheet } from '@/components/SearchSheet';
 import { ActiveBookingCarousel } from '@/components/home/ActiveBookingCarousel';
+import { AgreePriceRail } from '@/components/home/AgreePriceRail';
 import { ArtisanCard } from '@/components/home/ArtisanCard';
 import { HeroCarousel } from '@/components/home/HeroCarousel';
 import { LocationSheet } from '@/components/home/LocationSheet';
@@ -412,10 +413,26 @@ export default function Home() {
           />
         </View>
 
+        {/* ── Agree a price: the quote path, in the same language as fixed prices ── */}
+        {popularServices.length > 0 ? (
+          <View style={styles.sectionTight}>
+            <SectionHeader
+              title="Agree a price"
+              subtitle="You describe the job, artisans name a price, you can counter up to three rounds."
+              onViewAll={() => router.push('/categories')}
+              scale={scale}
+            />
+            <AgreePriceRail
+              categories={popularServices.slice(0, 6)}
+              onPress={(c) => router.push({ pathname: '/category/[id]', params: { id: c.slug } })}
+            />
+          </View>
+        ) : null}
+
         {/* ── Nearby Artisans ── */}
         <View style={styles.sectionTight}>
           <SectionHeader
-            title="Nearby Artisans"
+            title="Artisans near you"
             onViewAll={() => router.push('/artisans')}
             scale={scale}
           />

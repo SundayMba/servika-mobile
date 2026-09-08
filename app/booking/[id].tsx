@@ -83,7 +83,7 @@ function QuoteBreakdown({ bid }: { bid: Bid }) {
       {itemised ? (
         <>
           <View className="flex-row justify-between">
-            <AppText className="text-[12px] text-gray-600">Workmanship</AppText>
+            <AppText className="text-[12px] text-gray-600">Labour</AppText>
             <AppText weight="medium" className="text-[12px] text-gray-800">
               {formatNaira(bid.workmanshipNaira)}
             </AppText>
@@ -734,7 +734,7 @@ export default function BookingDetailScreen() {
                 />
                 {booking.agreedMaterialsNaira != null && booking.agreedMaterialsNaira > 0 ? (
                   <>
-                    <Row label="Workmanship" value={formatNaira(booking.agreedWorkmanshipNaira ?? 0)} />
+                    <Row label="Labour" value={formatNaira(booking.agreedWorkmanshipNaira ?? 0)} />
                     <Row label="Materials" value={formatNaira(booking.agreedMaterialsNaira)} />
                   </>
                 ) : null}
@@ -752,7 +752,7 @@ export default function BookingDetailScreen() {
                   {booking.artisanName ?? 'Your artisan'} asked for this from the{' '}
                   {formatNaira(booking.agreedMaterialsNaira ?? 0)} materials cost you agreed, to buy
                   the parts now. Approving sends it to them today; your{' '}
-                  {formatNaira(booking.agreedWorkmanshipNaira ?? 0)} workmanship payment stays held
+                  {formatNaira(booking.agreedWorkmanshipNaira ?? 0)} labour payment stays held
                   until you confirm the job. Released materials money cannot be refunded.
                 </AppText>
                 <View className="mt-3 flex-row gap-2.5">

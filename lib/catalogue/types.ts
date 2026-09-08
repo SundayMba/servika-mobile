@@ -70,6 +70,9 @@ export interface ArtisanServiceOffering {
   priceNaira: number;
   /** API path of the service's showcase photo, or null. */
   photoUrl: string | null;
+  durationMinutes?: number | null;
+  includes?: string[] | null;
+  description?: string | null;
 }
 
 /** One card on the Home fixed-price rail (GET /api/v1/services/featured). */
@@ -89,4 +92,8 @@ export interface FeaturedService {
   distanceKm: number | null;
   /** The artisan's primary category — fallback artwork when there is no photo. */
   categorySlug: string | null;
+  /** What the listing includes, how long it takes, and the artisan's note (Pro app, design 57). */
+  durationMinutes?: number | null;
+  includes?: string[] | null;
+  description?: string | null;
 }
