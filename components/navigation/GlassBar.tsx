@@ -15,7 +15,7 @@ try {
   Blur = null;
 }
 
-export const GLASS_BAR_HEIGHT = 64;
+export const GLASS_BAR_HEIGHT = 68;
 export const GLASS_BAR_MARGIN = 14;
 
 export function GlassBar({ children, bottom }: { children: ReactNode; bottom: number }) {

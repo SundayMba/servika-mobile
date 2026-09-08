@@ -41,7 +41,7 @@ export function TabBar({ state, navigation, isProtected, onBlockedPress }: TabBa
   const hasUnread = (unreadMessages ?? 0) > 0;
 
   return (
-    <GlassBar bottom={Math.max(insets.bottom, 6) + 2}>
+    <GlassBar bottom={Math.max(insets.bottom, 12) + 8}>
       {state.routes.map((route, index) => {
         const meta = TABS[route.name];
         if (!meta) return null;
@@ -58,7 +58,8 @@ export function TabBar({ state, navigation, isProtected, onBlockedPress }: TabBa
           if (!focused && !event.defaultPrevented) navigation.navigate(route.name);
         };
 
-        const color = focused ? colors.ink : colors.inkFaint;
+        const color = focused ? colors.white : colors.inkFaint;
+        const labelColor = focused ? colors.ink : colors.inkFaint;
 
         return (
           <Pressable key={route.key} accessibilityRole="button" accessibilityState={focused ? { selected: true } : {}} accessibilityLabel={meta.label} onPress={onPress} style={styles.tab}>
@@ -67,7 +68,7 @@ export function TabBar({ state, navigation, isProtected, onBlockedPress }: TabBa
                 <View style={[styles.orb, focused && styles.orbActive]}>
                   <Ionicons name={focused ? meta.iconActive : meta.icon} size={21} color={colors.white} />
                 </View>
-                <AppText weight={focused ? 'semibold' : 'medium'} numberOfLines={1} allowFontScaling={false} style={[styles.label, { color }]}>
+                <AppText weight={focused ? 'semibold' : 'medium'} numberOfLines={1} allowFontScaling={false} style={[styles.label, { color: labelColor }]}>
                   {meta.label}
                 </AppText>
               </View>
@@ -92,7 +93,7 @@ export function TabBar({ state, navigation, isProtected, onBlockedPress }: TabBa
 const styles = StyleSheet.create({
   tab: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   item: { minWidth: 62, paddingHorizontal: 14, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', gap: 2 },
-  itemActive: { backgroundColor: 'rgba(20,23,27,0.07)' },
+  itemActive: { backgroundColor: colors.primary },
   centerItem: { alignItems: 'center', justifyContent: 'center', gap: 2, height: 48 },
   orb: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.accentDeep, shadowColor: colors.accentDeep, shadowOpacity: 0.35, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 4 },
   orbActive: { transform: [{ scale: 1.06 }] },
