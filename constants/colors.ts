@@ -45,32 +45,34 @@ export const colors = {
   accentTint: '#FFF1E4',
 
   /**
-   * Auth v2 ("Ink, cream, and one orange thing to press", design 02 Sign-in v2):
-   * warm near-black, cream type, the deep orange as the only saturated colour.
-   * Shared grammar with Servika Pro's auth kit.
+   * Auth (design 02 Sign-in v2, re-grounded on the app's sand surface so the
+   * sign-in branch matches Home): ink type, hairline rules, and the deep orange
+   * as the only saturated colour. Token names keep the design's "on ink" naming
+   * because the kit and screens read them; the values are the light palette.
    */
-  inkWarm: '#17140F',
-  inkWarmRaised: '#26221C',
-  onInk: '#F3EBDF',
-  onInkBody: 'rgba(243,235,223,0.58)',
-  onInkMeta: 'rgba(243,235,223,0.5)',
-  onInkFaint: 'rgba(243,235,223,0.4)',
-  onInkFill: 'rgba(243,235,223,0.1)',
-  onInkFillStrong: 'rgba(243,235,223,0.16)',
-  onInkRule: 'rgba(243,235,223,0.16)',
-  onInkBorder: 'rgba(243,235,223,0.24)',
-  /** The one orange thing to press (deep brand orange on ink). */
+  inkWarm: '#F4F3F0',
+  inkWarmRaised: '#FFFFFF',
+  onInk: '#14171B',
+  onInkBody: 'rgba(20,23,27,0.62)',
+  onInkMeta: 'rgba(20,23,27,0.5)',
+  onInkFaint: 'rgba(20,23,27,0.42)',
+  onInkFill: 'rgba(20,23,27,0.06)',
+  onInkFillStrong: 'rgba(20,23,27,0.12)',
+  onInkRule: 'rgba(20,23,27,0.14)',
+  onInkBorder: 'rgba(20,23,27,0.18)',
+  /** The one orange thing to press. */
   orange: '#E4620A',
   /** Label on the orange bar. Cream, never white. */
   orangeLabel: '#FFF6EE',
   /** The bar while a request is in flight. */
   orangeBusy: '#B85E12',
-  orangeOnDark: '#FF9A6B',
-  dangerOnInk: '#FF9A9D',
+  /** Orange as text on the sand surface. */
+  orangeOnDark: '#C2560B',
+  dangerOnInk: '#B3261E',
   dangerRule: '#E5484D',
-  amberOnInk: '#F0B27A',
-  successOnInk: '#34D399',
-  successOnInkText: '#6EE7B7',
+  amberOnInk: '#B45309',
+  successOnInk: '#0E9E70',
+  successOnInkText: '#0E9E70',
 } as const;
 
 /** Instrument Sans, the onboarding typeface. Loaded in app/_layout.tsx. */

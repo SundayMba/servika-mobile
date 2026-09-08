@@ -43,10 +43,10 @@ export function Weave({ opacity = 1 }: { opacity?: number }) {
     <View pointerEvents="none" style={[StyleSheet.absoluteFill, { opacity }]}>
       <Svg width={w} height={h}>
         {Array.from({ length: vLines }).map((_, i) => (
-          <Line key={`v${i}`} x1={i * 11} y1={0} x2={i * 11} y2={h} stroke="rgba(243,235,223,0.05)" strokeWidth={1} />
+          <Line key={`v${i}`} x1={i * 11} y1={0} x2={i * 11} y2={h} stroke="rgba(20,23,27,0.055)" strokeWidth={1} />
         ))}
         {Array.from({ length: dLines }).map((_, i) => (
-          <Line key={`d${i}`} x1={i * 13 - h} y1={h} x2={i * 13} y2={0} stroke="rgba(243,235,223,0.04)" strokeWidth={1} />
+          <Line key={`d${i}`} x1={i * 13 - h} y1={h} x2={i * 13} y2={0} stroke="rgba(20,23,27,0.04)" strokeWidth={1} />
         ))}
       </Svg>
     </View>
@@ -61,7 +61,7 @@ export function WovenStrip({ style }: { style?: StyleProp<ViewStyle> }) {
     <View pointerEvents="none" style={[{ height: 12 }, style]}>
       <Svg width={w} height={12}>
         {Array.from({ length: Math.ceil(w / 9) }).map((_, i) => (
-          <Line key={`a${i}`} x1={i * 9} y1={0} x2={i * 9} y2={12} stroke="rgba(243,235,223,0.22)" strokeWidth={1.5} />
+          <Line key={`a${i}`} x1={i * 9} y1={0} x2={i * 9} y2={12} stroke="rgba(20,23,27,0.18)" strokeWidth={1.5} />
         ))}
         {Array.from({ length: Math.ceil(w / 11) + 2 }).map((_, i) => (
           <Line key={`b${i}`} x1={i * 11 - 12} y1={12} x2={i * 11} y2={0} stroke="rgba(228,98,10,0.5)" strokeWidth={1.5} />
@@ -114,7 +114,7 @@ export function AuthScreen({
   const goBack = onBack ?? (() => (router.canGoBack() ? router.back() : router.replace('/home')));
   return (
     <View style={styles.root}>
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
       <Weave />
       <View style={{ paddingTop: insets.top + 6 }}>
         {banner ? <View style={styles.bannerWrap}>{banner}</View> : null}
@@ -201,7 +201,7 @@ export function UnderlineField({
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
-          placeholderTextColor="rgba(243,235,223,0.3)"
+          placeholderTextColor="rgba(20,23,27,0.3)"
           secureTextEntry={secure}
           keyboardType={keyboardType}
           autoCapitalize={autoCapitalize}
@@ -282,7 +282,7 @@ export function PasswordStrength({ password, checks, showChecklist }: { password
         <View style={styles.checklist}>
           {checks.map((c) => (
             <View key={c.label} style={styles.checkRow}>
-              <View style={[styles.checkDot, { backgroundColor: c.ok ? 'rgba(228,98,10,0.2)' : 'rgba(229,72,77,0.2)' }]}>
+              <View style={[styles.checkDot, { backgroundColor: c.ok ? 'rgba(228,98,10,0.14)' : 'rgba(229,72,77,0.12)' }]}>
                 <AppText weight="semibold" style={{ fontSize: 10, color: c.ok ? colors.orangeOnDark : colors.dangerOnInk }}>{c.ok ? '✓' : '✕'}</AppText>
               </View>
               <AppText style={styles.checkLabel}>{c.label}</AppText>
@@ -544,7 +544,7 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.inkWarm },
   bannerWrap: { paddingHorizontal: 22, paddingBottom: 6 },
   topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 22, paddingBottom: 10, minHeight: 48 },
-  backBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(243,235,223,0.2)' },
+  backBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(20,23,27,0.2)' },
   kicker: { fontSize: 11, letterSpacing: 1.8, color: colors.onInkBody },
   stepRow: { flexDirection: 'row', alignItems: 'center', gap: 9 },
   stepTrack: { width: 58, height: 2, backgroundColor: colors.onInkRule, overflow: 'hidden' },
@@ -562,19 +562,19 @@ const styles = StyleSheet.create({
   accessory: { fontSize: 13, color: colors.orange },
   strengthRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   strengthBars: { flexDirection: 'row', gap: 5 },
-  strengthBar: { width: 34, height: 3, borderRadius: 99, backgroundColor: 'rgba(243,235,223,0.18)' },
+  strengthBar: { width: 34, height: 3, borderRadius: 99, backgroundColor: 'rgba(20,23,27,0.18)' },
   strengthLabel: { flex: 1, fontSize: 12.5, lineHeight: 17 },
   checklist: { gap: 9, paddingTop: 20 },
   checkRow: { flexDirection: 'row', alignItems: 'center', gap: 9 },
   checkDot: { width: 16, height: 16, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
-  checkLabel: { fontSize: 13.5, color: 'rgba(243,235,223,0.7)' },
+  checkLabel: { fontSize: 13.5, color: 'rgba(20,23,27,0.7)' },
   primary: { height: 62, borderRadius: 18, paddingLeft: 24, paddingRight: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, backgroundColor: colors.orange },
   primaryOff: { backgroundColor: 'rgba(228,98,10,0.35)' },
   primaryLabel: { flexShrink: 1, fontSize: 16, letterSpacing: -0.3, color: colors.orangeLabel },
   primaryTrail: { width: 46, height: 46, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(23,20,15,0.22)' },
   outline: { height: 58, borderRadius: 18, borderWidth: 1, borderColor: colors.onInkBorder, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 },
   outlineTrailing: { height: 62, justifyContent: 'space-between', paddingLeft: 24, paddingRight: 8 },
-  outlineTile: { width: 46, height: 46, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(243,235,223,0.12)' },
+  outlineTile: { width: 46, height: 46, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(20,23,27,0.12)' },
   outlineLabel: { fontSize: 15.5, letterSpacing: -0.3, color: colors.onInk },
   footerLine: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', minHeight: 36 },
   footerPrompt: { fontSize: 13.5, color: colors.onInkMeta },
@@ -584,23 +584,23 @@ const styles = StyleSheet.create({
   codeSlot: { width: 26, alignItems: 'center', justifyContent: 'flex-end', height: 44 },
   digit: { fontFamily: fonts.medium, fontSize: 36, lineHeight: 42, letterSpacing: -1.4 },
   caret: { width: 2, height: 34, backgroundColor: colors.orange, marginBottom: 4 },
-  dash: { width: 20, height: 1.5, backgroundColor: 'rgba(243,235,223,0.28)', marginBottom: 12 },
+  dash: { width: 20, height: 1.5, backgroundColor: 'rgba(20,23,27,0.28)', marginBottom: 12 },
   hiddenInput: { position: 'absolute', opacity: 0, height: 1, width: 1 },
   resendRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   resend: { fontSize: 13.5, color: colors.onInkMeta },
   resendStrong: { fontSize: 13.5, color: colors.onInk },
   resendLink: { fontSize: 13.5, color: colors.orangeOnDark },
-  pastePill: { height: 34, paddingHorizontal: 13, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(243,235,223,0.22)', flexDirection: 'row', alignItems: 'center', gap: 7 },
+  pastePill: { height: 34, paddingHorizontal: 13, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(20,23,27,0.22)', flexDirection: 'row', alignItems: 'center', gap: 7 },
   pasteLabel: { fontSize: 12.5, color: colors.onInk },
-  rule: { height: 1, backgroundColor: 'rgba(243,235,223,0.14)' },
-  banner: { flexDirection: 'row', alignItems: 'center', gap: 11, padding: 13, borderRadius: 16, backgroundColor: 'rgba(229,72,77,0.14)', borderWidth: 1, borderColor: 'rgba(229,72,77,0.4)' },
+  rule: { height: 1, backgroundColor: 'rgba(20,23,27,0.14)' },
+  banner: { flexDirection: 'row', alignItems: 'center', gap: 11, padding: 13, borderRadius: 16, backgroundColor: 'rgba(229,72,77,0.08)', borderWidth: 1, borderColor: 'rgba(229,72,77,0.35)' },
   bannerDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.dangerRule },
-  bannerText: { flex: 1, fontSize: 13, color: '#FFD9DA' },
+  bannerText: { flex: 1, fontSize: 13, color: '#B3261E' },
   bannerAction: { fontSize: 13, color: colors.orangeOnDark },
   checkTile: { width: 62, height: 62, borderRadius: 20, backgroundColor: colors.orange, alignItems: 'center', justifyContent: 'center' },
   googleRoot: { flex: 1, backgroundColor: colors.inkWarm, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40, gap: 26 },
   googleRing: { width: 74, height: 74, alignItems: 'center', justifyContent: 'center' },
-  googleSpinner: { position: 'absolute', width: 74, height: 74, borderRadius: 37, borderWidth: 2, borderColor: 'rgba(243,235,223,0.16)', borderTopColor: colors.orange },
+  googleSpinner: { position: 'absolute', width: 74, height: 74, borderRadius: 37, borderWidth: 2, borderColor: 'rgba(20,23,27,0.16)', borderTopColor: colors.orange },
   googleG: { width: 34, height: 34, borderRadius: 17, borderWidth: 2.5, borderColor: colors.onInk, alignItems: 'center', justifyContent: 'center' },
   googleTitle: { fontSize: 28, lineHeight: 30, letterSpacing: -1.1, color: colors.onInk, textAlign: 'center' },
   googleBody: { marginTop: -12, maxWidth: 260, textAlign: 'center', fontSize: 14, lineHeight: 22, color: colors.onInkBody },

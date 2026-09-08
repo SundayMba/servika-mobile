@@ -202,5 +202,5 @@ const styles = StyleSheet.create({
   takenNote: { paddingTop: 14, fontSize: 13.5, color: colors.dangerOnInk },
   domainRow: { flexDirection: 'row', gap: 8 },
   domainChip: { flex: 1, height: 38, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.onInkFill },
-  domainLabel: { fontSize: 13, color: 'rgba(243,235,223,0.75)' },
+  domainLabel: { fontSize: 13, color: 'rgba(20,23,27,0.75)' },
 });

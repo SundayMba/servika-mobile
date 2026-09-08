@@ -73,7 +73,7 @@ export function AuthPromptSheet({
 }
 
 const styles = StyleSheet.create({
-  surface: { backgroundColor: colors.inkWarm, borderTopLeftRadius: 30, borderTopRightRadius: 30, paddingTop: 0 },
+  surface: { backgroundColor: colors.inkWarmRaised, borderTopLeftRadius: 30, borderTopRightRadius: 30, paddingTop: 0 },
   strip: { marginHorizontal: -24 },
   body: { paddingTop: 24, gap: 13 },
   kicker: { fontSize: 11.5, letterSpacing: 2, color: colors.orange },
@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
   message: { maxWidth: 300, fontSize: 14.5, lineHeight: 23, color: colors.onInkBody },
   actions: { marginTop: 13, gap: 12 },
   footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, height: 46 },
-  divider: { width: 1, height: 14, backgroundColor: 'rgba(243,235,223,0.2)' },
+  divider: { width: 1, height: 14, backgroundColor: 'rgba(20,23,27,0.2)' },
   notNow: { fontSize: 14, color: colors.onInkMeta },
   signIn: { fontSize: 14, color: colors.onInk },
 });

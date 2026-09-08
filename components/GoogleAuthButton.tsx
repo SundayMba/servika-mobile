@@ -113,7 +113,7 @@ export function GoogleAuthButton({ variant = 'light', onBusyChange }: { variant?
         onPress={handlePress}
         style={({ pressed }) => [darkStyles.outline, busy && { opacity: 0.6 }, pressed && { opacity: 0.85 }]}
       >
-        {busy ? <ActivityIndicator size="small" color="#F3EBDF" /> : <GoogleG size={18} />}
+        {busy ? <ActivityIndicator size="small" color="#14171B" /> : <GoogleG size={18} />}
         <AppText weight="semibold" style={darkStyles.label}>Continue with Google</AppText>
       </Pressable>
     );
@@ -158,11 +158,11 @@ const darkStyles = StyleSheet.create({
     height: 58,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: 'rgba(243,235,223,0.24)',
+    borderColor: 'rgba(20,23,27,0.24)',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
   },
-  label: { fontSize: 15.5, letterSpacing: -0.2, color: '#F3EBDF' },
+  label: { fontSize: 15.5, letterSpacing: -0.2, color: '#14171B' },
 });
