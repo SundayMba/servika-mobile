@@ -111,7 +111,7 @@ export function GoogleAuthButton({ variant = 'light', onBusyChange }: { variant?
         accessibilityLabel="Continue with Google"
         disabled={busy}
         onPress={handlePress}
-        style={({ pressed }) => [darkStyles.outline, busy && { opacity: 0.6 }, pressed && { opacity: 0.85 }]}
+        style={[darkStyles.outline, busy ? { opacity: 0.6 } : null]}
       >
         {busy ? <ActivityIndicator size="small" color="#14171B" /> : <GoogleG size={18} />}
         <AppText weight="semibold" style={darkStyles.label}>Continue with Google</AppText>

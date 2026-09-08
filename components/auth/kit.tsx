@@ -313,13 +313,16 @@ export function PrimaryButton({
   style?: StyleProp<ViewStyle>;
 }) {
   const off = disabled && !loading;
+  const [pressed, setPressed] = useState(false);
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityState={{ disabled: !!disabled, busy: !!loading }}
       disabled={disabled || loading}
       onPress={onPress}
-      style={({ pressed }) => [styles.primary, loading && { backgroundColor: colors.orangeBusy }, off && styles.primaryOff, pressed && !off && { transform: [{ translateY: 1 }, { scale: 0.995 }] }, style]}
+      onPressIn={() => setPressed(true)}
+      onPressOut={() => setPressed(false)}
+      style={[styles.primary, loading ? { backgroundColor: colors.orangeBusy } : null, off ? styles.primaryOff : null, pressed && !off ? styles.pressed : null, style]}
     >
       <AppText weight="semibold" numberOfLines={1} style={[styles.primaryLabel, off && { color: 'rgba(255,246,238,0.6)' }]}>
         {loading && loadingLabel ? loadingLabel : label}
@@ -333,13 +336,16 @@ export function PrimaryButton({
 
 /** Transparent outline bar on ink. `trailing` adds the tile with an icon. */
 export function OutlineButton({ label, onPress, icon, trailing, loading, disabled }: { label: string; onPress: () => void; icon?: ReactNode; trailing?: React.ComponentProps<typeof Ionicons>['name']; loading?: boolean; disabled?: boolean }) {
+  const [pressed, setPressed] = useState(false);
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
       disabled={disabled || loading}
       onPress={onPress}
-      style={({ pressed }) => [styles.outline, trailing ? styles.outlineTrailing : null, (disabled || loading) && { opacity: 0.55 }, pressed && { transform: [{ translateY: 1 }] }]}
+      onPressIn={() => setPressed(true)}
+      onPressOut={() => setPressed(false)}
+      style={[styles.outline, trailing ? styles.outlineTrailing : null, disabled || loading ? { opacity: 0.55 } : null, pressed ? styles.pressed : null]}
     >
       {loading ? <ActivityIndicator color={colors.onInk} /> : icon}
       <AppText weight="semibold" style={styles.outlineLabel}>{label}</AppText>
@@ -570,6 +576,7 @@ const styles = StyleSheet.create({
   checkLabel: { fontSize: 13.5, color: 'rgba(20,23,27,0.7)' },
   primary: { height: 62, borderRadius: 18, paddingLeft: 24, paddingRight: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, backgroundColor: colors.orange },
   primaryOff: { backgroundColor: 'rgba(228,98,10,0.35)' },
+  pressed: { transform: [{ translateY: 1 }, { scale: 0.995 }] },
   primaryLabel: { flexShrink: 1, fontSize: 16, letterSpacing: -0.3, color: colors.orangeLabel },
   primaryTrail: { width: 46, height: 46, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(23,20,15,0.22)' },
   outline: { height: 58, borderRadius: 18, borderWidth: 1, borderColor: colors.onInkBorder, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 },
