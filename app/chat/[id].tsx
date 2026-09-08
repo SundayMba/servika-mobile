@@ -83,7 +83,7 @@ export default function ChatScreen() {
       <View className="flex-row items-center border-b border-gray-100 px-4 py-2">
         <Pressable
           hitSlop={8}
-          onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)/messages'))}
+          onPress={() => (router.canGoBack() ? router.back() : router.replace('/messages'))}
           className="pr-2"
         >
           <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />

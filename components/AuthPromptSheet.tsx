@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { GoogleInFlight, OutlineButton, PrimaryButton, WovenStrip } from '@/components/auth/kit';
+import { GoogleInFlight, OutlineButton, PrimaryButton } from '@/components/auth/kit';
 import { BottomSheet } from '@/components/BottomSheet';
 import { GoogleAuthButton } from '@/components/GoogleAuthButton';
 import { AppText } from '@/components/ui/AppText';
@@ -46,7 +46,6 @@ export function AuthPromptSheet({
   const hasGoogle = !!process.env.EXPO_PUBLIC_GOOGLE_OAUTH_WEB_CLIENT_ID;
   return (
     <BottomSheet visible={visible} onClose={onClose} showHandle={false} surfaceStyle={styles.surface}>
-      <WovenStrip style={styles.strip} />
       <View style={styles.body}>
         <AppText weight="semibold" style={styles.kicker}>{kicker.toUpperCase()}</AppText>
         <AppText weight="medium" style={styles.title}>{title}</AppText>
@@ -73,8 +72,7 @@ export function AuthPromptSheet({
 }
 
 const styles = StyleSheet.create({
-  surface: { backgroundColor: colors.inkWarmRaised, borderTopLeftRadius: 30, borderTopRightRadius: 30, paddingTop: 0 },
-  strip: { marginHorizontal: -24 },
+  surface: { backgroundColor: colors.inkWarmRaised, borderTopLeftRadius: 30, borderTopRightRadius: 30 },
   body: { paddingTop: 24, gap: 13 },
   kicker: { fontSize: 11.5, letterSpacing: 2, color: colors.orange },
   title: { fontSize: 33, lineHeight: 35, letterSpacing: -1.5, color: colors.onInk },

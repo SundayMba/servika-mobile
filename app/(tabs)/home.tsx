@@ -70,7 +70,7 @@ const ACTIVE_STATUSES: BookingStatus[] = [
 
 // Approx. height of the custom bottom tab bar (excluding the safe-area inset,
 // which we add separately) so scroll content clears it.
-const TAB_BAR_HEIGHT = 60;
+const TAB_BAR_HEIGHT = 76;
 
 const GUTTER = 22;
 

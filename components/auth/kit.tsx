@@ -115,7 +115,6 @@ export function AuthScreen({
   return (
     <View style={styles.root}>
       <StatusBar style="dark" />
-      <Weave />
       <View style={{ paddingTop: insets.top + 6 }}>
         {banner ? <View style={styles.bannerWrap}>{banner}</View> : null}
         <View style={styles.topRow}>
@@ -508,7 +507,6 @@ export function GoogleInFlight({ visible }: { visible: boolean }) {
   return (
     <Modal visible={visible} transparent animationType="fade" statusBarTranslucent>
       <View style={styles.googleRoot}>
-        <Weave />
         <View style={styles.googleRing}>
           <Animated.View style={[styles.googleSpinner, { transform: [{ rotate: spin.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] }) }] }]} />
           <View style={styles.googleG}>
