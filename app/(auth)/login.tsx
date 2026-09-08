@@ -157,10 +157,10 @@ const styles = StyleSheet.create({
   welcome: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   avatar: { width: 54, height: 54, borderRadius: 27, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.onInkFill, borderWidth: 1.5, borderColor: 'rgba(20,23,27,0.2)' },
   avatarText: { fontSize: 17, color: colors.onInk },
-  welcomeTitle: { fontSize: 30, lineHeight: 32, letterSpacing: -1.3, color: colors.onInk },
+  welcomeTitle: { fontSize: 26, lineHeight: 29, letterSpacing: -1, color: colors.onInk },
   staticField: { paddingTop: 16, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: colors.onInkRule, flexDirection: 'row', alignItems: 'center', gap: 12 },
   staticLabel: { fontSize: 11, letterSpacing: 1.76, color: colors.onInkBody },
-  staticValue: { fontSize: 18.5, letterSpacing: -0.3, color: colors.onInk },
+  staticValue: { fontSize: 17, letterSpacing: -0.2, color: colors.onInk },
   forgot: { paddingTop: 14, alignSelf: 'flex-start' },
   forgotText: { fontSize: 13, color: colors.onInkMeta },
 });
