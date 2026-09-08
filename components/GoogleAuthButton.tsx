@@ -43,10 +43,14 @@ function GoogleG({ size = 22 }: { size?: number }) {
  * Servika session at POST /auth/google, and lands the user on Home — no OTP
  * step, Google already verified the email.
  */
-export function GoogleAuthButton({ variant = 'light' }: { variant?: 'light' | 'dark' } = {}) {
+export function GoogleAuthButton({ variant = 'light', onBusyChange }: { variant?: 'light' | 'dark'; onBusyChange?: (busy: boolean) => void } = {}) {
   const router = useRouter();
   const { signIn } = useAuth();
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusyState] = useState(false);
+  const setBusy = (b: boolean) => {
+    setBusyState(b);
+    onBusyChange?.(b);
+  };
 
   if (!WEB_CLIENT_ID) return null;
 
@@ -109,7 +113,7 @@ export function GoogleAuthButton({ variant = 'light' }: { variant?: 'light' | 'd
         onPress={handlePress}
         style={({ pressed }) => [darkStyles.outline, busy && { opacity: 0.6 }, pressed && { opacity: 0.85 }]}
       >
-        {busy ? <ActivityIndicator size="small" color="#F3EFE7" /> : <GoogleG size={18} />}
+        {busy ? <ActivityIndicator size="small" color="#F3EBDF" /> : <GoogleG size={18} />}
         <AppText weight="semibold" style={darkStyles.label}>Continue with Google</AppText>
       </Pressable>
     );
@@ -151,14 +155,14 @@ export function GoogleAuthButton({ variant = 'light' }: { variant?: 'light' | 'd
 
 const darkStyles = StyleSheet.create({
   outline: {
-    height: 56,
-    borderRadius: 16,
+    height: 58,
+    borderRadius: 18,
     borderWidth: 1,
-    borderColor: 'rgba(243,239,231,0.28)',
+    borderColor: 'rgba(243,235,223,0.24)',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
   },
-  label: { fontSize: 15.5, letterSpacing: -0.2, color: '#F3EFE7' },
+  label: { fontSize: 15.5, letterSpacing: -0.2, color: '#F3EBDF' },
 });

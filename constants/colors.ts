@@ -45,22 +45,30 @@ export const colors = {
   accentTint: '#FFF1E4',
 
   /**
-   * Auth v2 ("Ink, cream, and one orange thing to press"): the sign-in branch
-   * runs on warm near-black with cream type, so the only saturated colour on
-   * the screen is the action. Shared grammar with Servika Pro's auth kit.
+   * Auth v2 ("Ink, cream, and one orange thing to press", design 02 Sign-in v2):
+   * warm near-black, cream type, the deep orange as the only saturated colour.
+   * Shared grammar with Servika Pro's auth kit.
    */
-  inkWarm: '#171411',
-  onInk: '#F3EFE7',
-  onInkBody: 'rgba(243,239,231,0.7)',
-  onInkMeta: 'rgba(243,239,231,0.58)',
-  onInkFill: 'rgba(243,239,231,0.08)',
-  onInkFillStrong: 'rgba(243,239,231,0.16)',
-  onInkRule: 'rgba(243,239,231,0.14)',
-  orange: '#F97316',
-  /** Text on an orange fill. Never white. */
-  orangeInk: '#221004',
-  orangeOnDark: '#FDBA74',
-  dangerOnInk: '#FCA5A5',
+  inkWarm: '#17140F',
+  inkWarmRaised: '#26221C',
+  onInk: '#F3EBDF',
+  onInkBody: 'rgba(243,235,223,0.58)',
+  onInkMeta: 'rgba(243,235,223,0.5)',
+  onInkFaint: 'rgba(243,235,223,0.4)',
+  onInkFill: 'rgba(243,235,223,0.1)',
+  onInkFillStrong: 'rgba(243,235,223,0.16)',
+  onInkRule: 'rgba(243,235,223,0.16)',
+  onInkBorder: 'rgba(243,235,223,0.24)',
+  /** The one orange thing to press (deep brand orange on ink). */
+  orange: '#E4620A',
+  /** Label on the orange bar. Cream, never white. */
+  orangeLabel: '#FFF6EE',
+  /** The bar while a request is in flight. */
+  orangeBusy: '#B85E12',
+  orangeOnDark: '#FF9A6B',
+  dangerOnInk: '#FF9A9D',
+  dangerRule: '#E5484D',
+  amberOnInk: '#F0B27A',
   successOnInk: '#34D399',
   successOnInkText: '#6EE7B7',
 } as const;

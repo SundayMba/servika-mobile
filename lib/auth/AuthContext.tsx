@@ -9,6 +9,7 @@ import {
 } from 'react';
 import { logout as logoutRequest } from '@/lib/api/auth';
 import { setOnSessionExpired } from '@/lib/api/client';
+import { setLastAccount } from '@/lib/auth/lastAccount';
 import { tokenStorage } from '@/lib/auth/tokenStorage';
 import type { AuthResponse, User } from '@/lib/auth/types';
 import { registerForPush, unregisterForPush } from '@/lib/push/notifications';
@@ -77,6 +78,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = useCallback(async (auth: AuthResponse) => {
     await tokenStorage.setTokens(auth.accessToken, auth.refreshToken);
     await tokenStorage.setUser(auth.user);
+    // Remembered (not the session) so sign-in can open the short way back in.
+    await setLastAccount({ fullName: auth.user.fullName, email: auth.user.email });
     setUser(auth.user);
     setStatus('authenticated');
   }, []);
