@@ -43,6 +43,26 @@ export const colors = {
   sandSunk: '#F1F1EE',
   /** The accent at 8% — icon tiles and the warm status chip. */
   accentTint: '#FFF1E4',
+
+  /**
+   * Auth v2 ("Ink, cream, and one orange thing to press"): the sign-in branch
+   * runs on warm near-black with cream type, so the only saturated colour on
+   * the screen is the action. Shared grammar with Servika Pro's auth kit.
+   */
+  inkWarm: '#171411',
+  onInk: '#F3EFE7',
+  onInkBody: 'rgba(243,239,231,0.7)',
+  onInkMeta: 'rgba(243,239,231,0.58)',
+  onInkFill: 'rgba(243,239,231,0.08)',
+  onInkFillStrong: 'rgba(243,239,231,0.16)',
+  onInkRule: 'rgba(243,239,231,0.14)',
+  orange: '#F97316',
+  /** Text on an orange fill. Never white. */
+  orangeInk: '#221004',
+  orangeOnDark: '#FDBA74',
+  dangerOnInk: '#FCA5A5',
+  successOnInk: '#34D399',
+  successOnInkText: '#6EE7B7',
 } as const;
 
 /** Instrument Sans, the onboarding typeface. Loaded in app/_layout.tsx. */

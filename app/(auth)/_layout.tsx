@@ -9,8 +9,8 @@ export default function AuthLayout() {
         headerShown: false,
         animation: 'slide_from_right',
         animationDuration: 220,
-        // Auth screens are white — keep the transition scene white.
-        contentStyle: { backgroundColor: colors.white },
+        // Auth screens are warm ink: keep the transition scene the same colour.
+        contentStyle: { backgroundColor: colors.inkWarm },
       }}
     />
   );

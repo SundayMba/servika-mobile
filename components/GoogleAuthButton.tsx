@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
 import { AppText } from '@/components/ui/AppText';
@@ -43,7 +43,7 @@ function GoogleG({ size = 22 }: { size?: number }) {
  * Servika session at POST /auth/google, and lands the user on Home — no OTP
  * step, Google already verified the email.
  */
-export function GoogleAuthButton() {
+export function GoogleAuthButton({ variant = 'light' }: { variant?: 'light' | 'dark' } = {}) {
   const router = useRouter();
   const { signIn } = useAuth();
   const [busy, setBusy] = useState(false);
@@ -100,6 +100,21 @@ export function GoogleAuthButton() {
     }
   };
 
+  if (variant === 'dark') {
+    return (
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Continue with Google"
+        disabled={busy}
+        onPress={handlePress}
+        style={({ pressed }) => [darkStyles.outline, busy && { opacity: 0.6 }, pressed && { opacity: 0.85 }]}
+      >
+        {busy ? <ActivityIndicator size="small" color="#F3EFE7" /> : <GoogleG size={18} />}
+        <AppText weight="semibold" style={darkStyles.label}>Continue with Google</AppText>
+      </Pressable>
+    );
+  }
+
   return (
     <View className="mt-6">
       {/* Divider */}
@@ -133,3 +148,17 @@ export function GoogleAuthButton() {
     </View>
   );
 }
+
+const darkStyles = StyleSheet.create({
+  outline: {
+    height: 56,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(243,239,231,0.28)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  label: { fontSize: 15.5, letterSpacing: -0.2, color: '#F3EFE7' },
+});

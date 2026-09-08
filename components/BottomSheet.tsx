@@ -1,5 +1,5 @@
 import { type ReactNode, useEffect, useRef, useState } from 'react';
-import { Modal, Pressable, View } from 'react-native';
+import { Modal, Pressable, View, type StyleProp, type ViewStyle } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import Animated, {
   Easing,
@@ -38,6 +38,8 @@ type BottomSheetProps = {
   estimatedHeight?: number;
   /** Fired once the entrance animation settles (e.g. to focus an input). */
   onOpened?: () => void;
+  /** Inline style for the sheet surface; wins over the class defaults (e.g. a dark surface). */
+  surfaceStyle?: StyleProp<ViewStyle>;
 };
 
 /**
@@ -54,6 +56,7 @@ export function BottomSheet({
   showHandle = true,
   estimatedHeight = 420,
   onOpened,
+  surfaceStyle,
 }: BottomSheetProps) {
   // Keep the Modal mounted through the exit animation, then unmount.
   const [mounted, setMounted] = useState(visible);
@@ -141,6 +144,7 @@ export function BottomSheet({
             style={[
               { paddingBottom: Math.max(insets.bottom, 16) + 8 },
               sheetStyle,
+              surfaceStyle,
             ]}
             className={`rounded-t-3xl bg-white px-6 pt-3 ${className ?? ''}`}
           >

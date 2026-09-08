@@ -60,7 +60,7 @@ export interface VerifyOtpResponse {
 export interface RegisterRequest {
   fullName: string;
   email: string;
-  phoneNumber: string;
+  phoneNumber?: string;
   password: string;
   role?: Role;
   /** Optional referrer's share code — links this signup to them. */

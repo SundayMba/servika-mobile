@@ -1,8 +1,11 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { Pressable, View } from 'react-native';
+import type Ionicons from '@expo/vector-icons/Ionicons';
+import { useRouter } from 'expo-router';
+import { Pressable, StyleSheet, View } from 'react-native';
 
-import { AppText } from '@/components/ui/AppText';
+import { OutlineButton, PrimaryButton, WovenStrip } from '@/components/auth/kit';
 import { BottomSheet } from '@/components/BottomSheet';
+import { GoogleAuthButton } from '@/components/GoogleAuthButton';
+import { AppText } from '@/components/ui/AppText';
 import { colors } from '@/constants/colors';
 
 type AuthPromptSheetProps = {
@@ -12,78 +15,86 @@ type AuthPromptSheetProps = {
   title?: string;
   /** Supporting copy beneath the headline. */
   message?: string;
-  /** Icon shown in the tinted badge. */
+  /** Small kicker above the headline ("YOU TRIED TO CHAT"). */
+  kicker?: string;
+  /** Kept for call-site compatibility; the wall no longer draws an icon. */
   icon?: keyof typeof Ionicons.glyphMap;
   onSignUp?: () => void;
   onLogin?: () => void;
 };
 
+/**
+ * The wall (design 10): a guest tried to do something that needs a name. Warm
+ * ink sheet with the woven strip on its lip, cream type, and one orange thing
+ * to press. Browsing never asks for an account; this only appears at the
+ * moment an action needs one, and "Not now" keeps the guest browsing.
+ */
 export function AuthPromptSheet({
   visible,
   onClose,
-  title = 'Create an account to continue',
-  message = 'Sign up to book services and track your jobs in real time.',
-  icon = 'lock-closed',
+  title = 'This part is for people we can vouch for.',
+  message = 'Look at prices all day, nobody asks your name. To book or message an artisan, we need one.',
+  kicker = 'Sign in to continue',
   onSignUp,
   onLogin,
 }: AuthPromptSheetProps) {
+  const router = useRouter();
+  const signUp =
+    onSignUp ??
+    (() => {
+      onClose();
+      router.push('/register');
+    });
+  const logIn =
+    onLogin ??
+    (() => {
+      onClose();
+      router.push('/login');
+    });
   return (
-    <BottomSheet visible={visible} onClose={onClose}>
-      {/* Icon badge */}
-      <View className="mb-4 items-center">
-        <View
-          style={{ backgroundColor: `${colors.primary}14` }}
-          className="h-16 w-16 items-center justify-center rounded-full"
-        >
-          <Ionicons name={icon} size={28} color={colors.primary} />
+    <BottomSheet visible={visible} onClose={onClose} showHandle={false} surfaceStyle={styles.surface}>
+      <WovenStrip opacity={0.7} style={styles.strip} />
+      <View style={styles.body}>
+        <AppText weight="semibold" style={styles.kicker}>
+          {kicker.toUpperCase()}
+        </AppText>
+        <AppText weight="medium" style={styles.title}>
+          {title}
+        </AppText>
+        <AppText style={styles.message}>{message}</AppText>
+
+        <View style={styles.actions}>
+          <PrimaryButton label="Use my email" onPress={signUp} />
+          <GoogleAuthButton variant="dark" />
+          {!process.env.EXPO_PUBLIC_GOOGLE_OAUTH_WEB_CLIENT_ID ? <OutlineButton label="I already have an account" onPress={logIn} /> : null}
+        </View>
+
+        <View style={styles.footer}>
+          <Pressable accessibilityRole="button" hitSlop={8} onPress={onClose}>
+            <AppText style={styles.notNow}>Not now, only looking</AppText>
+          </Pressable>
+          <View style={styles.divider} />
+          <Pressable accessibilityRole="button" hitSlop={8} onPress={logIn}>
+            <AppText weight="semibold" style={styles.signIn}>
+              Sign in
+            </AppText>
+          </Pressable>
         </View>
       </View>
-
-      {/* Copy */}
-      <AppText weight="semibold" className="text-center text-[19px] text-gray-900">
-        {title}
-      </AppText>
-      <AppText className="mt-2 text-center text-[14px] leading-5 text-gray-500">
-        {message}
-      </AppText>
-
-      {/* Actions */}
-      <View className="mt-6 gap-3">
-        <Pressable
-          accessibilityRole="button"
-          onPress={onSignUp ?? onClose}
-          style={{
-            shadowColor: colors.primary,
-            shadowOpacity: 0.3,
-            shadowRadius: 10,
-            shadowOffset: { width: 0, height: 4 },
-            elevation: 6,
-          }}
-          className="h-14 items-center justify-center rounded-2xl bg-primary active:opacity-90"
-        >
-          <AppText weight="semibold" className="text-[16px] text-white">Sign Up</AppText>
-        </Pressable>
-
-        <Pressable
-          accessibilityRole="button"
-          onPress={onLogin ?? onClose}
-          className="h-14 items-center justify-center rounded-2xl border border-gray-200 bg-white active:bg-gray-50"
-        >
-          <AppText weight="semibold" className="text-[16px] text-gray-900">Log In</AppText>
-        </Pressable>
-      </View>
-
-      {/* Dismiss */}
-      <Pressable
-        accessibilityRole="button"
-        onPress={onClose}
-        hitSlop={8}
-        className="mt-4 items-center py-1"
-      >
-        <AppText weight="semibold" className="text-[14px] text-gray-400">
-          Continue browsing
-        </AppText>
-      </Pressable>
     </BottomSheet>
   );
 }
+
+const styles = StyleSheet.create({
+  surface: { backgroundColor: colors.inkWarm, borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingTop: 0 },
+  strip: { marginHorizontal: -24 },
+  body: { paddingTop: 18 },
+  kicker: { fontSize: 11, letterSpacing: 1.8, color: colors.orangeOnDark },
+  title: { marginTop: 10, fontSize: 28, lineHeight: 32, letterSpacing: -1, color: colors.onInk },
+  message: { marginTop: 10, fontSize: 14.5, lineHeight: 21, color: colors.onInkBody },
+  actions: { marginTop: 22, gap: 12 },
+  footer: { marginTop: 18, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 },
+  divider: { width: 1, height: 14, backgroundColor: colors.onInkRule },
+  notNow: { fontSize: 13.5, color: colors.onInkMeta },
+  signIn: { fontSize: 13.5, color: colors.onInk },
+});

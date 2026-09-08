@@ -1,204 +1,92 @@
-import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
 import { useRef, useState } from 'react';
-import {
-  ScrollView,
-  type TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Pressable, StyleSheet, TextInput } from 'react-native';
 
-import { AppText } from '@/components/ui/AppText';
+import { AuthScreen, FooterLink, inkStyles, Lede, PrimaryButton, SplitHeadline, TextAccessory, UnderlineField } from '@/components/auth/kit';
 import { GoogleAuthButton } from '@/components/GoogleAuthButton';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { VerifyEmailSheet } from '@/components/VerifyEmailSheet';
+import { AppText } from '@/components/ui/AppText';
 import { authErrorMessage, login } from '@/lib/api/auth';
 import { useAuth } from '@/lib/auth/AuthContext';
 
+/** Returning sign-in (design 10b): the same underline grammar, one thing to press. */
 export default function Login() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { signIn } = useAuth();
-
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
+  const [show, setShow] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // When set, the account exists but its email isn't verified — show the sheet.
-  const [verifyEmail, setVerifyEmail] = useState<string | null>(null);
-
   const passwordRef = useRef<TextInput>(null);
 
-  const handleSignIn = async () => {
+  const submit = async () => {
     if (submitting) return;
-    setError(null);
-
     const emailOrPhone = identifier.trim();
-    if (!emailOrPhone || !password) {
-      setError('Enter your email/phone and password.');
-      return;
-    }
-
+    if (!emailOrPhone || !password) return setError('Enter your email or phone, and your password.');
+    setError(null);
     setSubmitting(true);
     try {
       const res = await login({ emailOrPhone, password });
       if (res.session) {
         await signIn(res.session);
+        router.dismissAll();
         router.replace('/home');
       } else if (res.verificationRequired) {
-        // Account exists but email unverified — finish the verify step.
-        setVerifyEmail(res.email);
+        // The account exists but the email was never confirmed: finish that step.
+        router.push({ pathname: '/verify', params: { email: res.email, flow: 'login' } });
       }
     } catch (e) {
-      setError(authErrorMessage(e, 'Invalid email/phone or password.'));
+      setError(authErrorMessage(e, 'That email or phone and password do not match.'));
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <View className="flex-1 bg-primary">
-      <StatusBar style="light" />
+    <AuthScreen
+      kicker="Signing back in"
+      footer={
+        <>
+          <PrimaryButton label="Sign me in" loading={submitting} onPress={submit} />
+          <GoogleAuthButton variant="dark" />
+          <FooterLink prompt="New here?" action="Make an account" onPress={() => router.replace('/register')} />
+        </>
+      }
+    >
+      <SplitHeadline first="Good to have" second="you back." />
+      <Lede>Sign in to see your bookings and pick up any chat where you left it.</Lede>
 
-      {/* ── Brand-orange canopy: spans through the status bar, the white sheet
-          below curves up over it (same language as Home) ── */}
-      <View
-        style={{ paddingTop: insets.top + 18 }}
-        className="overflow-hidden bg-primary px-6 pb-14"
-      >
-        {/* Soft decorative circles */}
-        <View
-          pointerEvents="none"
-          className="absolute -right-12 -top-12 h-44 w-44 rounded-full bg-white/10"
-        />
-        <View
-          pointerEvents="none"
-          className="absolute -left-16 top-20 h-36 w-36 rounded-full bg-white/10"
-        />
-
-        <View className="flex-row items-center gap-2.5">
-          <View className="h-11 w-11 items-center justify-center rounded-2xl bg-white">
-            <Image
-              source={require('@assets/images/logo/app-icon.webp')}
-              style={{ height: 30, width: 30 }}
-              contentFit="contain"
-            />
-          </View>
-          <AppText weight="semibold" className="text-[17px] text-white">Servika</AppText>
-        </View>
-
-        <AppText weight="semibold" className="mt-6 text-[27px] text-white">
-          Welcome back 👋
-        </AppText>
-        <AppText className="mt-1.5 text-[14px] leading-5 text-white/85">
-          Sign in to continue with Servika.
-        </AppText>
-      </View>
-
-      {/* ── White sheet curving up into the orange ── */}
-      <KeyboardAvoidingView
-        className="-mt-7 flex-1"
-        behavior="padding"
-      >
-        <View className="flex-1 overflow-hidden rounded-t-[32px] bg-white">
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-            contentContainerStyle={{
-              paddingHorizontal: 24,
-              paddingTop: 28,
-              paddingBottom: Math.max(insets.bottom, 16) + 16,
-            }}
-          >
-            {/* Form */}
-            <View className="gap-4">
-              <Input
-                label="Email or phone"
-                icon="mail-outline"
-                placeholder="Enter your email or phone"
-                value={identifier}
-                onChangeText={setIdentifier}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                returnKeyType="next"
-                onSubmitEditing={() => passwordRef.current?.focus()}
-              />
-              <View>
-                <Input
-                  ref={passwordRef}
-                  label="Password"
-                  icon="lock-closed-outline"
-                  placeholder="Enter your password"
-                  value={password}
-                  onChangeText={setPassword}
-                  password
-                  autoCapitalize="none"
-                  returnKeyType="done"
-                  onSubmitEditing={handleSignIn}
-                />
-                <TouchableOpacity
-                  hitSlop={8}
-                  className="mt-2 self-end"
-                  onPress={() => router.push('/forgot-password')}
-                >
-                  <AppText weight="semibold" className="text-[13px] text-primary">
-                    Forgot Password?
-                  </AppText>
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            {/* Error */}
-            {error ? (
-              <AppText weight="medium" className="mt-4 text-center text-[13px] text-red-500">
-                {error}
-              </AppText>
-            ) : null}
-
-            {/* Submit */}
-            <View className="mt-5">
-              <Button
-                label="Sign in"
-                onPress={handleSignIn}
-                loading={submitting}
-              />
-            </View>
-
-            {/* Google sign-in (renders only when the OAuth client id is configured) */}
-            <GoogleAuthButton />
-
-            {/* Footer */}
-            <View className="mt-7 flex-row items-center justify-center gap-1">
-              <AppText className="text-[14px] text-gray-500">
-                Don&apos;t have an account?
-              </AppText>
-              <TouchableOpacity
-                hitSlop={8}
-                onPress={() => router.replace('/register')}
-              >
-                <AppText weight="semibold" className="text-[14px] text-primary">
-                  Create account
-                </AppText>
-              </TouchableOpacity>
-            </View>
-          </ScrollView>
-        </View>
-      </KeyboardAvoidingView>
-
-      {/* Unverified account → finish email verification, then home. */}
-      <VerifyEmailSheet
-        visible={verifyEmail !== null}
-        email={verifyEmail ?? ''}
-        onClose={() => setVerifyEmail(null)}
-        onVerified={() => {
-          setVerifyEmail(null);
-          router.replace('/home');
-        }}
+      <UnderlineField
+        label="Email or phone"
+        value={identifier}
+        onChangeText={setIdentifier}
+        placeholder="you@example.com"
+        keyboardType="email-address"
+        autoComplete="username"
+        returnKeyType="next"
+        onSubmitEditing={() => passwordRef.current?.focus()}
       />
-    </View>
+      <UnderlineField
+        label="Password"
+        value={password}
+        onChangeText={setPassword}
+        placeholder="Your password"
+        secure={!show}
+        autoComplete="password"
+        inputRef={passwordRef}
+        returnKeyType="done"
+        onSubmitEditing={submit}
+        right={<TextAccessory label={show ? 'Hide' : 'Show'} onPress={() => setShow((v) => !v)} />}
+      />
+      <Pressable accessibilityRole="button" hitSlop={8} onPress={() => router.push('/forgot-password')} style={styles.forgot}>
+        <AppText style={inkStyles.body}>Forgot it? We will email you a code</AppText>
+      </Pressable>
+
+      {error ? <AppText style={inkStyles.error}>{error}</AppText> : null}
+    </AuthScreen>
   );
 }
+
+const styles = StyleSheet.create({
+  forgot: { marginTop: 14, alignSelf: 'flex-start' },
+});
