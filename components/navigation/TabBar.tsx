@@ -119,8 +119,9 @@ export function TabBar({
             onPress={onPress}
             style={styles.tab}
           >
-            <View style={[styles.glyph, isFocused && styles.glyphActive]}>
-              <Ionicons name={meta.icon} size={21} color={color} />
+            <View style={styles.glyph}>
+              {isFocused ? <View style={styles.pill} /> : null}
+              <Ionicons name={meta.icon} size={22} color={color} />
               {meta.badge && hasUnread ? <View style={styles.badge} /> : null}
             </View>
             <AppText
@@ -202,16 +203,24 @@ const styles = StyleSheet.create({
   },
   glyph: {
     // The column is 'stretch' so the label can fill it; the icon has to opt
-    // back out or it lands hard against the left edge. A rounded slot so the
-    // active tab can fill with the primary orange.
+    // back out or it lands hard against the left edge.
     alignSelf: 'center',
-    width: 56,
+    width: 64,
     height: 32,
-    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  glyphActive: { backgroundColor: colors.primary },
+  // The WhatsApp-style active pill: its own fully rounded layer behind the glyph.
+  pill: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    borderRadius: 999,
+    overflow: 'hidden',
+    backgroundColor: colors.primary,
+  },
   centerTab: {
     flexGrow: 1,
     flexShrink: 1,
@@ -231,7 +240,7 @@ const styles = StyleSheet.create({
     borderColor: colors.white,
   },
   label: {
-    fontSize: 10.5,
+    fontSize: 11.5,
     textAlign: 'center',
   },
   centerLabel: {
@@ -241,7 +250,7 @@ const styles = StyleSheet.create({
   badge: {
     position: 'absolute',
     top: 3,
-    right: 12,
+    right: 16,
     width: 8,
     height: 8,
     borderRadius: 999,
