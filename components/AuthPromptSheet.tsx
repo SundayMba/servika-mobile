@@ -9,14 +9,25 @@ import { GoogleAuthButton } from '@/components/GoogleAuthButton';
 import { AppText } from '@/components/ui/AppText';
 import { colors } from '@/constants/colors';
 
+export type AuthPromptReason = 'book' | 'chat' | 'request' | 'tab' | 'save';
+
+/** One kicker + headline + line per thing a guest can bump into. */
+const COPY: Record<AuthPromptReason, { kicker: string; title: string; message: string }> = {
+  book: { kicker: 'You tried to book', title: 'Booking is for people\nwe can vouch for.', message: 'Look at prices all day, nobody asks your name. To book an artisan, we need one.' },
+  chat: { kicker: 'You tried to chat', title: 'Chat is for people\nwe can vouch for.', message: 'Look at prices all day, nobody asks your name. To message an artisan, we need one.' },
+  request: { kicker: 'You tried to post a job', title: 'Artisans quote for\na real person.', message: 'Describe the job once you have a name and an email. Their offers land in your account.' },
+  tab: { kicker: 'This part needs an account', title: 'Your bookings and chats\nlive behind a name.', message: 'Look at prices all day, nobody asks your name. To keep anything of your own, we need one.' },
+  save: { kicker: 'You tried to save', title: 'Saving is for people\nwe can vouch for.', message: 'An account keeps your saved artisans on every phone you sign in on.' },
+};
+
 type AuthPromptSheetProps = {
   visible: boolean;
   onClose: () => void;
-  /** Headline shown in the sheet. */
+  /** What the guest tried to do; picks the kicker, headline and line. */
+  reason?: AuthPromptReason;
+  /** Optional overrides when a screen needs its own words. */
   title?: string;
-  /** Supporting copy beneath the headline. */
   message?: string;
-  /** Small kicker above the headline ("YOU TRIED TO CHAT"). */
   kicker?: string;
   /** Kept for call-site compatibility; the wall no longer draws an icon. */
   icon?: keyof typeof Ionicons.glyphMap;
@@ -33,12 +44,17 @@ type AuthPromptSheetProps = {
 export function AuthPromptSheet({
   visible,
   onClose,
-  title = 'This part is for people\nwe can vouch for.',
-  message = 'Look at prices all day, nobody asks your name. To book or message an artisan, we need one.',
-  kicker = 'Sign in to continue',
+  reason = 'book',
+  title,
+  message,
+  kicker,
   onSignUp,
   onLogin,
 }: AuthPromptSheetProps) {
+  const copy = COPY[reason];
+  const kickerText = kicker ?? copy.kicker;
+  const titleText = title ?? copy.title;
+  const messageText = message ?? copy.message;
   const router = useRouter();
   const [googleBusy, setGoogleBusy] = useState(false);
   const signUp = onSignUp ?? (() => { onClose(); router.push('/register'); });
@@ -47,9 +63,9 @@ export function AuthPromptSheet({
   return (
     <BottomSheet visible={visible} onClose={onClose} showHandle={false} surfaceStyle={styles.surface}>
       <View style={styles.body}>
-        <AppText weight="semibold" style={styles.kicker}>{kicker.toUpperCase()}</AppText>
-        <AppText weight="medium" style={styles.title}>{title}</AppText>
-        <AppText style={styles.message}>{message}</AppText>
+        <AppText weight="semibold" style={styles.kicker}>{kickerText.toUpperCase()}</AppText>
+        <AppText weight="medium" style={styles.title}>{titleText}</AppText>
+        <AppText style={styles.message}>{messageText}</AppText>
 
         <View style={styles.actions}>
           <PrimaryButton label="Use my email" onPress={signUp} />

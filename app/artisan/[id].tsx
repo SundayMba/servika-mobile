@@ -551,10 +551,8 @@ export default function ArtisanProfile() {
       {/* Gate for booking / chat */}
       <AuthPromptSheet
         visible={promptVisible}
+        reason="book"
         onClose={hidePrompt}
-        title="Sign up to continue"
-        message="Create an account to request services and chat with artisans directly."
-        icon="lock-closed"
         onSignUp={() => {
           hidePrompt();
           router.push('/register');

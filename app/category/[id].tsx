@@ -233,9 +233,8 @@ export default function CategoryListing() {
         <SearchSheet visible={searchVisible} onClose={() => setSearchVisible(false)} />
         <AuthPromptSheet
           visible={promptVisible}
+          reason="request"
           onClose={hidePrompt}
-          title="Sign up to continue"
-          message="Create an account to post a request and get matched with a pro."
           onSignUp={() => {
             hidePrompt();
             router.push('/register');

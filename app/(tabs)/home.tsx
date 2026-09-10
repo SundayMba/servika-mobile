@@ -562,10 +562,8 @@ export default function Home() {
       {/* ── Booking & chat are gated behind sign-in ── */}
       <AuthPromptSheet
         visible={promptVisible}
+        reason="book"
         onClose={hidePrompt}
-        title="Sign in to continue"
-        message="Create an account or log in to book services and message artisans."
-        icon="lock-closed"
         onSignUp={() => {
           hidePrompt();
           router.push('/register');

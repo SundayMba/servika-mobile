@@ -45,6 +45,7 @@ export default function TabsLayout() {
 
       <AuthPromptSheet
         visible={authPromptVisible}
+        reason="tab"
         onClose={() => setAuthPromptVisible(false)}
         title="Sign up to continue"
         message="Create an account to manage your bookings, messages and profile."

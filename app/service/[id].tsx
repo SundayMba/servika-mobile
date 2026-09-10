@@ -570,10 +570,8 @@ export default function ServiceProfile() {
 
       <AuthPromptSheet
         visible={promptVisible}
+        reason="book"
         onClose={hidePrompt}
-        title="Sign up to continue"
-        message="Create an account to book at this price and chat with the provider."
-        icon="lock-closed"
         onSignUp={() => {
           hidePrompt();
           router.push('/register');
