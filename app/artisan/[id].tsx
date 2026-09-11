@@ -12,6 +12,7 @@ import {
 
 import { AppText } from '@/components/ui/AppText';
 import { AuthPromptSheet } from '@/components/AuthPromptSheet';
+import { PhotoViewer, type ViewerPhoto } from '@/components/PhotoViewer';
 import { Button } from '@/components/ui/Button';
 import { colors } from '@/constants/colors';
 import { config } from '@/lib/config';
@@ -77,6 +78,8 @@ export default function ArtisanProfile() {
   // and only offer "Read more" when there genuinely is more to read.
   const [aboutLines, setAboutLines] = useState<number | null>(null);
   const [servicesExpanded, setServicesExpanded] = useState(false);
+  // Which uploaded work photo is open in the fullscreen viewer (null = closed).
+  const [viewerIndex, setViewerIndex] = useState<number | null>(null);
 
   const { data: artisan, isLoading, isError } = useArtisan(id);
   const isFavorite = useIsFavorite(id, isAuthenticated);
@@ -115,6 +118,8 @@ export default function ArtisanProfile() {
     artisan.galleryUrls.length > 0
       ? artisan.galleryUrls.map((u) => ({ uri: `${config.apiBaseUrl}${u}` }))
       : galleryImages(artisan.galleryKeys);
+  // Uploaded photos open in the pinch-zoom viewer; bundled seed art has no URI.
+  const viewerPhotos: ViewerPhoto[] = artisan.galleryUrls.map((u) => ({ uri: `${config.apiBaseUrl}${u}` }));
   const initials = artisan.fullName
     .split(/\s+/)
     .slice(0, 2)
@@ -460,8 +465,12 @@ export default function ArtisanProfile() {
               contentContainerStyle={{ paddingHorizontal: 15, gap: 12 }}
             >
               {gallery.map((image, index) => (
-                <View
+                <Pressable
                   key={index}
+                  accessibilityRole="imagebutton"
+                  accessibilityLabel={`Work photo ${index + 1} of ${gallery.length}`}
+                  disabled={viewerPhotos.length === 0}
+                  onPress={() => setViewerIndex(index)}
                   className="h-48 w-36 overflow-hidden rounded-2xl bg-background"
                 >
                   <Image
@@ -469,7 +478,7 @@ export default function ArtisanProfile() {
                     contentFit="cover"
                     style={{ flex: 1 }}
                   />
-                </View>
+                </Pressable>
               ))}
             </ScrollView>
           </View>
@@ -549,6 +558,14 @@ export default function ArtisanProfile() {
       </View>
 
       {/* Gate for booking / chat */}
+      {viewerPhotos.length > 0 ? (
+        <PhotoViewer
+          photos={viewerPhotos}
+          initialIndex={viewerIndex ?? 0}
+          visible={viewerIndex !== null}
+          onClose={() => setViewerIndex(null)}
+        />
+      ) : null}
       <AuthPromptSheet
         visible={promptVisible}
         reason="book"
