@@ -27,6 +27,13 @@ export async function requestReferralWithdrawal(
 }
 
 /** Payout-destination banks (name + code) for the withdrawal picker. */
+/** The bank's name for an account number (cached server-side; ten checks a day). 404 = no such account. */
+export type BankAccountResolution = { bankCode: string; accountNumber: string; accountName: string };
+export async function resolveBankAccount(bankCode: string, accountNumber: string): Promise<BankAccountResolution> {
+  const { data } = await apiClient.get<BankAccountResolution>('/api/v1/banks/resolve', { params: { bankCode, accountNumber }, timeout: 30_000 });
+  return data;
+}
+
 export async function getBanks(): Promise<Bank[]> {
   const { data } = await apiClient.get<Bank[]>('/api/v1/banks');
   return data;

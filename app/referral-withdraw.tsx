@@ -2,7 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, TextInput, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -13,6 +13,7 @@ import { appAlert } from '@/components/ui/AppAlert';
 import { BottomSheet } from '@/components/BottomSheet';
 import { colors } from '@/constants/colors';
 import { authErrorMessage } from '@/lib/api/auth';
+import { resolveBankAccount } from '@/lib/api/referrals';
 import type { Bank } from '@/lib/artisan/walletTypes';
 import { formatNaira } from '@/lib/catalogue/assets';
 import { useBanks, useMyReferrals, useRequestReferralWithdrawal } from '@/lib/referral/hooks';
@@ -40,6 +41,34 @@ export default function ReferralWithdraw() {
   const [accountName, setAccountName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
+  // The bank's answer for (bank, number).
+  const [lookup, setLookup] = useState<'idle' | 'checking' | 'found' | 'missing' | 'failed'>('idle');
+  const [lookedUp, setLookedUp] = useState('');
+
+  useEffect(() => {
+    const digits = accountNumber.replace(/\D/g, '');
+    if (!bank || digits.length !== 10) {
+      if (lookup !== 'idle') setLookup('idle');
+      return;
+    }
+    const key = `${bank.code}|${digits}`;
+    if (key === lookedUp) return;
+    setLookedUp(key);
+    setLookup('checking');
+    setAccountName('');
+    setError(null);
+    let cancelled = false;
+    resolveBankAccount(bank.code, digits)
+      .then((res) => { if (!cancelled) { setAccountName(res.accountName); setLookup('found'); } })
+      .catch((e: unknown) => {
+        if (cancelled) return;
+        const status = (e as { response?: { status?: number } })?.response?.status;
+        setLookup(status === 404 ? 'missing' : 'failed');
+        setError(status === 404 ? 'No account with that number at this bank. Check the digits.' : status === 429 ? 'That is enough account checks for today. Try again tomorrow.' : 'Could not reach the bank. Try again in a moment.');
+      });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bank?.code, accountNumber]);
 
   const amountNaira = Number(amount) || 0;
 
@@ -53,8 +82,12 @@ export default function ReferralWithdraw() {
       setError(`You can withdraw at most ${formatNaira(available)}.`);
       return;
     }
-    if (!bank || !accountNumber.trim() || !accountName.trim()) {
-      setError('Choose your bank and enter your account number and name.');
+    if (!bank || accountNumber.replace(/\D/g, '').length !== 10) {
+      setError('Choose your bank and enter your ten-digit account number.');
+      return;
+    }
+    if (lookup !== 'found' || !accountName.trim()) {
+      setError(lookup === 'checking' ? 'One moment, the bank is still answering.' : 'We could not confirm this account. Check the number.');
       return;
     }
     try {
@@ -141,12 +174,13 @@ export default function ReferralWithdraw() {
           keyboardType="number-pad"
           maxLength={10}
         />
-        <Field
-          label="Account name"
-          value={accountName}
-          onChangeText={setAccountName}
-          placeholder="As it appears on your account"
-        />
+        <View className="mb-3 rounded-2xl border border-gray-200 bg-white px-4 py-3.5">
+          <AppText className="text-[11px] uppercase tracking-wider text-gray-400">Account name</AppText>
+          <AppText weight="semibold" className={`mt-1 text-[15px] ${lookup === 'found' ? 'text-gray-900' : 'text-gray-400'}`}>
+            {lookup === 'found' ? accountName : lookup === 'checking' ? 'Asking the bank' : lookup === 'missing' ? 'No account with that number' : lookup === 'failed' ? 'Could not reach the bank' : 'Filled in by the bank once the number is complete'}
+          </AppText>
+          {lookup === 'found' ? <AppText className="mt-1 text-[12px] text-gray-500">Not you? Check the number. The name comes straight from {bank?.name}.</AppText> : null}
+        </View>
 
         {/* Amount */}
         <AppText weight="semibold" className="mb-2 mt-3 text-[15px] text-gray-900">Amount</AppText>
