@@ -32,7 +32,7 @@ const SLIDES = [
     title: 'Every artisan,',
     titleAccent: 'already vouched for.',
     subtitle:
-      'Electricians, plumbers and fridge repairers near you — each one ID-checked before they can take a job.',
+      'Electricians, plumbers and fridge repairers near you, each one ID-checked before they can take a job.',
   },
   {
     id: '2',
