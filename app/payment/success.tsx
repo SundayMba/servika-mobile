@@ -30,10 +30,12 @@ export default function PaymentSuccess() {
   const params = useLocalSearchParams<{
     bookingId?: string;
     amount?: string;
+    fee?: string;
     reference?: string;
   }>();
   const { data: booking } = useBooking(params.bookingId);
   const amount = params.amount ? Number(params.amount) : booking?.initialQuoteAmountNaira ?? null;
+  const fee = params.fee ? Number(params.fee) || 0 : 0;
   const [copied, setCopied] = useState(false);
 
   const leaveTo = (href: Href) => {
@@ -94,6 +96,13 @@ export default function PaymentSuccess() {
               {booking?.artisanName ?? '—'}
             </AppText>
           </Row>
+          {fee > 0 ? (
+            <Row label="Payment fee">
+              <AppText weight="medium" className="text-right text-[14px] text-gray-900">
+                {formatNaira(fee)}
+              </AppText>
+            </Row>
+          ) : null}
           <Row label="Status">
             <View className="flex-row items-center gap-1.5 rounded-full bg-green-50 px-2.5 py-1">
               <Ionicons name="lock-closed" size={12} color="#15803D" />

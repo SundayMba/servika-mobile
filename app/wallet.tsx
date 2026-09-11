@@ -12,6 +12,7 @@ import { useWalletTransactions } from '@/lib/payments/hooks';
 import type { WalletTransaction } from '@/lib/payments/types';
 
 const TX: Record<string, { icon: keyof typeof Ionicons.glyphMap; label: string; tint: string }> = {
+  ServiceFee: { icon: 'receipt-outline', label: 'Payment fee', tint: '#64748B' },
   BookingPayment: { icon: 'card', label: 'Booking payment', tint: '#3B82F6' },
   Refund: { icon: 'arrow-undo', label: 'Refund', tint: '#22C55E' },
   Adjustment: { icon: 'swap-horizontal', label: 'Adjustment', tint: '#64748B' },

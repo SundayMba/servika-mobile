@@ -39,6 +39,7 @@ import {
   useCounterBid,
 } from '@/lib/booking/hooks';
 import { payForBooking } from '@/lib/payments/checkout';
+import { feeStartLabel, useFeeQuote, useFeeSchedule } from '@/lib/payments/fees';
 import type { Bid, BookingStatus } from '@/lib/booking/types';
 import { formatNaira } from '@/lib/catalogue/assets';
 import { useBookingDispute } from '@/lib/disputes/hooks';
@@ -302,6 +303,12 @@ export default function BookingDetailScreen() {
   const rebroadcast = useRebroadcast();
   // Opens after a quote is accepted: escrow (recommended) vs cash after service.
   const [paySheetOpen, setPaySheetOpen] = useState(false);
+  // The payment fee, from the server: 0 while Servika covers it, shown plainly once users pay it.
+  const feeQuote = useFeeQuote(booking?.initialQuoteAmountNaira, paySheetOpen);
+  const feeSchedule = useFeeSchedule();
+  const payFee = feeQuote.data?.serviceFeeNaira ?? 0;
+  const payTotal = (booking?.initialQuoteAmountNaira ?? 0) + payFee;
+  const feeCoveredUntil = feeSchedule.data && !feeSchedule.data.usersBearFees ? feeStartLabel(feeSchedule.data.feesStartAtUtc) : null;
 
   const [paying, setPaying] = useState(false);
   const payNow = async () => {
@@ -317,6 +324,7 @@ export default function BookingDetailScreen() {
           params: {
             bookingId: booking.id,
             amount: String(outcome.init.amountNaira),
+            fee: String(outcome.init.serviceFeeNaira ?? 0),
             reference: outcome.init.reference,
           },
         });
@@ -1096,6 +1104,32 @@ export default function BookingDetailScreen() {
               . How would you like to pay?
             </AppText>
           </View>
+
+          {booking?.initialQuoteAmountNaira != null ? (
+            <View className="mt-4 rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3">
+              <View className="flex-row items-center justify-between">
+                <AppText className="text-[13px] text-gray-600">Agreed price</AppText>
+                <AppText weight="medium" className="text-[13px] text-gray-900">{formatNaira(booking.initialQuoteAmountNaira)}</AppText>
+              </View>
+              <View className="mt-1.5 flex-row items-center justify-between">
+                <AppText className="text-[13px] text-gray-600">Payment fee</AppText>
+                <AppText weight="medium" className="text-[13px] text-gray-900">{payFee > 0 ? formatNaira(payFee) : '₦0'}</AppText>
+              </View>
+              {payFee === 0 ? (
+                <AppText className="mt-1 text-[11.5px] leading-4 text-gray-400">
+                  {feeCoveredUntil ? `Servika covers the card fee until ${feeCoveredUntil}.` : 'Servika covers the card fee for now.'}
+                </AppText>
+              ) : (
+                <AppText className="mt-1 text-[11.5px] leading-4 text-gray-400">
+                  The card processing charge, shown up front. The artisan receives the agreed price in full.
+                </AppText>
+              )}
+              <View className="mt-2 flex-row items-center justify-between border-t border-gray-200 pt-2">
+                <AppText weight="semibold" className="text-[14px] text-gray-900">You pay</AppText>
+                <AppText weight="semibold" className="text-[15px] text-gray-900">{formatNaira(payTotal)}</AppText>
+              </View>
+            </View>
+          ) : null}
 
           <Pressable
             accessibilityRole="button"

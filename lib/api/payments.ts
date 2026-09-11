@@ -1,5 +1,7 @@
 import { apiClient } from '@/lib/api/client';
 import type {
+  FeeQuote,
+  FeeSchedule,
   PaymentInitResponse,
   Wallet,
   WalletTransaction,
@@ -32,5 +34,17 @@ export async function getWalletTransactions(): Promise<WalletTransaction[]> {
   const { data } = await apiClient.get<WalletTransaction[]>(
     '/api/v1/wallet/transactions',
   );
+  return data;
+}
+
+/** The fee schedule (public): who pays transaction fees and from when. */
+export async function getFeeSchedule(): Promise<FeeSchedule> {
+  const { data } = await apiClient.get<FeeSchedule>('/api/v1/fees');
+  return data;
+}
+
+/** The payment fee for paying `amount` online, exactly as the server will charge it. */
+export async function getFeeQuote(amount: number): Promise<FeeQuote> {
+  const { data } = await apiClient.get<FeeQuote>('/api/v1/fees/quote', { params: { amount } });
   return data;
 }
