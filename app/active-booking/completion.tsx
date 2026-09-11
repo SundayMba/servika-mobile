@@ -138,6 +138,23 @@ export default function ServiceCompletion() {
                 />
               </Pressable>
             ))}
+            {completion!.receiptPhoto ? (
+              <Pressable
+                accessibilityRole="imagebutton"
+                accessibilityLabel="View the materials receipt fullscreen"
+                style={{ width: '47%' }}
+                onPress={() => setViewerIndex(completion!.photos.length)}
+              >
+                <Image
+                  source={{ uri: completion!.receiptPhoto }}
+                  style={{ width: '100%', height: 150, borderRadius: 16 }}
+                  contentFit="cover"
+                />
+                <View className="absolute bottom-2 left-2 rounded-md bg-gray-900/80 px-2 py-0.5">
+                  <AppText weight="semibold" className="text-[10.5px] text-white">Materials receipt</AppText>
+                </View>
+              </Pressable>
+            ) : null}
           </View>
         )}
 
@@ -190,7 +207,7 @@ export default function ServiceCompletion() {
         visible={viewerIndex !== null}
         initialIndex={viewerIndex ?? 0}
         onClose={() => setViewerIndex(null)}
-        photos={(completion?.photos ?? []).map((uri) => ({ uri }))}
+        photos={[...(completion?.photos ?? []), ...(completion?.receiptPhoto ? [completion.receiptPhoto] : [])].map((uri) => ({ uri }))}
       />
 
     </SafeAreaView>

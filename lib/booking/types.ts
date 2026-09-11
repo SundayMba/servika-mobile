@@ -29,6 +29,8 @@ export interface JobCompletion {
   submittedAtUtc: string | null;
   /** Photos as base64 data URIs the app renders directly. */
   photos: string[];
+  /** The materials receipt the artisan attached, shown apart from the work photos. */
+  receiptPhoto?: string | null;
 }
 
 /** Artisan submits proof of completed work. */
