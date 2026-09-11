@@ -201,7 +201,9 @@ function FixedPriceCardBase({
   width: number;
   onPress: () => void;
 }) {
-  const mediaHeight = Math.round(width * 0.62);
+  // Taller than a photo card's usual 16:10 so an uploaded portrait keeps its subject;
+  // anchored to the top because faces and the work sit in the upper part of the shot.
+  const mediaHeight = Math.round(width * 0.8);
   return (
     <Pressable
       accessibilityRole="button"
@@ -211,7 +213,7 @@ function FixedPriceCardBase({
     >
       <View style={[styles.media, { height: mediaHeight }]}>
         {item.source ? (
-          <Image source={item.source} contentFit="cover" style={StyleSheet.absoluteFill} transition={150} />
+          <Image source={item.source} contentFit="cover" contentPosition="top" style={StyleSheet.absoluteFill} transition={150} />
         ) : (
           <View style={styles.mediaFallback}>
             <Ionicons name="pricetags" size={28} color={colors.accentDeep} />
