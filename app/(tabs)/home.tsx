@@ -230,7 +230,7 @@ export default function Home() {
   const bookingsPending = refreshing || bookingsQuery.isLoading;
 
   return (
-    <View style={[styles.screen, { paddingTop: insets.top }]}>
+    <View style={[styles.screen, { paddingTop: insets.top + 8 }]}>
       <StatusBar style="dark" />
 
       {/* The status-bar band is part of the screen, not of the scroll content,
@@ -643,6 +643,8 @@ const styles = StyleSheet.create({
   },
   searchBand: {
     paddingHorizontal: GUTTER,
+    // Breathing room under the status bar when the bar is pinned at the top.
+    paddingTop: 10,
     // The container gap spaces it like any section; a little extra ground
     // below so content sliding under the pinned bar disappears cleanly.
     paddingBottom: 8,
