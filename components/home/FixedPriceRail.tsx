@@ -31,7 +31,7 @@ export type FixedPriceCardItem = {
   key: string;
   name: string;
   priceNaira: number;
-  /** The service's own photo, matched stock art, or null → tag tile. */
+  /** The service's own photo, trade art for its category, the artisan's photo, or null → tag tile. */
   source: Source;
   rating: number;
   reviewCount: number;
