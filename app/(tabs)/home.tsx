@@ -22,7 +22,6 @@ import { HeroCarousel } from '@/components/home/HeroCarousel';
 import { LocationSheet } from '@/components/home/LocationSheet';
 import {
   FixedPriceRail,
-  padWithExamples,
   toFixedPriceCard,
 } from '@/components/home/FixedPriceRail';
 import { ServiceTile } from '@/components/home/ServiceTile';
@@ -386,10 +385,11 @@ export default function Home() {
           )}
         </View>
 
-        {/* ── Services close to you: fixed-price listings, booked in one tap.
-            Live listings when there are any nearby, padded with example cards
-            so the section (and its promise) is always on the page. A live card
-            opens the service profile; booking is gated there. ── */}
+        {/* ── Services close to you: fixed-price listings real artisans have
+            published, booked in one tap. Only live listings are shown; the
+            section hides itself until there is one nearby. A card opens the
+            service profile; booking is gated there. ── */}
+        {(featuredQuery.data?.length ?? 0) > 0 ? (
         <View style={styles.sectionTight}>
           <SectionHeader
             title="Services close to you"
@@ -398,19 +398,15 @@ export default function Home() {
             scale={scale}
           />
           <FixedPriceRail
-            items={padWithExamples((featuredQuery.data ?? []).map(toFixedPriceCard))}
+            items={(featuredQuery.data ?? []).map(toFixedPriceCard)}
             onPress={(item) => {
-              const live = item.service;
-              if (live) {
-                router.push({ pathname: '/service/[id]', params: { id: live.serviceId } });
-              } else if (item.categorySlug) {
-                router.push({ pathname: '/category/[id]', params: { id: item.categorySlug } });
-              } else {
-                router.push('/categories');
+              if (item.service) {
+                router.push({ pathname: '/service/[id]', params: { id: item.service.serviceId } });
               }
             }}
           />
         </View>
+        ) : null}
 
         {/* ── Nearby Artisans ── */}
         <View style={styles.sectionTight}>

@@ -25,8 +25,7 @@ type Source = ImageSourcePropType | { uri: string } | null;
 
 /**
  * One card's worth of display data. Live listings come from the services API
- * via `toFixedPriceCard`; while the marketplace has none near the customer, the
- * rail pads with `EXAMPLE_FIXED_PRICES` so the section never disappears.
+ * via `toFixedPriceCard`; the rail shows only what real artisans have published.
  */
 export type FixedPriceCardItem = {
   key: string;
@@ -38,22 +37,13 @@ export type FixedPriceCardItem = {
   reviewCount: number;
   /** Km from the customer's selected area; null when either side has no pin. */
   distanceKm: number | null;
-  /** The provider line. Examples have none and say so instead. */
+  /** The provider line. */
   providerName?: string;
   providerSource?: Source;
   available?: boolean;
   certified?: boolean;
-  /** Set on live listings; the tap opens the service profile. */
+  /** The live listing; the tap opens the service profile. */
   service?: FeaturedService;
-  /** Set on example cards; the tap opens this category instead. */
-  categorySlug?: string;
-  example?: boolean;
-};
-
-const STOCK = {
-  braids: require('@assets/images/services/fixed-price-examples/braids.webp') as ImageSourcePropType,
-  electrical: require('@assets/images/services/fixed-price-examples/electrical.webp') as ImageSourcePropType,
-  cleaning: require('@assets/images/services/fixed-price-examples/cleaning.webp') as ImageSourcePropType,
 };
 
 /**
@@ -73,22 +63,9 @@ const TRADE_ART: Record<string, ImageSourcePropType> = {
   carpentry: require('@assets/images/artisans/working/hero_carpenter.webp'),
 };
 
-/**
- * Work photos matched on the service NAME, for listings whose artisan never
- * uploaded one and whose category has no trade art (hair and cleaning have no
- * category of their own yet). A blank tag tile is the last resort, not the norm.
- */
-const KEYWORD_ART: [RegExp, ImageSourcePropType][] = [
-  [/braid|hair|bead|weav|wig|twist|loc|barb|salon|nail|lash|makeup/i, STOCK.braids],
-  [/clean|wash|laundry|mop|fumigat|dust/i, STOCK.cleaning],
-  [/socket|switch|wiring|electric|light|fan|bulb/i, STOCK.electrical],
-];
-
-/** Photo priority: the service's own → name keyword → trade art → artisan photo → none. */
+/** Photo priority: the service's own → trade art for its category → artisan photo → none. */
 export function serviceArt(item: FeaturedService): Source {
   if (item.photoUrl) return { uri: `${config.apiBaseUrl}${item.photoUrl}` };
-  const byName = KEYWORD_ART.find(([re]) => re.test(item.name))?.[1];
-  if (byName) return byName;
   if (item.categorySlug && TRADE_ART[item.categorySlug]) return TRADE_ART[item.categorySlug];
   if (item.artisanPhotoUrl) return { uri: `${config.apiBaseUrl}${item.artisanPhotoUrl}` };
   return null;
@@ -111,60 +88,6 @@ export function toFixedPriceCard(item: FeaturedService): FixedPriceCardItem {
     certified: item.hasCertificate,
     service: item,
   };
-}
-
-/**
- * Three showcase listings for when nothing is published near the customer.
- * Real work photos (Pexels licence, credits beside the files) with Black
- * subjects, per the project's imagery rule. Tapping one opens the closest
- * category so the card is never a dead end. No provider is named: these are
- * illustrations, not people.
- */
-export const EXAMPLE_FIXED_PRICES: FixedPriceCardItem[] = [
-  {
-    key: 'example-braids',
-    name: 'Knotless braids',
-    priceNaira: 15_000,
-    source: STOCK.braids,
-    rating: 4.9,
-    reviewCount: 128,
-    distanceKm: 2.1,
-    example: true,
-  },
-  {
-    key: 'example-electrical',
-    name: 'Socket & switch fix',
-    priceNaira: 8_000,
-    source: STOCK.electrical,
-    rating: 4.8,
-    reviewCount: 64,
-    distanceKm: 1.4,
-    categorySlug: 'electrical',
-    example: true,
-  },
-  {
-    key: 'example-cleaning',
-    name: 'Standard home cleaning',
-    priceNaira: 12_000,
-    source: STOCK.cleaning,
-    rating: 4.7,
-    reviewCount: 91,
-    distanceKm: 3.0,
-    categorySlug: 'cleaning',
-    example: true,
-  },
-];
-
-/**
- * The rail needs three cards to read as a rail. Fewer live listings than that
- * are padded with example cards, skipping any example whose photo is already
- * on a live card so the row never shows the same picture twice.
- */
-export function padWithExamples(live: FixedPriceCardItem[], min = 3): FixedPriceCardItem[] {
-  if (live.length >= min) return live;
-  const used = new Set(live.map((c) => c.source));
-  const fill = EXAMPLE_FIXED_PRICES.filter((e) => !used.has(e.source));
-  return [...live, ...fill.slice(0, min - live.length)];
 }
 
 /**
@@ -207,7 +130,7 @@ function FixedPriceCardBase({
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${item.name}, ${formatNaira(item.priceNaira)}${item.example ? ', example' : ''}`}
+      accessibilityLabel={`${item.name}, ${formatNaira(item.priceNaira)}`}
       onPress={onPress}
       style={[styles.card, { width }]}
     >
@@ -238,13 +161,6 @@ function FixedPriceCardBase({
               <Ionicons name="ribbon" size={10} color={colors.accentDeep} />
               <AppText weight="semibold" style={styles.topTagLabel}>
                 Certified
-              </AppText>
-            </View>
-          ) : null}
-          {item.example ? (
-            <View style={styles.topTag}>
-              <AppText weight="semibold" style={styles.topTagLabel}>
-                Example
               </AppText>
             </View>
           ) : null}
@@ -311,14 +227,7 @@ function FixedPriceCardBase({
                 {item.available ? 'Available' : 'Busy'}
               </AppText>
             </>
-          ) : (
-            <>
-              <Ionicons name="sparkles-outline" size={13} color={colors.inkSubtle} />
-              <AppText numberOfLines={1} style={styles.exampleLine}>
-                Example listing · tap to browse this service
-              </AppText>
-            </>
-          )}
+          ) : null}
         </View>
       </View>
     </Pressable>
@@ -327,7 +236,7 @@ function FixedPriceCardBase({
 
 export const FixedPriceCard = memo(FixedPriceCardBase);
 
-/** The horizontal rail. Home decides whether `items` are live, examples, or both. */
+/** The horizontal rail of live fixed-price listings. */
 export function FixedPriceRail({
   items,
   onPress,
@@ -481,10 +390,5 @@ const styles = StyleSheet.create({
   availLabel: {
     fontSize: 10.5,
     letterSpacing: 0.19,
-  },
-  exampleLine: {
-    flexShrink: 1,
-    fontSize: 12,
-    color: colors.inkSubtle,
   },
 });
