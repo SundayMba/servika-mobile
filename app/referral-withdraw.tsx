@@ -18,8 +18,8 @@ import type { Bank } from '@/lib/artisan/walletTypes';
 import { formatNaira } from '@/lib/catalogue/assets';
 import { useBanks, useMyReferrals, useRequestReferralWithdrawal } from '@/lib/referral/hooks';
 
-// One referral reward (₦500) is the smallest cash-out — matches the backend floor.
-const MIN_WITHDRAWAL = 500;
+// One referral reward is the smallest cash-out; the amount follows the admin setting.
+const DEFAULT_MIN_WITHDRAWAL = 500;
 
 /**
  * Cash out the referral reward pool to a bank account. The available balance comes
@@ -31,6 +31,7 @@ export default function ReferralWithdraw() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { data: referral } = useMyReferrals();
+  const MIN_WITHDRAWAL = referral?.rewardNaira ?? DEFAULT_MIN_WITHDRAWAL;
   const requestWithdrawal = useRequestReferralWithdrawal();
 
   const available = referral?.availableNaira ?? 0;
