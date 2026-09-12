@@ -1,4 +1,5 @@
 import { apiClient } from '@/lib/api/client';
+import type { PaymentStatusInfo } from '@/components/payments/PaystackCheckout';
 import type {
   FeeQuote,
   FeeSchedule,
@@ -46,5 +47,11 @@ export async function getFeeSchedule(): Promise<FeeSchedule> {
 /** The payment fee for paying `amount` online, exactly as the server will charge it. */
 export async function getFeeQuote(amount: number): Promise<FeeQuote> {
   const { data } = await apiClient.get<FeeQuote>('/api/v1/fees/quote', { params: { amount } });
+  return data;
+}
+
+/** Where a payment stands; the server asks Paystack directly and settles if it can. */
+export async function verifyPayment(reference: string): Promise<PaymentStatusInfo> {
+  const { data } = await apiClient.post<PaymentStatusInfo>(`/api/v1/payments/${encodeURIComponent(reference)}/verify`);
   return data;
 }

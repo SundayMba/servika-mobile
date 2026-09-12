@@ -38,7 +38,7 @@ import {
   useDecideMaterialsAdvance,
   useCounterBid,
 } from '@/lib/booking/hooks';
-import { payForBooking } from '@/lib/payments/checkout';
+import { startBookingPayment } from '@/lib/payments/checkout';
 import { feeStartLabel, useFeeQuote, useFeeSchedule } from '@/lib/payments/fees';
 import type { Bid, BookingStatus } from '@/lib/booking/types';
 import { formatNaira } from '@/lib/catalogue/assets';
@@ -315,24 +315,24 @@ export default function BookingDetailScreen() {
     if (!booking || paying) return;
     setPaying(true);
     try {
-      // In-app checkout sheet, then wait for the webhook to mark it Paid.
-      const outcome = await payForBooking(booking.id);
-      refetch();
-      if (outcome.status === 'paid') {
+      // The gateway page opens inside the app (own WebView), so a hop out to OPay
+      // or a bank app comes back here, and the server verifies the payment on return.
+      const { init, hosted } = await startBookingPayment(booking.id);
+      if (hosted) {
         router.push({
-          pathname: '/payment/success',
+          pathname: '/payment/checkout',
           params: {
+            url: init.authorizationUrl as string,
+            reference: init.reference,
             bookingId: booking.id,
-            amount: String(outcome.init.amountNaira),
-            fee: String(outcome.init.serviceFeeNaira ?? 0),
-            reference: outcome.init.reference,
+            amount: String(init.amountNaira),
+            fee: String(init.serviceFeeNaira ?? 0),
           },
         });
-      } else if (/^https?:/i.test(outcome.init.authorizationUrl ?? '')) {
-        appAlert(
-          'Payment not confirmed',
-          'If you completed the payment, it can take a moment to reflect. Pull down to refresh; you will also get a notification once it lands.',
-        );
+      } else {
+        // Dev stub: no page to open; the stub webhook settles it.
+        refetch();
+        appAlert('Payment started', 'This test build has no gateway page. The payment settles when the test webhook fires.');
       }
     } catch (err) {
       appAlert('Payment failed', authErrorMessage(err, 'Please try again.'));
