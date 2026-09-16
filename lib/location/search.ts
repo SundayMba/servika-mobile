@@ -5,11 +5,11 @@ import type { LatLng } from '@/lib/tracking/geo';
 /**
  * Location search + current-location resolution for the service-area picker.
  *
- * Two backends, same shape:
- *  - **Google Places Autocomplete** when `EXPO_PUBLIC_GOOGLE_PLACES_KEY` is set
- *    (real "search on Google Maps" — type-ahead, Nigeria-scoped).
- *  - **Native geocoding fallback** (expo-location, no key) otherwise — resolves a
- *    typed address to a place. Works today; swap in the key for full autocomplete.
+ * Backends in order, same shape:
+ *  - **Google Places Autocomplete** when `EXPO_PUBLIC_GOOGLE_PLACES_KEY` is set.
+ *  - **LocationIQ** (OpenStreetMap, free tier, no card) when `EXPO_PUBLIC_LOCATIONIQ_KEY` is set.
+ *  - **Photon** (komoot's OpenStreetMap geocoder, no key) otherwise.
+ *  - **Native geocoding** (expo-location) as the last resort.
  *
  * The picker only needs a human label to show on Home, so autocomplete results
  * carry no coordinates (a Place Details lookup would add a billable call). GPS
@@ -113,6 +113,64 @@ async function searchGooglePlacesLegacy(
   }));
 }
 
+const LOCATIONIQ_KEY = process.env.EXPO_PUBLIC_LOCATIONIQ_KEY;
+
+/**
+ * LocationIQ autocomplete (OpenStreetMap data, Nigeria-scoped). Free tier with no
+ * card: set EXPO_PUBLIC_LOCATIONIQ_KEY. `null` on an API error so the caller
+ * falls through; `[]` is a real "no matches".
+ */
+async function searchLocationIq(query: string, signal?: AbortSignal): Promise<PlaceResult[] | null> {
+  try {
+    const url =
+      'https://api.locationiq.com/v1/autocomplete' +
+      `?key=${LOCATIONIQ_KEY}&q=${encodeURIComponent(query)}&countrycodes=ng&limit=6&normalizecity=1&dedupe=1`;
+    const res = await fetch(url, { signal });
+    if (res.status === 404) return [];
+    if (!res.ok) return null;
+    const json = (await res.json()) as { place_id: string; display_place?: string; display_address?: string; display_name: string }[];
+    return json.map((p) => ({
+      id: String(p.place_id),
+      label: p.display_place ?? p.display_name.split(',')[0],
+      sub: p.display_address ?? p.display_name.split(',').slice(1, 3).join(',').trim() ?? undefined,
+    }));
+  } catch (e) {
+    if ((e as Error)?.name === 'AbortError') throw e;
+    return null;
+  }
+}
+
+/**
+ * Photon (komoot's OpenStreetMap geocoder): no key, fair-use public instance.
+ * Biased to Lagos, filtered to Nigeria. `null` on an API error, `[]` on no matches.
+ */
+async function searchPhoton(query: string, signal?: AbortSignal): Promise<PlaceResult[] | null> {
+  try {
+    const url =
+      'https://photon.komoot.io/api/' +
+      `?q=${encodeURIComponent(query)}&limit=8&lang=en&lat=6.5244&lon=3.3792&zoom=10&location_bias_scale=0.4`;
+    const res = await fetch(url, { signal });
+    if (!res.ok) return null;
+    const json = (await res.json()) as {
+      features?: { properties: { osm_id: number; name?: string; street?: string; housenumber?: string; district?: string; city?: string; county?: string; state?: string; countrycode?: string } }[];
+    };
+    const out: PlaceResult[] = [];
+    for (const f of json.features ?? []) {
+      const pr = f.properties;
+      if (pr.countrycode && pr.countrycode.toUpperCase() !== 'NG') continue;
+      const label = pr.name ?? [pr.housenumber, pr.street].filter(Boolean).join(' ');
+      if (!label) continue;
+      const sub = [pr.district, pr.city ?? pr.county, pr.state].filter((x) => x && x !== label).join(', ');
+      out.push({ id: `photon-${pr.osm_id}-${out.length}`, label, sub: sub || undefined });
+      if (out.length >= 6) break;
+    }
+    return out;
+  } catch (e) {
+    if ((e as Error)?.name === 'AbortError') throw e;
+    return null;
+  }
+}
+
 /** Fallback: resolve a typed address to a place via the native geocoder. */
 async function searchNativeGeocode(query: string): Promise<PlaceResult[]> {
   try {
@@ -156,7 +214,30 @@ export async function searchPlaces(
     const legacy = await searchGooglePlacesLegacy(q, signal);
     if (legacy) return legacy;
   }
+  // OpenStreetMap-backed providers: LocationIQ when keyed, else Photon (no key).
+  if (LOCATIONIQ_KEY) {
+    const liq = await searchLocationIq(q, signal);
+    if (liq) return liq;
+  }
+  const photon = await searchPhoton(q, signal);
+  if (photon && photon.length > 0) return photon;
   return searchNativeGeocode(q);
+}
+
+/** Photon reverse geocode: a readable area for a coordinate, or null. */
+async function reversePhoton(latitude: number, longitude: number): Promise<string | null> {
+  try {
+    const res = await fetch(`https://photon.komoot.io/reverse?lat=${latitude}&lon=${longitude}&lang=en`);
+    if (!res.ok) return null;
+    const json = (await res.json()) as { features?: { properties: { name?: string; street?: string; district?: string; city?: string; county?: string; state?: string } }[] };
+    const pr = json.features?.[0]?.properties;
+    if (!pr) return null;
+    const parts = [pr.name ?? pr.street, pr.district, pr.city ?? pr.county ?? pr.state].filter(Boolean);
+    const uniq = parts.filter((x, i) => parts.indexOf(x) === i);
+    return uniq.slice(0, 3).join(', ') || null;
+  } catch {
+    return null;
+  }
 }
 
 /** Build a readable area label from a reverse-geocoded place. */
@@ -189,10 +270,12 @@ export async function reverseGeocodeArea(
 ): Promise<string> {
   try {
     const [place] = await Location.reverseGeocodeAsync({ latitude, longitude });
-    return formatPlace(place) ?? PINNED_LABEL;
+    const native = formatPlace(place);
+    if (native) return native;
   } catch {
-    return PINNED_LABEL;
+    /* fall through to Photon */
   }
+  return (await reversePhoton(latitude, longitude)) ?? PINNED_LABEL;
 }
 
 /** Forward-geocode a text place to coordinates (for centering the map). */
@@ -223,11 +306,15 @@ export async function resolveCurrentArea(): Promise<CurrentArea> {
     accuracy: Location.Accuracy.Balanced,
   });
   const { latitude, longitude } = position.coords;
-  const [place] = await Location.reverseGeocodeAsync({ latitude, longitude });
-  const label = place
-    ? [place.district || place.name || place.street, place.city || place.region]
-        .filter(Boolean)
-        .join(', ')
-    : PINNED_LABEL;
+  let label = '';
+  try {
+    const [place] = await Location.reverseGeocodeAsync({ latitude, longitude });
+    label = place
+      ? [place.district || place.name || place.street, place.city || place.region].filter(Boolean).join(', ')
+      : '';
+  } catch {
+    /* fall through to Photon */
+  }
+  if (!label) label = (await reversePhoton(latitude, longitude)) ?? '';
   return { label: label || PINNED_LABEL, lat: latitude, lng: longitude };
 }

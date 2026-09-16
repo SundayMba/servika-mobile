@@ -1,152 +1,89 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, View } from 'react-native';
-import MapView, {
-  AnimatedRegion,
-  Marker,
-  MarkerAnimated,
-  Polyline,
-  PROVIDER_DEFAULT,
-} from 'react-native-maps';
+import { Pressable, Text, View } from 'react-native';
 
-import { AppText } from '@/components/ui/AppText';
+import { Camera, LibreMap, LineOverlay, Pin, UserLocation, boundsFor, toLngLat, zoomForSpan, type CameraRef } from '@/components/map/LibreMap';
 import { colors } from '@/constants/colors';
-import { distanceKm, regionFor, type LatLng } from '@/lib/tracking/geo';
+import { distanceKm, type LatLng } from '@/lib/tracking/geo';
 
 /** A nearby artisan to show as an ambient marker. */
 export type NearbyMarker = { id: string; position: LatLng };
 
-// Explicit role colours (not theme tokens) so the two apps render identically:
-// the artisan is always orange, the customer always blue — like ride apps give
-// driver and rider each a fixed identity colour.
+// Fixed identity colours so both apps render the same: artisan orange, customer blue.
 const ARTISAN_COLOR = '#F97316';
 const CUSTOMER_COLOR = '#2563EB';
 
-/**
- * An inDrive-style person marker: a small coloured name tag floating above a
- * circular person icon. Starts with `tracksViewChanges` ON so Android rasterises
- * it AFTER the text/icon have drawn, then freezes ~600ms later — a frozen raster
- * moves smoothly with the marker at 60fps instead of re-drawing every frame
- * (the re-draw churn is what makes markers feel janky).
- */
-function PersonBadge({
-  label,
-  color,
-  icon,
-}: {
-  label?: string;
-  color: string;
-  icon: 'walk' | 'person';
-}) {
+/** An inDrive-style person marker: a coloured name tag above a round person icon. */
+function PersonBadge({ label, color, icon }: { label?: string; color: string; icon: 'walk' | 'person' }) {
   return (
     <View className="items-center">
       {label ? (
-        <View
-          className="mb-1 rounded-full px-2.5 py-[3px]"
-          style={[{ backgroundColor: color }, shadow]}
-        >
-          <AppText weight="semibold" className="text-[11px] text-white" numberOfLines={1}>
+        <View className="mb-1 rounded-full px-2.5 py-[3px]" style={[{ backgroundColor: color }, shadow]}>
+          <Text className="text-[11px] font-bold text-white" numberOfLines={1}>
             {label}
-          </AppText>
+          </Text>
         </View>
       ) : null}
-      <View
-        className="h-9 w-9 items-center justify-center rounded-full border-2 border-white"
-        style={[{ backgroundColor: color }, shadow]}
-      >
+      <View className="h-9 w-9 items-center justify-center rounded-full border-2 border-white" style={[{ backgroundColor: color }, shadow]}>
         <Ionicons name={icon} size={16} color={colors.white} />
       </View>
     </View>
   );
 }
 
-/** Rasterise-then-freeze wrapper for static markers (destination). */
-function FrozenMarker({
-  coordinate,
-  children,
-  anchor,
-}: {
-  coordinate: LatLng;
-  children: React.ReactNode;
-  anchor?: { x: number; y: number };
-}) {
-  const [tracks, setTracks] = useState(true);
-  useEffect(() => {
-    const t = setTimeout(() => setTracks(false), 600);
-    return () => clearTimeout(t);
-  }, []);
-  return (
-    <Marker coordinate={coordinate} anchor={anchor ?? { x: 0.5, y: 0.5 }} tracksViewChanges={tracks}>
-      {children}
-    </Marker>
-  );
-}
-
 /**
- * The moving artisan marker. Glides between location pings with a tween whose
- * duration adapts to the real ping cadence (a 4s gap tweens over ~4s), so the
- * marker appears to move continuously instead of hop-and-wait.
+ * Glides a position between pings: the marker moves continuously across the
+ * gap until the next ping instead of hop-and-wait. Pure JS, ~30 fps.
  */
-function ArtisanPuck({ position, label }: { position: LatLng; label?: string }) {
-  const region = useRef(
-    new AnimatedRegion({
-      latitude: position.latitude,
-      longitude: position.longitude,
-      latitudeDelta: 0,
-      longitudeDelta: 0,
-    }),
-  ).current;
-  const first = useRef(true);
+function useGlide(target: LatLng): LatLng {
+  const [shown, setShown] = useState(target);
+  const from = useRef(target);
   const lastAt = useRef(Date.now());
-  const [tracks, setTracks] = useState(true);
-
+  const first = useRef(true);
   useEffect(() => {
-    const t = setTimeout(() => setTracks(false), 600);
-    return () => clearTimeout(t);
-  }, []);
-
-  useEffect(() => {
-    const next = {
-      latitude: position.latitude,
-      longitude: position.longitude,
-      latitudeDelta: 0,
-      longitudeDelta: 0,
-    };
-    const now = Date.now();
     if (first.current) {
       first.current = false;
-      lastAt.current = now;
-      region.setValue(next);
+      lastAt.current = Date.now();
+      setShown(target);
       return;
     }
-    // Tween across (roughly) the time until the next ping arrives.
-    const sincePrev = now - lastAt.current;
-    lastAt.current = now;
-    const duration = Math.min(6000, Math.max(800, sincePrev));
-    // `toValue` is required by the (Animated) type but ignored by AnimatedRegion,
-    // which tweens to the latitude/longitude provided here.
-    region.timing({ ...next, toValue: 0, duration, useNativeDriver: false }).start();
-  }, [position.latitude, position.longitude, region]);
+    const start = from.current;
+    const startedAt = Date.now();
+    const duration = Math.min(6000, Math.max(800, startedAt - lastAt.current));
+    lastAt.current = startedAt;
+    let raf: ReturnType<typeof setTimeout>;
+    const tick = () => {
+      const t = Math.min(1, (Date.now() - startedAt) / duration);
+      const e = 1 - (1 - t) * (1 - t);
+      const next = {
+        latitude: start.latitude + (target.latitude - start.latitude) * e,
+        longitude: start.longitude + (target.longitude - start.longitude) * e,
+      };
+      from.current = next;
+      setShown(next);
+      if (t < 1) raf = setTimeout(tick, 33);
+    };
+    tick();
+    return () => clearTimeout(raf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [target.latitude, target.longitude]);
+  return shown;
+}
 
+function ArtisanPuck({ position, label }: { position: LatLng; label?: string }) {
+  const shown = useGlide(position);
   return (
-    <MarkerAnimated
-      coordinate={region}
-      anchor={{ x: 0.5, y: label ? 0.72 : 0.5 }}
-      tracksViewChanges={tracks}
-    >
+    <Pin position={shown} anchor={label ? 'bottom' : 'center'}>
       <PersonBadge label={label} color={ARTISAN_COLOR} icon="walk" />
-    </MarkerAnimated>
+    </Pin>
   );
 }
 
 /**
- * Sleek dark ride-app-style live map: person markers with coloured name tags
- * (artisan orange, customer blue), a road-snapped route line, a smoothly gliding
- * artisan puck, and a camera that follows the trip — panning by hand pauses the
- * follow; the recenter button resumes it.
- *
- * Real native map (react-native-maps): Apple Maps on iOS (no key), Google on
- * Android (needs a Maps key for release). Requires a dev build, not Expo Go.
+ * Ride-app-style live map: person markers with coloured name tags, a road-snapped
+ * route line, a gliding artisan puck, and a camera that follows the trip. Panning
+ * by hand pauses the follow; the recenter button resumes it. Free OpenStreetMap
+ * tiles via MapLibre; needs a native build, not Expo Go.
  */
 export function LiveMap({
   destination,
@@ -160,57 +97,40 @@ export function LiveMap({
   destination: LatLng;
   artisan: LatLng | null;
   nearby?: NearbyMarker[];
-  /** Road-snapped route to draw. `approximate` (stub provider) renders dashed. */
+  /** Road-snapped route to draw. `approximate` (straight-line stub) renders dashed. */
   route?: { points: LatLng[]; approximate: boolean } | null;
-  /** Show the viewer's own blue dot — so a customer can walk to meet a
-   * stationary artisan (needs foreground location permission). */
+  /** Show the viewer's own blue dot (needs foreground location permission). */
   showsUserLocation?: boolean;
-  /** Name tag over the moving artisan marker (e.g. the artisan's first name, or
-   * "You" on the artisan's own screen). */
+  /** Name tag over the moving artisan marker. */
   artisanLabel?: string;
-  /** Name tag over the destination marker (e.g. "You" for the customer watching,
-   * or the customer's name on the artisan's screen). */
+  /** Name tag over the destination marker. */
   destinationLabel?: string;
 }) {
-  const mapRef = useRef<MapView | null>(null);
-  // Camera follows the trip until the user pans; recenter resumes following.
+  const camera = useRef<CameraRef | null>(null);
   const follow = useRef(true);
   const lastFitAt = useRef<LatLng | null>(null);
 
   const fit = () => {
     lastFitAt.current = artisan;
-    // Close together (or no artisan ping yet): a street-level camera — you
-    // should read street/place names, like a ride app — instead of a far-out
-    // fitToCoordinates (which zooms way out when the two points nearly
-    // coincide, e.g. "0 m away").
+    // Close together, or no ping yet: a street-level camera you can read names on.
     if (!artisan || distanceKm(destination, artisan) < 0.35) {
       const center = artisan
-        ? {
-            latitude: (destination.latitude + artisan.latitude) / 2,
-            longitude: (destination.longitude + artisan.longitude) / 2,
-          }
+        ? { latitude: (destination.latitude + artisan.latitude) / 2, longitude: (destination.longitude + artisan.longitude) / 2 }
         : destination;
-      mapRef.current?.animateToRegion(
-        { ...center, latitudeDelta: 0.008, longitudeDelta: 0.008 },
-        500,
-      );
+      camera.current?.easeTo({ center: toLngLat(center), zoom: 16, duration: 500 });
       return;
     }
-    mapRef.current?.fitToCoordinates([destination, artisan], {
-      edgePadding: { top: 140, right: 90, bottom: 340, left: 90 },
-      animated: true,
-    });
+    const bounds = boundsFor([destination, artisan]);
+    if (bounds) camera.current?.fitBounds(bounds, { padding: { top: 140, right: 90, bottom: 340, left: 90 }, duration: 600 });
   };
 
-  // Re-frame when the artisan first appears or the destination changes.
   useEffect(() => {
     const t = setTimeout(fit, 600);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [destination.latitude, destination.longitude, !!artisan]);
 
-  // Trip follow: as the artisan moves meaningfully (~60m), keep both ends framed
-  // — unless the user has taken over by panning.
+  // Follow the trip: re-frame every ~60 m unless the user has panned.
   useEffect(() => {
     if (!artisan || !follow.current) return;
     const prev = lastFitAt.current;
@@ -218,69 +138,45 @@ export function LiveMap({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [artisan?.latitude, artisan?.longitude]);
 
+  const initialSpan = artisan
+    ? Math.max(Math.abs(destination.latitude - artisan.latitude) * 2.2, 0.01)
+    : 0.01;
+
   return (
     <View className="flex-1">
-      <MapView
-        ref={mapRef}
-        showsUserLocation={showsUserLocation}
-        showsMyLocationButton={false}
-        provider={PROVIDER_DEFAULT}
+      <LibreMap
         style={{ flex: 1 }}
-        userInterfaceStyle="light"
-        customMapStyle={LIGHT_MAP_STYLE}
-        showsCompass={false}
-        showsPointsOfInterest
-        showsBuildings={false}
-        toolbarEnabled={false}
-        onPanDrag={() => {
-          follow.current = false;
+        onRegionWillChange={(e) => {
+          if (e.nativeEvent.userInteraction) follow.current = false;
         }}
-        initialRegion={regionFor(artisan ?? destination, destination)}
       >
-        {/* Destination (the customer / job address) — blue person with name tag */}
-        <FrozenMarker coordinate={destination} anchor={{ x: 0.5, y: destinationLabel ? 0.72 : 0.5 }}>
-          <PersonBadge label={destinationLabel} color={CUSTOMER_COLOR} icon="person" />
-        </FrozenMarker>
+        <Camera
+          ref={camera}
+          initialViewState={{ center: toLngLat(artisan ?? destination), zoom: zoomForSpan(initialSpan) }}
+        />
+        {showsUserLocation ? <UserLocation /> : null}
 
-        {/* Ambient nearby artisans */}
-        {nearby.map((n) => (
-          <FrozenMarker key={n.id} coordinate={n.position}>
-            <View
-              className="h-6 w-6 items-center justify-center rounded-full border border-white"
-              style={[{ backgroundColor: `${ARTISAN_COLOR}B3` }, shadow]}
-            >
-              <Ionicons name="construct" size={11} color={colors.white} />
-            </View>
-          </FrozenMarker>
-        ))}
-
-        {/* Route: road-snapped polyline when we have one (solid for real Google
-            geometry, dashed when it's the straight-line stub); otherwise a dashed
-            straight line between artisan and destination. */}
         {route && route.points.length >= 2 ? (
-          <Polyline
-            coordinates={route.points}
-            strokeColor={ARTISAN_COLOR}
-            strokeWidth={5}
-            lineCap="round"
-            lineJoin="round"
-            lineDashPattern={route.approximate ? [1, 8] : undefined}
-          />
+          <LineOverlay id="route" points={route.points} color={ARTISAN_COLOR} width={5} dashed={route.approximate} />
         ) : artisan ? (
-          <Polyline
-            coordinates={[artisan, destination]}
-            strokeColor={ARTISAN_COLOR}
-            strokeWidth={4}
-            lineDashPattern={[1, 8]}
-            lineCap="round"
-          />
+          <LineOverlay id="route" points={[artisan, destination]} color={ARTISAN_COLOR} width={4} dashed />
         ) : null}
 
-        {/* Live artisan puck (smoothly animated person marker with name tag) */}
-        {artisan ? <ArtisanPuck position={artisan} label={artisanLabel} /> : null}
-      </MapView>
+        {nearby.map((n) => (
+          <Pin key={n.id} position={n.position}>
+            <View className="h-6 w-6 items-center justify-center rounded-full border border-white" style={[{ backgroundColor: `${ARTISAN_COLOR}B3` }, shadow]}>
+              <Ionicons name="construct" size={11} color={colors.white} />
+            </View>
+          </Pin>
+        ))}
 
-      {/* Recenter: re-frames the trip and resumes camera follow. */}
+        <Pin position={destination} anchor={destinationLabel ? 'bottom' : 'center'}>
+          <PersonBadge label={destinationLabel} color={CUSTOMER_COLOR} icon="person" />
+        </Pin>
+
+        {artisan ? <ArtisanPuck position={artisan} label={artisanLabel} /> : null}
+      </LibreMap>
+
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Recenter map"
@@ -304,21 +200,3 @@ const shadow = {
   shadowOffset: { width: 0, height: 2 },
   elevation: 5,
 } as const;
-
-// Calm light day-map (Google provider; ignored by Apple Maps, which uses
-// userInterfaceStyle="light"). inDrive-like: streets white, water soft blue,
-// and — unlike the old dark style — neighbourhood/place labels stay VISIBLE so
-// riders can orient by the places they know. Only business POIs are hidden
-// (they read as ads and clutter the trip view).
-const LIGHT_MAP_STYLE = [
-  { elementType: 'geometry', stylers: [{ color: '#f2f4f7' }] },
-  { elementType: 'labels.text.fill', stylers: [{ color: '#4b5563' }] },
-  { elementType: 'labels.text.stroke', stylers: [{ color: '#ffffff' }] },
-  { featureType: 'poi.business', stylers: [{ visibility: 'off' }] },
-  { featureType: 'transit', stylers: [{ visibility: 'off' }] },
-  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#ffffff' }] },
-  { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#e5e7eb' }] },
-  { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#6b7280' }] },
-  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#c9d6e0' }] },
-  { featureType: 'landscape', elementType: 'geometry', stylers: [{ color: '#eef1f4' }] },
-];
