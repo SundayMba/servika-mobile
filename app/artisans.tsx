@@ -4,7 +4,9 @@ import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
+
+import { ListRowsSkeleton } from '@/components/home/Skeletons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppText } from '@/components/ui/AppText';
@@ -179,17 +181,13 @@ export default function ArtisansList() {
       </Pressable>
 
       {artisans.length === 0 ? (
-        <View className="flex-1 items-center justify-center px-6">
-          {artisansQuery.isLoading ? (
-            <ActivityIndicator color={colors.primary} />
-          ) : (
-            <AppText className="text-[13px] text-gray-400">
-              {artisansQuery.isError
-                ? "Couldn't load artisans. Pull to retry."
-                : 'No artisans available yet.'}
-            </AppText>
-          )}
-        </View>
+        artisansQuery.isLoading || artisansQuery.isError ? (
+          <ListRowsSkeleton />
+        ) : (
+          <View className="flex-1 items-center justify-center px-6">
+            <AppText className="text-[13px] text-gray-400">No artisans available yet.</AppText>
+          </View>
+        )
       ) : (
         <ScrollView
           showsVerticalScrollIndicator={false}

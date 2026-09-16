@@ -51,6 +51,38 @@ export function ServiceGridSkeleton({ count = 8 }: { count?: number }) {
   );
 }
 
+/** A list of rows (avatar + two lines), for the artisans and similar list screens. */
+export function ListRowsSkeleton({ count = 6 }: { count?: number }) {
+  return (
+    <View style={{ paddingHorizontal: 20, paddingTop: 4, gap: 14 }}>
+      {Array.from({ length: count }).map((_, i) => (
+        <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <Skeleton style={{ width: 56, height: 56, borderRadius: 16 }} />
+          <View style={{ flex: 1, gap: 8 }}>
+            <Skeleton style={{ height: 14, width: '55%' }} />
+            <Skeleton style={{ height: 11, width: '80%' }} />
+          </View>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+/** A two-column grid of cards (photo + two lines), for the services screen. */
+export function CardGridSkeleton({ count = 6 }: { count?: number }) {
+  return (
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 22, gap: 12 }}>
+      {Array.from({ length: count }).map((_, i) => (
+        <View key={i} style={{ width: '47%', gap: 8 }}>
+          <Skeleton style={{ aspectRatio: 1, borderRadius: 18 }} />
+          <Skeleton style={{ height: 13, width: '70%' }} />
+          <Skeleton style={{ height: 11, width: '45%' }} />
+        </View>
+      ))}
+    </View>
+  );
+}
+
 /** Matches the horizontal Nearby Artisans carousel. */
 export function ArtisanCarouselSkeleton({ count = 3 }: { count?: number }) {
   return (

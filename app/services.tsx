@@ -3,7 +3,6 @@ import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -23,6 +22,7 @@ import { colors, fonts } from '@/constants/colors';
 import { useNearbyServices } from '@/lib/catalogue/hooks';
 import type { FeaturedService } from '@/lib/catalogue/types';
 import { useSelectedArea, useSelectedCoords } from '@/lib/location/areaStore';
+import { CardGridSkeleton } from '@/components/home/Skeletons';
 
 type SortKey = 'best' | 'price' | 'nearest' | 'rated';
 
@@ -142,30 +142,22 @@ export default function ServicesCloseToYou() {
         })}
       </ScrollView>
 
-      {query.isLoading ? (
-        <View style={styles.center}>
-          <ActivityIndicator color={colors.primary} />
-        </View>
+      {query.isLoading || (query.isError && items.length === 0) ? (
+        <CardGridSkeleton />
       ) : items.length === 0 ? (
         <View style={styles.center}>
           <View style={styles.emptyIcon}>
             <Ionicons name="pricetags-outline" size={26} color={colors.accentDeep} />
           </View>
           <AppText weight="semibold" style={styles.emptyTitle}>
-            {query.isError
-              ? "Couldn't load services"
-              : search
-                ? 'No matches'
-                : 'No fixed-price services here yet'}
+            {search ? 'No matches' : 'No fixed-price services here yet'}
           </AppText>
           <AppText style={styles.emptyBody}>
-            {query.isError
-              ? 'Pull down to try again.'
-              : search
-                ? 'Try another word, or clear the search.'
-                : 'Providers near you are still publishing prices. You can still book any artisan and agree a price.'}
+            {search
+              ? 'Try another word, or clear the search.'
+              : 'Providers near you are still publishing prices. You can still book any artisan and agree a price.'}
           </AppText>
-          {!search && !query.isError ? (
+          {!search ? (
             <Pressable
               accessibilityRole="button"
               onPress={() => router.push('/categories')}
