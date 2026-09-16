@@ -47,6 +47,7 @@ import {
   useSelectedCoords,
 } from '@/lib/location/areaStore';
 import { useUnreadCount } from '@/lib/notifications/hooks';
+import { FALLBACK_CATEGORIES } from '@/constants/fallback-categories';
 
 /**
  * Home, per the "Servika Home v2" design canvas.
@@ -151,12 +152,10 @@ function SectionHeader({
 }
 
 /** Shown when a section has no data and isn't loading. */
-function SectionEmpty({ error }: { error?: boolean }) {
+function SectionEmpty() {
   return (
     <View style={styles.sectionEmpty}>
-      <AppText style={styles.sectionEmptyLabel}>
-        {error ? "Couldn't load. Pull to retry." : 'Nothing here yet.'}
-      </AppText>
+      <AppText style={styles.sectionEmptyLabel}>Nothing here yet.</AppText>
     </View>
   );
 }
@@ -195,8 +194,8 @@ export default function Home() {
 
   // Home shows only the "popular" subset of the catalogue.
   const popularServices = useMemo(
-    () => (categoriesQuery.data ?? []).filter((c) => c.isPopular),
-    [categoriesQuery.data],
+    () => (categoriesQuery.data ?? (categoriesQuery.isError ? FALLBACK_CATEGORIES : [])).filter((c) => c.isPopular),
+    [categoriesQuery.data, categoriesQuery.isError],
   );
 
   // Pull-to-refresh — refetch every live section at once.
@@ -363,7 +362,7 @@ export default function Home() {
           {servicesPending ? (
             <ServiceGridSkeleton />
           ) : popularServices.length === 0 ? (
-            <SectionEmpty error={categoriesQuery.isError} />
+            categoriesQuery.isError ? <ServiceGridSkeleton /> : <SectionEmpty />
           ) : (
             <View style={styles.serviceGrid}>
               {popularServices.map((category) => (
@@ -418,7 +417,7 @@ export default function Home() {
           {artisansPending ? (
             <ArtisanCarouselSkeleton />
           ) : (artisansQuery.data?.length ?? 0) === 0 ? (
-            <SectionEmpty error={artisansQuery.isError} />
+            artisansQuery.isError ? <ArtisanCarouselSkeleton /> : <SectionEmpty />
           ) : (
             <ScrollView
               horizontal
