@@ -170,6 +170,18 @@ function formatPlace(place: Location.LocationGeocodedAddress | undefined): strin
   return parts.slice(0, 4).join(', ') || null;
 }
 
+/**
+ * What a pin is called when no place name can be found for it. Never a bare
+ * coordinate: "6.4785, 3.4219" is not an area anyone recognises, and it used to
+ * leak into profiles and the Home header when geocoding failed.
+ */
+export const PINNED_LABEL = 'Pinned location';
+
+/** True for labels that are really just numbers ("6.4785, 3.4219"). */
+export function isCoordinateLabel(label: string | null | undefined): boolean {
+  return !!label && /^-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?$/.test(label.trim());
+}
+
 /** Reverse-geocode a coordinate to a readable service-area label. */
 export async function reverseGeocodeArea(
   latitude: number,
@@ -177,11 +189,9 @@ export async function reverseGeocodeArea(
 ): Promise<string> {
   try {
     const [place] = await Location.reverseGeocodeAsync({ latitude, longitude });
-    return (
-      formatPlace(place) ?? `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`
-    );
+    return formatPlace(place) ?? PINNED_LABEL;
   } catch {
-    return `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+    return PINNED_LABEL;
   }
 }
 
@@ -218,6 +228,6 @@ export async function resolveCurrentArea(): Promise<CurrentArea> {
     ? [place.district || place.name || place.street, place.city || place.region]
         .filter(Boolean)
         .join(', ')
-    : `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
-  return { label: label || 'Current location', lat: latitude, lng: longitude };
+    : PINNED_LABEL;
+  return { label: label || PINNED_LABEL, lat: latitude, lng: longitude };
 }
