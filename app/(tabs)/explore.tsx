@@ -14,9 +14,9 @@ import {
   ScrollView,
   View,
 } from 'react-native';
+import MapView, { Marker, Polyline, PROVIDER_DEFAULT } from 'react-native-maps';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Camera, LibreMap, LineOverlay, Pin, UserLocation, boundsFor, toLngLat, type CameraRef } from '@/components/map/LibreMap';
 import { AppText } from '@/components/ui/AppText';
 import { SearchSheet } from '@/components/SearchSheet';
 import { LocationSheet } from '@/components/home/LocationSheet';
@@ -40,7 +40,7 @@ import { etaMinutes, formatDistance, type LatLng } from '@/lib/tracking/geo';
  * full profile. Works anywhere in Nigeria — the area comes from GPS, search, or
  * the map picker; proximity is computed server-side from real coordinates.
  *
- * Needs a native build (MapLibre isn't in Expo Go), same as live tracking.
+ * Needs a dev build (react-native-maps isn't in Expo Go), same as live tracking.
  */
 
 // Height of the custom bottom tab bar (excluding the safe-area inset).
@@ -48,8 +48,8 @@ const TAB_BAR_HEIGHT = 60;
 
 const { height: WINDOW_H } = Dimensions.get('window');
 
-/** Zoom framing a district comfortably (~4–5 km across). */
-const AREA_ZOOM = 13;
+/** Region framing a district comfortably (~4–5 km across). */
+const AREA_DELTA = 0.045;
 
 function initials(name: string): string {
   return name
@@ -64,6 +64,10 @@ function initials(name: string): string {
  * Uber-style teardrop map pin — an orange bubble with a house icon (where the
  * artisan is based) and an availability dot, with a pointed tail on the spot.
  *
+ * Android quirk: with `tracksViewChanges={false}` from birth, the marker can
+ * rasterise before the icon glyph has drawn, leaving an invisible pin. So it
+ * starts tracking, then freezes shortly after mount (the selection remount —
+ * via the parent's `key` — restarts the cycle so the new look renders too).
  */
 function ArtisanPin({
   artisan,
@@ -74,9 +78,24 @@ function ArtisanPin({
   selected: boolean;
   onPress: () => void;
 }) {
+  const [track, setTrack] = useState(true);
+  useEffect(() => {
+    const t = setTimeout(() => setTrack(false), 500);
+    return () => clearTimeout(t);
+  }, []);
+
   const size = selected ? 46 : 38;
   return (
-    <Pin position={{ latitude: artisan.latitude!, longitude: artisan.longitude! }} anchor="bottom" onPress={onPress}>
+    <Marker
+      coordinate={{
+        latitude: artisan.latitude!,
+        longitude: artisan.longitude!,
+      }}
+      anchor={{ x: 0.5, y: 1 }}
+      tracksViewChanges={track}
+      onPress={onPress}
+      zIndex={selected ? 10 : 1}
+    >
       <View style={{ alignItems: 'center' }}>
         <View
           style={{
@@ -122,7 +141,7 @@ function ArtisanPin({
           }}
         />
       </View>
-    </Pin>
+    </Marker>
   );
 }
 
@@ -211,7 +230,7 @@ function ArtisanRow({
 export default function Explore() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const camera = useRef<CameraRef | null>(null);
+  const mapRef = useRef<MapView | null>(null);
 
   const area = useSelectedArea();
   const coords = useSelectedCoords();
@@ -270,8 +289,11 @@ export default function Explore() {
   ).current;
 
   // ── Map follows the selected area (GPS, search, quick-pick, map picker) ──
-  const centerOn = (target: LatLng, zoom = AREA_ZOOM) => {
-    camera.current?.easeTo({ center: toLngLat(target), zoom, duration: 450 });
+  const centerOn = (target: LatLng, delta = AREA_DELTA) => {
+    mapRef.current?.animateToRegion(
+      { ...target, latitudeDelta: delta, longitudeDelta: delta },
+      450,
+    );
   };
 
   useEffect(() => {
@@ -326,10 +348,12 @@ export default function Explore() {
       if (coords) {
         // Frame the client and the artisan together so the connector line
         // (and the gap it spans) is visible in one glance.
-        const bounds = boundsFor([coords, pin]);
-        if (bounds) camera.current?.fitBounds(bounds, { padding: { top: 140, right: 60, bottom: 120 + (peekHeight - tabSpace), left: 60 }, duration: 500 });
+        mapRef.current?.fitToCoordinates([coords, pin], {
+          edgePadding: { top: 140, right: 60, bottom: 120, left: 60 },
+          animated: true,
+        });
       } else {
-        centerOn(pin, 14.5);
+        centerOn(pin, 0.02);
       }
     }
     snapTo('closed');
@@ -339,40 +363,57 @@ export default function Explore() {
     router.push({ pathname: '/artisan/[id]', params: { id } });
 
   const count = artisans?.length ?? 0;
-  const initialCenter: LatLng = { latitude: coords?.latitude ?? 6.4478, longitude: coords?.longitude ?? 3.4723 };
+  const initialRegion = {
+    latitude: coords?.latitude ?? 6.4478,
+    longitude: coords?.longitude ?? 3.4723,
+    latitudeDelta: AREA_DELTA,
+    longitudeDelta: AREA_DELTA,
+  };
 
   return (
     <View className="flex-1 bg-background">
       {/* ── Map ── */}
-      <LibreMap
+      <MapView
+        ref={mapRef}
+        provider={PROVIDER_DEFAULT}
         style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }}
+        customMapStyle={LIGHT_MAP_STYLE}
+        initialRegion={initialRegion}
+        showsUserLocation
+        showsMyLocationButton={false}
+        showsCompass={false}
+        showsPointsOfInterest={false}
+        showsBuildings={false}
+        toolbarEnabled={false}
         onPress={() => setSelectedId(null)}
-        contentInset={{ top: 0, right: 0, bottom: peekHeight - tabSpace, left: 0 }}
+        mapPadding={{ top: 0, right: 0, bottom: peekHeight - tabSpace, left: 0 }}
       >
-        <Camera ref={camera} initialViewState={{ center: toLngLat(initialCenter), zoom: AREA_ZOOM }} />
-        <UserLocation />
         {/* Dashed as-the-crow-flies connector between the client and the
             selected artisan — an honest "how far are they from me" hint. The
             real road-snapped route stays on the live-tracking screen. */}
         {selected && coords && selected.latitude != null && selected.longitude != null ? (
-          <LineOverlay
-            id="connector"
-            points={[coords, { latitude: selected.latitude, longitude: selected.longitude }]}
-            color={colors.primary}
-            width={3}
-            dashed
+          <Polyline
+            coordinates={[
+              coords,
+              { latitude: selected.latitude, longitude: selected.longitude },
+            ]}
+            strokeColor={colors.primary}
+            strokeWidth={3}
+            lineDashPattern={[1, 8]}
+            lineCap="round"
           />
         ) : null}
 
         {pinned.map((a) => (
           <ArtisanPin
-            key={a.id}
+            // Selection changes size/ring — remount so the rasterised marker updates.
+            key={`${a.id}-${a.id === selectedId ? 'sel' : 'idle'}`}
             artisan={a}
             selected={a.id === selectedId}
             onPress={() => selectArtisan(a)}
           />
         ))}
-      </LibreMap>
+      </MapView>
 
       {/* ── Top overlay: area pill + search ── */}
       <View
@@ -635,3 +676,19 @@ const pinShadow = {
   shadowOffset: { width: 0, height: 2 },
   elevation: 5,
 } as const;
+
+// Clean light "silver" style (Google provider; Apple Maps ignores it and uses
+// its default light look). POIs/transit off for a calm Uber-like canvas.
+const LIGHT_MAP_STYLE = [
+  { elementType: 'geometry', stylers: [{ color: '#f5f5f5' }] },
+  { elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#616161' }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: '#f5f5f5' }] },
+  { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+  { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#ffffff' }] },
+  { featureType: 'road.arterial', elementType: 'labels.text.fill', stylers: [{ color: '#757575' }] },
+  { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#dadada' }] },
+  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#c9d6e0' }] },
+  { featureType: 'landscape', elementType: 'geometry', stylers: [{ color: '#f0f2f5' }] },
+];

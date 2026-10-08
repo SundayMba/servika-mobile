@@ -33,6 +33,64 @@
           ]
         }
       }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:678593435307:android:a4c9a4dd6e188eb88949ee",
+        "android_client_info": {
+          "package_name": "com.mba001.servikapro"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "678593435307-1jvoqq6c6gami1hphm68nv7pg2i53evi.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD5pfqihFP09UzwSwJnO85JI3icYqelVRE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "678593435307-1jvoqq6c6gami1hphm68nv7pg2i53evi.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:678593435307:android:e10771eaa1f9f9a08949ee",
+        "android_client_info": {
+          "package_name": "com.servika.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "678593435307-1jvoqq6c6gami1hphm68nv7pg2i53evi.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD5pfqihFP09UzwSwJnO85JI3icYqelVRE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "678593435307-1jvoqq6c6gami1hphm68nv7pg2i53evi.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
     }
   ],
   "configuration_version": "1"

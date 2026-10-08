@@ -26,7 +26,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.mba001.servika",
+      "package": "com.servika.app",
       "googleServicesFile": "./google-services.json"
     },
     "web": {
@@ -70,8 +70,7 @@
             "extraProguardRules": "-keep class com.google.android.gms.maps.** { *; }\n-keep interface com.google.android.gms.maps.** { *; }\n-keep class com.swmansion.** { *; }\n-keep class com.reactnativecommunity.** { *; }\n-keep class expo.modules.** { *; }"
           }
         }
-      ],
-      "@maplibre/maplibre-react-native"
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

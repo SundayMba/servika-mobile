@@ -9,6 +9,7 @@ import {
   Pressable,
   View,
 } from 'react-native';
+import MapView, { PROVIDER_DEFAULT, type Region } from 'react-native-maps';
 import Animated, {
   Easing,
   FadeIn,
@@ -19,7 +20,6 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Camera, LibreMap, NIGERIA_BOUNDS, type CameraRef } from '@/components/map/LibreMap';
 import { AppTextInput } from '@/components/ui/AppTextInput';
 import { AppText } from '@/components/ui/AppText';
 import { appAlert } from '@/components/ui/AppAlert';
@@ -55,15 +55,22 @@ function inNigeria(latitude: number, longitude: number): boolean {
 // tap a place right away. Still bounded to Nigeria (below) so they can pan to
 // other states; GPS/search jump elsewhere. Whole-country view was too zoomed-out
 // to label neighbourhoods.
-const DEFAULT_CENTER = { latitude: 6.5244, longitude: 3.3792 };
-const DEFAULT_ZOOM = 11;
+const DEFAULT_REGION_DELTAS = { latitudeDelta: 0.22, longitudeDelta: 0.18 };
+const DEFAULT_REGION: Region = {
+  latitude: 6.5244,
+  longitude: 3.3792,
+  ...DEFAULT_REGION_DELTAS,
+};
 
 // A comfortable zoom once we jump to a specific point (GPS / search result).
-const FOCUS_ZOOM = 15.5;
+const FOCUS_DELTA = { latitudeDelta: 0.012, longitudeDelta: 0.012 };
 
-// The camera itself is fenced to Nigeria (maxBounds) and cannot zoom out past a
-// country view (minZoom), so no JS clamping is needed.
-const MIN_ZOOM = 5.5;
+// Widest zoom we allow before snapping back to a city view — keeps the map from
+// zooming out to a continental "Nigeria / Ghana / Mali" scale.
+const MAX_DELTA = 3;
+
+const clamp = (value: number, min: number, max: number) =>
+  Math.min(max, Math.max(min, value));
 
 /**
  * Full-screen map location picker with a fixed centre pin — pan the map to move
@@ -74,10 +81,11 @@ const MIN_ZOOM = 5.5;
 export default function LocationPicker() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const camera = useRef<CameraRef | null>(null);
-  const center = useRef<{ latitude: number; longitude: number }>({ ...DEFAULT_CENTER });
-  const flyTo = (latitude: number, longitude: number, duration = 600) =>
-    camera.current?.easeTo({ center: [longitude, latitude], zoom: FOCUS_ZOOM, duration });
+  const mapRef = useRef<MapView | null>(null);
+  const center = useRef<{ latitude: number; longitude: number }>({
+    latitude: DEFAULT_REGION.latitude,
+    longitude: DEFAULT_REGION.longitude,
+  });
 
   const [address, setAddress] = useState('Move the map to pick a spot');
   const [resolving, setResolving] = useState(false);
@@ -122,7 +130,7 @@ export default function LocationPicker() {
         const { latitude, longitude } = pos.coords;
         if (!inNigeria(latitude, longitude)) return;
         center.current = { latitude, longitude };
-        flyTo(latitude, longitude);
+        mapRef.current?.animateToRegion({ latitude, longitude, ...FOCUS_DELTA }, 600);
         resolveCenter();
       } catch {
         // ignore — the country-wide default region stands
@@ -158,10 +166,26 @@ export default function LocationPicker() {
     lift.value = withTiming(1, { duration: 140, easing: Easing.out(Easing.quad) });
   };
 
-  const onRegionChangeComplete = (centerLngLat: [number, number]) => {
+  const onRegionChangeComplete = (region: Region) => {
     lift.value = withTiming(0, { duration: 260, easing: Easing.out(Easing.back(2)) });
-    const [longitude, latitude] = centerLngLat;
-    center.current = { latitude, longitude };
+
+    // Keep the map inside Nigeria (pure JS — no flaky native boundary/zoom APIs):
+    // clamp the centre to the country box, and if it's zoomed out past the
+    // country (into a continental view), pull it back to a city-level zoom.
+    const lat = clamp(region.latitude, NG_BOUNDS.southWest.latitude, NG_BOUNDS.northEast.latitude);
+    const lng = clamp(region.longitude, NG_BOUNDS.southWest.longitude, NG_BOUNDS.northEast.longitude);
+    const tooWide = region.latitudeDelta > MAX_DELTA;
+
+    if (lat !== region.latitude || lng !== region.longitude || tooWide) {
+      const next = tooWide
+        ? { latitude: lat, longitude: lng, ...DEFAULT_REGION_DELTAS }
+        : { latitude: lat, longitude: lng, latitudeDelta: region.latitudeDelta, longitudeDelta: region.longitudeDelta };
+      center.current = { latitude: lat, longitude: lng };
+      mapRef.current?.animateToRegion(next, 250);
+      return; // the follow-up onRegionChangeComplete resolves the address
+    }
+
+    center.current = { latitude: region.latitude, longitude: region.longitude };
     resolveCenter();
   };
 
@@ -177,7 +201,7 @@ export default function LocationPicker() {
     setResolving(false);
     if (coords && inNigeria(coords.latitude, coords.longitude)) {
       center.current = coords;
-      flyTo(coords.latitude, coords.longitude, 500);
+      mapRef.current?.animateToRegion({ ...coords, ...FOCUS_DELTA }, 500);
     }
   };
 
@@ -198,7 +222,7 @@ export default function LocationPicker() {
         return;
       }
       center.current = { latitude, longitude };
-      flyTo(latitude, longitude);
+      mapRef.current?.animateToRegion({ latitude, longitude, ...FOCUS_DELTA }, 600);
     } catch {
       // ignore
     } finally {
@@ -219,18 +243,18 @@ export default function LocationPicker() {
     <View className="flex-1 bg-background">
       <StatusBar style="dark" />
 
-      <LibreMap
+      <MapView
+        ref={mapRef}
+        provider={PROVIDER_DEFAULT}
         style={{ flex: 1 }}
-        onRegionWillChange={onRegionChange}
-        onRegionDidChange={(e) => onRegionChangeComplete(e.nativeEvent.center)}
-      >
-        <Camera
-          ref={camera}
-          initialViewState={{ center: [DEFAULT_CENTER.longitude, DEFAULT_CENTER.latitude], zoom: DEFAULT_ZOOM }}
-          maxBounds={NIGERIA_BOUNDS}
-          minZoom={MIN_ZOOM}
-        />
-      </LibreMap>
+        initialRegion={DEFAULT_REGION}
+        showsPointsOfInterest={false}
+        showsCompass={false}
+        toolbarEnabled={false}
+        showsMyLocationButton={false}
+        onRegionChange={onRegionChange}
+        onRegionChangeComplete={onRegionChangeComplete}
+      />
 
       {/* Fixed centre pin (overlay — the map pans beneath it) */}
       <View
