@@ -24,7 +24,12 @@ function withArm64Only(config) {
       if (found) found.value = value;
       else props.push({ type: 'property', key, value });
     };
-    set('reactNativeArchitectures', 'arm64-v8a');
+    // EAS production builds (the Play Store bundle) also carry armeabi-v7a so
+    // 32-bit-only phones, still common at the cheap end in Nigeria, can install.
+    // Play serves each device only the ABI it needs, so this costs users nothing.
+    const abis =
+      process.env.EAS_BUILD_PROFILE === 'production' ? 'arm64-v8a,armeabi-v7a' : 'arm64-v8a';
+    set('reactNativeArchitectures', abis);
     return cfg;
   });
 }
