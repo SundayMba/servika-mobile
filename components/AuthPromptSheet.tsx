@@ -33,6 +33,8 @@ type AuthPromptSheetProps = {
   icon?: keyof typeof Ionicons.glyphMap;
   onSignUp?: () => void;
   onLogin?: () => void;
+  /** Google signed the guest in on this very screen: close the wall and carry on with what they tried to do. */
+  onSignedIn?: () => void;
 };
 
 /**
@@ -50,6 +52,7 @@ export function AuthPromptSheet({
   kicker,
   onSignUp,
   onLogin,
+  onSignedIn,
 }: AuthPromptSheetProps) {
   const copy = COPY[reason];
   const kickerText = kicker ?? copy.kicker;
@@ -69,7 +72,7 @@ export function AuthPromptSheet({
 
         <View style={styles.actions}>
           <PrimaryButton label="Use my email" onPress={signUp} />
-          {hasGoogle ? <GoogleAuthButton variant="dark" onBusyChange={setGoogleBusy} /> : <OutlineButton label="I already have an account" onPress={logIn} />}
+          {hasGoogle ? <GoogleAuthButton variant="dark" onBusyChange={setGoogleBusy} onSignedIn={() => (onSignedIn ? onSignedIn() : onClose())} /> : <OutlineButton label="I already have an account" onPress={logIn} />}
         </View>
 
         <View style={styles.footer}>

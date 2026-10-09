@@ -18,6 +18,8 @@ export default function TabsLayout() {
   const { status } = useAuth();
   const isAuthenticated = status === 'authenticated';
   const [authPromptVisible, setAuthPromptVisible] = useState(false);
+  // The protected tab the guest tapped; opened once they sign in on the wall.
+  const [blockedTab, setBlockedTab] = useState<string | null>(null);
   // Live notifications while in the app — booking updates, payments, chat
   // nudges land instantly (no polling wait).
   useNotificationsRealtime();
@@ -32,7 +34,10 @@ export default function TabsLayout() {
             isProtected={(name) =>
               !isAuthenticated && PROTECTED_TABS.includes(name)
             }
-            onBlockedPress={() => setAuthPromptVisible(true)}
+            onBlockedPress={(name) => {
+              setBlockedTab(name);
+              setAuthPromptVisible(true);
+            }}
           />
         )}
       >
@@ -57,6 +62,11 @@ export default function TabsLayout() {
         onLogin={() => {
           setAuthPromptVisible(false);
           router.push('/login');
+        }}
+        onSignedIn={() => {
+          setAuthPromptVisible(false);
+          if (blockedTab) router.navigate(`/${blockedTab}` as never);
+          setBlockedTab(null);
         }}
       />
     </>

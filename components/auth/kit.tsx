@@ -22,6 +22,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Line } from 'react-native-svg';
 import { isAxiosError } from 'axios';
 
+import { GoogleG } from '@/components/auth/GoogleG';
 import { AppText } from '@/components/ui/AppText';
 import { colors, fonts } from '@/constants/colors';
 
@@ -510,7 +511,7 @@ export function GoogleInFlight({ visible }: { visible: boolean }) {
         <View style={styles.googleRing}>
           <Animated.View style={[styles.googleSpinner, { transform: [{ rotate: spin.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] }) }] }]} />
           <View style={styles.googleG}>
-            <AppText weight="semibold" style={{ fontSize: 17, color: colors.onInk }}>G</AppText>
+            <GoogleG size={26} />
           </View>
         </View>
         <AppText weight="medium" style={styles.googleTitle}>Talking to Google</AppText>
@@ -606,7 +607,7 @@ const styles = StyleSheet.create({
   googleRoot: { flex: 1, backgroundColor: colors.inkWarm, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40, gap: 26 },
   googleRing: { width: 74, height: 74, alignItems: 'center', justifyContent: 'center' },
   googleSpinner: { position: 'absolute', width: 74, height: 74, borderRadius: 37, borderWidth: 2, borderColor: 'rgba(20,23,27,0.16)', borderTopColor: colors.orange },
-  googleG: { width: 34, height: 34, borderRadius: 17, borderWidth: 2.5, borderColor: colors.onInk, alignItems: 'center', justifyContent: 'center' },
+  googleG: { width: 34, height: 34, alignItems: 'center', justifyContent: 'center' },
   googleTitle: { fontSize: 24, lineHeight: 27, letterSpacing: -0.9, color: colors.onInk, textAlign: 'center' },
   googleBody: { marginTop: -12, maxWidth: 260, textAlign: 'center', fontSize: 14, lineHeight: 22, color: colors.onInkBody },
 });

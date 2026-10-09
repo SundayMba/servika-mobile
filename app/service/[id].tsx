@@ -114,7 +114,7 @@ export default function ServiceProfile() {
   const insets = useSafeAreaInsets();
   const coords = useSelectedCoords();
 
-  const { isAuthenticated, guard, promptVisible, hidePrompt } = useAuthGate();
+  const { isAuthenticated, guard, promptVisible, hidePrompt, onSignedIn } = useAuthGate();
   const { openWithArtisan } = useOpenChat();
 
   const serviceQuery = useService(id, coords);
@@ -569,6 +569,7 @@ export default function ServiceProfile() {
       />
 
       <AuthPromptSheet
+        onSignedIn={onSignedIn}
         visible={promptVisible}
         reason="book"
         onClose={hidePrompt}

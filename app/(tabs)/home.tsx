@@ -177,7 +177,7 @@ export default function Home() {
   const { width } = useWindowDimensions();
   const scale = typeScale(width);
   const { user } = useAuth();
-  const { isAuthenticated, guard, promptVisible, hidePrompt } = useAuthGate();
+  const { isAuthenticated, guard, promptVisible, hidePrompt, onSignedIn } = useAuthGate();
   const { openWithArtisan } = useOpenChat();
 
   // Greet the signed-in user by first name; guests see "Guest".
@@ -556,6 +556,7 @@ export default function Home() {
 
       {/* ── Booking & chat are gated behind sign-in ── */}
       <AuthPromptSheet
+        onSignedIn={onSignedIn}
         visible={promptVisible}
         reason="book"
         onClose={hidePrompt}

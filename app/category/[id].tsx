@@ -99,7 +99,7 @@ export default function CategoryListing() {
   const router = useRouter();
 
   const [searchVisible, setSearchVisible] = useState(false);
-  const { guard, promptVisible, hidePrompt } = useAuthGate();
+  const { guard, promptVisible, hidePrompt, onSignedIn } = useAuthGate();
 
   const { data: categories, isLoading } = useCategories();
   const category = categories?.find((c) => c.slug === id);
@@ -232,6 +232,7 @@ export default function CategoryListing() {
         {/* Search (open to guests) */}
         <SearchSheet visible={searchVisible} onClose={() => setSearchVisible(false)} />
         <AuthPromptSheet
+        onSignedIn={onSignedIn}
           visible={promptVisible}
           reason="request"
           onClose={hidePrompt}

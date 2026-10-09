@@ -71,7 +71,7 @@ export default function ArtisanProfile() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  const { isAuthenticated, guard, promptVisible, hidePrompt } = useAuthGate();
+  const { isAuthenticated, guard, promptVisible, hidePrompt, onSignedIn } = useAuthGate();
   const { openWithArtisan } = useOpenChat();
   const [aboutExpanded, setAboutExpanded] = useState(false);
   // First render is unclamped so we can count real lines; then we clamp to 3
@@ -567,6 +567,7 @@ export default function ArtisanProfile() {
         />
       ) : null}
       <AuthPromptSheet
+        onSignedIn={onSignedIn}
         visible={promptVisible}
         reason="book"
         onClose={hidePrompt}

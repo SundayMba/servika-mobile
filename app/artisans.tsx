@@ -146,7 +146,7 @@ export default function ArtisansList() {
   const router = useRouter();
   const [searchVisible, setSearchVisible] = useState(false);
 
-  const { isAuthenticated, guard, promptVisible, hidePrompt } = useAuthGate();
+  const { isAuthenticated, guard, promptVisible, hidePrompt, onSignedIn } = useAuthGate();
   const { openWithArtisan } = useOpenChat();
   const artisansQuery = useNearbyArtisans();
   const artisans = artisansQuery.data ?? [];
@@ -220,6 +220,7 @@ export default function ArtisansList() {
       <SearchSheet visible={searchVisible} onClose={() => setSearchVisible(false)} />
 
       <AuthPromptSheet
+        onSignedIn={onSignedIn}
         visible={promptVisible}
         reason="book"
         onClose={hidePrompt}

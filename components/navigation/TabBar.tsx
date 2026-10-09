@@ -38,7 +38,7 @@ type TabBarProps = BottomTabBarProps & {
   /** Returns true if a route requires the user to be signed in. */
   isProtected?: (routeName: string) => boolean;
   /** Called when a guest taps a protected tab (instead of navigating). */
-  onBlockedPress?: () => void;
+  onBlockedPress?: (routeName: string) => void;
 };
 
 /**
@@ -82,7 +82,7 @@ export function TabBar({
           }
           // Guests can't open protected tabs — surface the auth prompt instead.
           if (isProtected?.(route.name)) {
-            onBlockedPress?.();
+            onBlockedPress?.(route.name);
             return;
           }
           const event = navigation.emit({
