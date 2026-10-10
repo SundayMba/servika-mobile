@@ -70,6 +70,14 @@
             "extraProguardRules": "-keep class com.google.android.gms.maps.** { *; }\n-keep interface com.google.android.gms.maps.** { *; }\n-keep class com.swmansion.** { *; }\n-keep class com.reactnativecommunity.** { *; }\n-keep class expo.modules.** { *; }"
           }
         }
+      ],
+      [
+        "@sentry/react-native/expo",
+        {
+          "organization": "servika",
+          "project": "servika-customer",
+          "url": "https://sentry.io/"
+        }
       ]
     ],
     "experiments": {

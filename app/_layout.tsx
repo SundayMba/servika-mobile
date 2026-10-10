@@ -19,8 +19,11 @@ import { ApiStatusBadge } from '@/components/ApiStatusBadge';
 import { NotificationObserver } from '@/components/NotificationObserver';
 import { AppAlertHost } from '@/components/ui/AppAlert';
 import { AppErrorBoundary } from '@/components/AppErrorBoundary';
+import { initSentry, withSentry } from '@/lib/observability/sentry';
 
 ExpoSplashScreen.preventAutoHideAsync();
+// Crash reporting first, so even a failure while the tree mounts is recorded.
+initSentry();
 
 // expo-router mounts whatever a route file exports as `ErrorBoundary` around
 // that segment; exported from the root layout it wraps the entire app, so a
@@ -28,7 +31,7 @@ ExpoSplashScreen.preventAutoHideAsync();
 // blank window. Named export, not default — the default export is the layout.
 export { AppErrorBoundary as ErrorBoundary };
 
-export default function RootLayout() {
+function RootLayout() {
   const [splashDone, setSplashDone] = useState(false);
   const [splashPainted, setSplashPainted] = useState(false);
 
@@ -105,3 +108,5 @@ export default function RootLayout() {
     </GestureHandlerRootView>
   );
 }
+
+export default withSentry(RootLayout);

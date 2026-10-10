@@ -13,6 +13,7 @@ import { setLastAccount } from '@/lib/auth/lastAccount';
 import { tokenStorage } from '@/lib/auth/tokenStorage';
 import type { AuthResponse, User } from '@/lib/auth/types';
 import { registerForPush, unregisterForPush } from '@/lib/push/notifications';
+import { setReportingUser } from '@/lib/observability/sentry';
 
 /**
  * App-wide auth session state. Hydrates from SecureStore on boot so a returning
@@ -74,6 +75,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (status === 'authenticated') void registerForPush();
   }, [status]);
+
+  // Error reports carry the account id only, so one person's crashes group together.
+  useEffect(() => {
+    setReportingUser(user?.id ?? null);
+  }, [user?.id]);
 
   const signIn = useCallback(async (auth: AuthResponse) => {
     await tokenStorage.setTokens(auth.accessToken, auth.refreshToken);

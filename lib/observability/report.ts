@@ -1,18 +1,10 @@
+import { Sentry, sentryEnabled } from '@/lib/observability/sentry';
+
 /**
- * The single place a crash or a swallowed failure is reported from.
- *
- * There is no crash reporter wired up yet — that needs a Sentry DSN and a
- * native rebuild, which is an account decision rather than a code one. What
- * this file buys in the meantime is the seam: every call site already routes
- * through `reportError`, so turning reporting on is a change in one function
- * rather than a hunt through the app.
- *
- * To enable Sentry later:
- *   npx expo install @sentry/react-native
- *   set EXPO_PUBLIC_SENTRY_DSN per profile in eas.json
- * then init in app/_layout.tsx and replace the body of `reportError` with
- * `Sentry.captureException(error, { extra: context })`. Upload source maps in
- * the EAS build so the stacks come back symbolicated.
+ * The single place a crash or a swallowed failure is reported from. Every call
+ * site routes through `reportError`, so where reports go is decided here once.
+ * With a Sentry DSN in the build they go to Sentry; otherwise they stay in the
+ * device log, where `adb logcat` can retrieve them.
  */
 
 export type ErrorContext = Record<string, unknown>;
@@ -25,8 +17,13 @@ export function reportError(error: unknown, context?: ErrorContext): void {
     return;
   }
 
-  // Release: no reporter yet, so at least keep it in the device log where
-  // `adb logcat` / Xcode can retrieve it from a user's phone.
+  if (sentryEnabled) {
+    Sentry.captureException(error instanceof Error ? error : new Error(String(error)), {
+      extra: context,
+    });
+    return;
+  }
+
   console.error(
     '[servika]',
     error instanceof Error ? `${error.name}: ${error.message}\n${error.stack ?? ''}` : String(error),

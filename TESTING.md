@@ -74,3 +74,5 @@ account (approve it in the admin console) on a second phone, or the Pro app on t
 
 ## Bugs found
 (flow -> what happened -> fix commit)
+- 2026-10-09 Auth, tester on the Play build: "Continue with Google" on the sign-in wall left the wall open and did not open the tab the guest tapped -> wall now closes and resumes the gated action / opens the blocked tab (useAuthGate.onSignedIn).
+- 2026-10-09 Auth: "Talking to Google" screen drew a plain letter G -> coloured Google logo (components/auth/GoogleG.tsx).
