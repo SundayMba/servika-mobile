@@ -74,6 +74,9 @@ account (approve it in the admin console) on a second phone, or the Pro app on t
 
 ## Bugs found
 (flow -> what happened -> fix commit)
+- 2026-10-10 Pro payout, manual bank picker: dev warning "two children with the same key 50572"; Paystack lists some banks twice under one code -> list de-duplicated server-side, rows keyed by code+name in both apps.
 - 2026-10-09 Auth, tester on the Play build: "Continue with Google" on the sign-in wall left the wall open and did not open the tab the guest tapped -> wall now closes and resumes the gated action / opens the blocked tab (useAuthGate.onSignedIn).
 - 2026-10-10 Home: after the admin deleted an artisan, their fixed-price card stayed on the Home rail (cached list) and tapping it showed "Service not found" -> a 404 on a profile/service now invalidates every catalogue list and Home refetches stale rails on focus; rails go stale after 20s.
 - 2026-10-09 Auth: "Talking to Google" screen drew a plain letter G -> coloured Google logo (components/auth/GoogleG.tsx).
+
+- **2026-10-11 (Pro) Guarantor notice came back after toggling online/offline.** The availability endpoint (and profile save, payout, preferences, away) returned the profile with guarantorCount 0 and required=true; the app caches that response. Fixed in the backend with one `MyProfileDtoBuilder` for every response. Deployed.
