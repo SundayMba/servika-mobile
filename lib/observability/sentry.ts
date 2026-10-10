@@ -19,6 +19,8 @@ export function initSentry(): void {
     // Light performance sampling; errors are always sent.
     tracesSampleRate: 0.1,
     maxBreadcrumbs: 60,
+    // One screenshot at the moment of the error (free; text is whatever was on screen).
+    attachScreenshot: true,
     // Local console noise does not belong in breadcrumbs.
     beforeBreadcrumb(crumb) {
       return crumb.category === 'console' ? null : crumb;
