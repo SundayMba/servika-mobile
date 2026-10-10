@@ -290,7 +290,7 @@ function BankPickerSheet({
           ) : (
             filtered.map((b) => (
               <Pressable
-                key={b.code}
+                key={`${b.code}-${b.name}`}
                 accessibilityRole="button"
                 onPress={() => onSelect(b)}
                 className="flex-row items-center border-b border-gray-100 py-3.5 active:opacity-60"
