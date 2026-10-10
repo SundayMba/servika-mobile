@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, type QueryClient } from '@tanstack/react-query';
 import {
   getArtisan,
   getArtisans,
@@ -86,7 +86,7 @@ export function useFeaturedServices(coords?: { latitude: number; longitude: numb
   return useQuery({
     queryKey: ['featured-services', key],
     queryFn: () => getFeaturedServices(coords),
-    staleTime: 60_000,
+    staleTime: 20_000,
   });
 }
 
@@ -102,7 +102,7 @@ export function useNearbyServices(coords?: LatLng | null) {
   return useQuery({
     queryKey: ['nearby-services', coordsKey(coords)],
     queryFn: () => getNearbyServices(coords ?? undefined),
-    staleTime: 60_000,
+    staleTime: 20_000,
   });
 }
 
@@ -114,4 +114,17 @@ export function useService(id: string | undefined, coords?: LatLng | null) {
     enabled: !!id,
     staleTime: 60_000,
   });
+}
+
+/**
+ * A profile or service the app still lists came back 404: the provider was
+ * removed or unverified since the list was fetched. Drop every catalogue list
+ * so Home, Explore and the services screen refetch instead of showing it again.
+ */
+export function invalidateCatalogueLists(queryClient: QueryClient) {
+  return Promise.all([
+    queryClient.invalidateQueries({ queryKey: ['artisans'] }),
+    queryClient.invalidateQueries({ queryKey: ['featured-services'] }),
+    queryClient.invalidateQueries({ queryKey: ['nearby-services'] }),
+  ]);
 }

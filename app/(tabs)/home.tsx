@@ -1,5 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useMemo, useState, type ComponentProps } from 'react';
 import {
@@ -186,6 +186,18 @@ export default function Home() {
   const categoriesQuery = useCategories();
   const featuredQuery = useFeaturedServices(areaCoords ?? undefined);
   const artisansQuery = useNearbyArtisans(areaCoords);
+  // Coming back to Home after a detail screen: refresh the rails if they have
+  // gone stale, so a provider removed meanwhile does not linger on the page.
+  const refetchFeatured = featuredQuery.refetch;
+  const refetchArtisans = artisansQuery.refetch;
+  const featuredStale = featuredQuery.isStale;
+  const artisansStale = artisansQuery.isStale;
+  useFocusEffect(
+    useCallback(() => {
+      if (featuredStale) void refetchFeatured();
+      if (artisansStale) void refetchArtisans();
+    }, [featuredStale, artisansStale, refetchFeatured, refetchArtisans]),
+  );
   // Only signed-in customers have bookings; skip the (auth-only) call for guests.
   const bookingsQuery = useBookings(undefined, { enabled: isAuthenticated });
   // Unread notification count → Home bell badge (auth-only).

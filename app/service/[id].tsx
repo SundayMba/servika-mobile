@@ -3,8 +3,9 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { StatusBar } from 'expo-status-bar';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -23,7 +24,7 @@ import { Button } from '@/components/ui/Button';
 import { colors } from '@/constants/colors';
 import { useAuthGate } from '@/lib/auth/useAuthGate';
 import { artisanPhotoSource, formatNaira, galleryImages } from '@/lib/catalogue/assets';
-import { useArtisan, useService } from '@/lib/catalogue/hooks';
+import { useArtisan, useService, invalidateCatalogueLists } from '@/lib/catalogue/hooks';
 import type { ArtisanServiceOffering } from '@/lib/catalogue/types';
 import { useOpenChat } from '@/lib/chat/hooks';
 import { config } from '@/lib/config';
@@ -119,6 +120,11 @@ export default function ServiceProfile() {
 
   const serviceQuery = useService(id, coords);
   const service = serviceQuery.data;
+  const queryClient = useQueryClient();
+  // Gone on the server: make sure the lists that led here stop showing it.
+  useEffect(() => {
+    if (serviceQuery.isError) void invalidateCatalogueLists(queryClient);
+  }, [serviceQuery.isError, queryClient]);
   const artisanId = service?.artisanId;
   const artisanQuery = useArtisan(artisanId);
   const artisan = artisanQuery.data;

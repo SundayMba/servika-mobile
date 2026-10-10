@@ -2,8 +2,9 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { StatusBar } from 'expo-status-bar';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import {
   SafeAreaView,
@@ -24,7 +25,7 @@ import {
   formatNaira,
   galleryImages,
 } from '@/lib/catalogue/assets';
-import { useArtisan } from '@/lib/catalogue/hooks';
+import { useArtisan, invalidateCatalogueLists } from '@/lib/catalogue/hooks';
 import { useOpenChat } from '@/lib/chat/hooks';
 import { timeAgo, useArtisanReviews } from '@/lib/reviews/hooks';
 
@@ -82,6 +83,11 @@ export default function ArtisanProfile() {
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
 
   const { data: artisan, isLoading, isError } = useArtisan(id);
+  const queryClient = useQueryClient();
+  // Gone on the server: make sure the lists that led here stop showing them.
+  useEffect(() => {
+    if (isError) void invalidateCatalogueLists(queryClient);
+  }, [isError, queryClient]);
   const isFavorite = useIsFavorite(id, isAuthenticated);
   const toggleFavorite = useToggleFavorite();
   const { data: reviews } = useArtisanReviews(id);
