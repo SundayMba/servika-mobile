@@ -16,6 +16,7 @@ import { QueryProvider } from '@/lib/query/QueryProvider';
 import { AuthProvider } from '@/lib/auth/AuthContext';
 import { PhoneGateProvider } from '@/lib/phone/PhoneGate';
 import { ApiStatusBadge } from '@/components/ApiStatusBadge';
+import { UpdateBanner } from '@/components/UpdateBanner';
 import { NotificationObserver } from '@/components/NotificationObserver';
 import { AppAlertHost } from '@/components/ui/AppAlert';
 import { AppErrorBoundary } from '@/components/AppErrorBoundary';
@@ -84,6 +85,7 @@ function RootLayout() {
         </Stack>
         {/* Dev-only API connectivity indicator (Slice 0 rails check). */}
         <ApiStatusBadge />
+          <UpdateBanner />
         {/* Servika's own alert dialog. Mounted once here, above the Stack, so
             appAlert() works from any screen and any callback — including ones
             that fire after the calling screen has already navigated away. */}
