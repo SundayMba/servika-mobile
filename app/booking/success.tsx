@@ -135,7 +135,7 @@ export default function BookingSuccess() {
   // Android back button and every button here exit the funnel cleanly instead
   // of walking the user backward through their own form inputs.
   const leaveTo = (href: Href, mode: 'replace' | 'push' = 'replace') => {
-    router.dismissAll();
+    if (router.canDismiss()) router.dismissAll();
     if (mode === 'push') router.push(href);
     else router.replace(href);
   };

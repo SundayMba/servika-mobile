@@ -39,7 +39,7 @@ export default function PaymentSuccess() {
   const [copied, setCopied] = useState(false);
 
   const leaveTo = (href: Href) => {
-    router.dismissAll();
+    if (router.canDismiss()) router.dismissAll();
     router.replace(href);
   };
 

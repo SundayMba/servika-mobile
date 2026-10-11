@@ -107,7 +107,7 @@ export default function ForgotPassword() {
 
   if (step === 'changed') {
     return (
-      <AuthScreen back={false} contentStyle={styles.doneContent} footer={<PrimaryButton label="Take me home" onPress={() => { router.dismissAll(); router.replace('/home'); }} />}>
+      <AuthScreen back={false} contentStyle={styles.doneContent} footer={<PrimaryButton label="Take me home" onPress={() => { if (router.canDismiss()) router.dismissAll(); router.replace('/home'); }} />}>
         <CheckTile />
         <View style={{ marginTop: 30 }}>
           <Headline>New password,{'\n'}same you.</Headline>

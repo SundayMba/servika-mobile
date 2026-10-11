@@ -60,7 +60,7 @@ export default function Login() {
       const res = await login({ emailOrPhone, password });
       if (res.session) {
         await signIn(res.session);
-        router.dismissAll();
+        if (router.canDismiss()) router.dismissAll();
         router.replace('/home');
       } else if (res.verificationRequired) {
         // The account exists but the email was never confirmed: finish that step.

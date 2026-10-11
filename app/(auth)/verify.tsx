@@ -94,7 +94,7 @@ export default function Verify() {
   };
 
   const home = () => {
-    router.dismissAll();
+    if (router.canDismiss()) router.dismissAll();
     router.replace('/home');
   };
 
