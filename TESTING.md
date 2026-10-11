@@ -80,3 +80,4 @@ account (approve it in the admin console) on a second phone, or the Pro app on t
 - 2026-10-09 Auth: "Talking to Google" screen drew a plain letter G -> coloured Google logo (components/auth/GoogleG.tsx).
 
 - **2026-10-11 (Pro) Guarantor notice came back after toggling online/offline.** The availability endpoint (and profile save, payout, preferences, away) returned the profile with guarantorCount 0 and required=true; the app caches that response. Fixed in the backend with one `MyProfileDtoBuilder` for every response. Deployed.
+- **2026-10-11 (Pro) POP_TO_TOP warning on "Look around first"** after email verification: `dismissAll()` on a screen reached by replace. All `dismissAll()` calls in both apps now check `router.canDismiss()` first.
