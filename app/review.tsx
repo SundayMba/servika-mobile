@@ -60,16 +60,19 @@ export default function ServiceReview() {
   const { data: artisan } = useArtisan(params.artisanId);
   const name = artisan?.fullName || params.name || 'Your artisan';
   const specialty = artisan?.specialty || 'Artisan';
-  const rating = artisan?.rating ?? 0;
-  const jobsCount = artisan?.jobsCount || '';
   const imageKey = artisan?.imageKey || '';
 
-  const [overall, setOverall] = useState(5);
+  // No default: the customer must pick a rating themselves.
+  const [overall, setOverall] = useState(0);
   const [text, setText] = useState('');
 
   const { mutateAsync, isPending } = useSubmitReview();
 
   const submit = async () => {
+    if (overall < 1) {
+      appAlert('Pick a rating', 'Tap the stars to rate the job first.');
+      return;
+    }
     if (!params.bookingId) {
       appAlert('Something went wrong', 'This review is missing its booking.');
       return;
@@ -124,8 +127,9 @@ export default function ServiceReview() {
             <ArtisanRow
               name={name}
               specialty={params.serviceName ? `${params.serviceName} • ${specialty}` : specialty}
-              rating={rating}
-              jobsCount={jobsCount}
+              rating={artisan?.rating}
+              reviewCount={artisan?.reviewCount}
+              completedJobs={artisan?.completedJobs}
               imageKey={imageKey}
               photoUrl={artisan?.photoUrl}
             />
@@ -141,7 +145,7 @@ export default function ServiceReview() {
               <Stars value={overall} onChange={setOverall} size={34} />
             </View>
             <AppText weight="semibold" className="mt-2 text-[13px] text-primary">
-              {RATING_LABELS[overall]}
+              {overall > 0 ? RATING_LABELS[overall] : 'Tap a star'}
             </AppText>
           </View>
 
@@ -165,7 +169,12 @@ export default function ServiceReview() {
           </View>
 
           <View className="mt-3">
-            <Button label="Submit Review" onPress={submit} loading={isPending} />
+            <Button
+              label="Submit Review"
+              onPress={submit}
+              loading={isPending}
+              disabled={overall < 1}
+            />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

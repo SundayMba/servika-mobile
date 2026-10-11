@@ -1,10 +1,11 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Keyboard, Linking, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { Keyboard, Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { AuthScreen, Banner, classifyAuthError, FooterLink, GoogleInFlight, Headline, inkStyles, Lede, OutlineButton, passwordChecks, passwordPasses, PasswordStrength, PrimaryButton, StepRule, TextAccessory, UnderlineField } from '@/components/auth/kit';
 import { GoogleAuthButton } from '@/components/GoogleAuthButton';
 import { AppText } from '@/components/ui/AppText';
+import { openUrl, PRIVACY_URL, TERMS_URL } from '@/constants/links';
 import { colors } from '@/constants/colors';
 import { register } from '@/lib/api/auth';
 
@@ -124,8 +125,8 @@ export default function Register() {
           ) : (
             <AppText style={styles.consent}>
               Making an account means you accept our{' '}
-              <AppText inline weight="semibold" style={styles.consentLink} onPress={() => Linking.openURL('https://servika.com.ng/terms').catch(() => {})}>Terms</AppText> and{' '}
-              <AppText inline weight="semibold" style={styles.consentLink} onPress={() => Linking.openURL('https://servika.com.ng/privacy').catch(() => {})}>Privacy Policy</AppText>.
+              <AppText inline weight="semibold" style={styles.consentLink} onPress={() => openUrl(TERMS_URL)}>Terms</AppText> and{' '}
+              <AppText inline weight="semibold" style={styles.consentLink} onPress={() => openUrl(PRIVACY_URL)}>Privacy Policy</AppText>.
             </AppText>
           )}
           <PrimaryButton label="Send my code" loadingLabel="Sending your code" loading={submitting} disabled={weak} onPress={submit} />

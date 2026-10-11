@@ -30,6 +30,7 @@ import { useOpenChat } from '@/lib/chat/hooks';
 import { config } from '@/lib/config';
 import { useIsFavorite, useToggleFavorite } from '@/lib/favorites/hooks';
 import { useSelectedCoords } from '@/lib/location/areaStore';
+import { useFeeSchedule } from '@/lib/payments/fees';
 import { timeAgo, useArtisanReviews } from '@/lib/reviews/hooks';
 
 const HERO_HEIGHT = 340;
@@ -114,6 +115,7 @@ export default function ServiceProfile() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const coords = useSelectedCoords();
+  const usersBearFees = useFeeSchedule().data?.usersBearFees === true;
 
   const { isAuthenticated, guard, promptVisible, hidePrompt, onSignedIn } = useAuthGate();
   const { openWithArtisan } = useOpenChat();
@@ -263,8 +265,9 @@ export default function ServiceProfile() {
             <AppText style={styles.priceNote}>all-inclusive</AppText>
           </View>
           <AppText style={styles.promise}>
-            The price you see is the price you pay. You pay only after {firstName} accepts,
-            and Servika holds it safely until the job is done.
+            {usersBearFees
+              ? `A set price, plus a small payment fee at checkout. You pay only after ${firstName} accepts, and Servika holds it safely until the job is done.`
+              : `The price you see is the price you pay. You pay only after ${firstName} accepts, and Servika holds it safely until the job is done.`}
           </AppText>
 
           {/* What the price covers, in the artisan's own words */}
@@ -317,11 +320,13 @@ export default function ServiceProfile() {
               <View style={styles.providerRating}>
                 <Ionicons name="star" size={12} color="#FBBF24" />
                 <AppText weight="semibold" style={styles.providerRatingValue}>
-                  {service.rating.toFixed(1)}
+                  {service.reviewCount ? service.rating.toFixed(1) : 'New'}
                 </AppText>
-                <AppText style={styles.providerRatingCount}>
-                  ({service.reviewCount} {service.reviewCount === 1 ? 'review' : 'reviews'})
-                </AppText>
+                {service.reviewCount ? (
+                  <AppText style={styles.providerRatingCount}>
+                    ({service.reviewCount} {service.reviewCount === 1 ? 'review' : 'reviews'})
+                  </AppText>
+                ) : null}
                 {artisan ? (
                   <AppText style={styles.providerRatingCount}>
                     {' · '}

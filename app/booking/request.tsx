@@ -145,10 +145,22 @@ export default function BookingRequest() {
 
   const { data: artisan } = useArtisan(artisanId || undefined);
   const { data: categories } = useCategories();
+  // For a chosen artisan, a picked service carries the artisan's category it
+  // matches by name (e.g. "Plumbing repair" → plumbing), so the booking is filed
+  // under the service the customer actually asked for.
+  const artisanCategories = (categories ?? []).filter((c) =>
+    artisan?.categorySlugs?.includes(c.slug),
+  );
+  const slugForLabel = (label: string): string | undefined => {
+    const l = label.toLowerCase();
+    return artisanCategories.find(
+      (c) => l.includes(c.name.toLowerCase()) || c.name.toLowerCase().includes(l) || l.includes(c.slug),
+    )?.slug;
+  };
   const serviceOptions: { label: string; slug?: string }[] = artisanId
     ? [...new Set([artisan?.specialty, ...(artisan?.services ?? [])])]
         .filter((s): s is string => !!s)
-        .map((label) => ({ label }))
+        .map((label) => ({ label, slug: slugForLabel(label) }))
     : (categories ?? []).map((c) => ({ label: c.name, slug: c.slug }));
 
   // Preferred time: a quick-pick preset OR a custom From–To window (the custom

@@ -16,10 +16,8 @@ import { authErrorMessage } from '@/lib/api/auth';
 import { resolveBankAccount } from '@/lib/api/referrals';
 import type { Bank } from '@/lib/artisan/walletTypes';
 import { formatNaira } from '@/lib/catalogue/assets';
+import { useFeeQuote, useFeeSchedule } from '@/lib/payments/fees';
 import { useBanks, useMyReferrals, useRequestReferralWithdrawal } from '@/lib/referral/hooks';
-
-// One referral reward is the smallest cash-out; the amount follows the admin setting.
-const DEFAULT_MIN_WITHDRAWAL = 500;
 
 /**
  * Cash out the referral reward pool to a bank account. The available balance comes
@@ -31,7 +29,13 @@ export default function ReferralWithdraw() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { data: referral } = useMyReferrals();
-  const MIN_WITHDRAWAL = referral?.rewardNaira ?? DEFAULT_MIN_WITHDRAWAL;
+  const feeSchedule = useFeeSchedule();
+  // The smallest cash-out follows the admin setting; older APIs used one reward.
+  const MIN_WITHDRAWAL =
+    referral?.minWithdrawalNaira ??
+    feeSchedule.data?.referralMinWithdrawalNaira ??
+    referral?.rewardNaira ??
+    0;
   const requestWithdrawal = useRequestReferralWithdrawal();
 
   const available = referral?.availableNaira ?? 0;
@@ -72,6 +76,10 @@ export default function ReferralWithdraw() {
   }, [bank?.code, accountNumber]);
 
   const amountNaira = Number(amount) || 0;
+  // The transfer charge for this amount, quoted by the server before confirming.
+  const quote = useFeeQuote(amountNaira, amountNaira >= MIN_WITHDRAWAL && amountNaira <= available);
+  const transferFee = quote.data?.transferFeeNaira ?? null;
+  const reachesBank = quote.data?.netNaira ?? null;
 
   const onWithdraw = async () => {
     setError(null);
@@ -92,16 +100,25 @@ export default function ReferralWithdraw() {
       return;
     }
     try {
-      await requestWithdrawal.mutateAsync({
+      const result = await requestWithdrawal.mutateAsync({
         amountNaira,
         bankName: bank.name,
         bankCode: bank.code,
         accountNumber: accountNumber.trim(),
         accountName: accountName.trim(),
       });
+      if (result.status === 'Failed') {
+        setError('The bank transfer did not go through. Your money is back in your rewards. Try again later.');
+        return;
+      }
+      const net = result.netNaira ?? amountNaira;
+      const fee = result.feeNaira ?? 0;
+      const feeLine = fee > 0 ? ` (${formatNaira(amountNaira)} minus the ${formatNaira(fee)} transfer charge)` : '';
       appAlert(
-        'Withdrawal requested',
-        `${formatNaira(amountNaira)} is on its way to your ${bank.name} account. Bank transfers usually arrive within minutes. We'll notify you once it lands.`,
+        result.status === 'Paid' ? 'Withdrawal sent' : 'Withdrawal requested',
+        result.status === 'Paid'
+          ? `${formatNaira(net)}${feeLine} has been sent to your ${bank.name} account.`
+          : `${formatNaira(net)}${feeLine} is on its way to your ${bank.name} account. We'll notify you once it lands.`,
         [{ text: 'OK', onPress: () => router.back() }],
       );
     } catch (e) {
@@ -206,6 +223,32 @@ export default function ReferralWithdraw() {
             <AppText weight="semibold" className="text-[12px] text-primary">Max</AppText>
           </Pressable>
         </View>
+
+        {MIN_WITHDRAWAL > 0 ? (
+          <AppText className="mt-2 text-[12px] text-gray-500">
+            Minimum {formatNaira(MIN_WITHDRAWAL)}.
+          </AppText>
+        ) : null}
+
+        {amountNaira >= MIN_WITHDRAWAL && amountNaira > 0 && amountNaira <= available ? (
+          <View className="mt-3 rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3">
+            <View className="flex-row items-center justify-between">
+              <AppText className="text-[13px] text-gray-600">Transfer charge</AppText>
+              <AppText weight="medium" className="text-[13px] text-gray-900">
+                {transferFee == null ? (quote.isError ? 'Shown after sending' : 'Checking…') : formatNaira(transferFee)}
+              </AppText>
+            </View>
+            <View className="mt-1.5 flex-row items-center justify-between">
+              <AppText className="text-[13px] text-gray-600">Reaches your bank</AppText>
+              <AppText weight="semibold" className="text-[13px] text-gray-900">
+                {reachesBank == null ? '…' : formatNaira(reachesBank)}
+              </AppText>
+            </View>
+            {quote.data && !quote.data.usersBearFees ? (
+              <AppText className="mt-1 text-[11.5px] text-gray-400">Servika covers the transfer charge for now.</AppText>
+            ) : null}
+          </View>
+        ) : null}
 
         {error ? (
           <AppText weight="medium" className="mt-3 text-[13px] text-red-500">{error}</AppText>

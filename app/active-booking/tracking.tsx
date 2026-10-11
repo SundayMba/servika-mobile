@@ -11,15 +11,14 @@ import { appAlert } from '@/components/ui/AppAlert';
 import { ArtisanRow, VerifiedBadges } from '@/components/active-booking/parts';
 import { BottomSheet } from '@/components/BottomSheet';
 import { Button } from '@/components/ui/Button';
-import { LiveMap, type NearbyMarker } from '@/components/tracking/LiveMap';
+import { LiveMap } from '@/components/tracking/LiveMap';
 import { colors } from '@/constants/colors';
-import { useArtisan, useNearbyArtisans } from '@/lib/catalogue/hooks';
+import { useArtisan } from '@/lib/catalogue/hooks';
 import { authErrorMessage } from '@/lib/api/auth';
-import { canCancel } from '@/lib/booking/display';
+import { canCancel, cancelRefundNote } from '@/lib/booking/display';
 import { useBooking, useCancelBooking } from '@/lib/booking/hooks';
 import { useOpenChat } from '@/lib/chat/hooks';
 import {
-  destinationPoint,
   distanceKm,
   etaMinutes,
   formatDistance,
@@ -73,7 +72,6 @@ export default function LiveTracking() {
   // a notification that only knows the booking id).
   const artisanId = params.artisanId ?? booking?.artisanId ?? undefined;
   const { data: artisan } = useArtisan(artisanId);
-  const { data: nearbyArtisans } = useNearbyArtisans();
   const { location, state } = useLiveTracking(bookingId);
 
   const name = artisan?.fullName || params.name || 'Your artisan';
@@ -82,10 +80,7 @@ export default function LiveTracking() {
 
   const confirmCancel = () => {
     if (!bookingId) return;
-    const refundNote =
-      booking?.paymentState === 'Paid'
-        ? ' Your payment will be refunded in full.'
-        : '';
+    const refundNote = booking ? cancelRefundNote(booking) : '';
     appAlert('Cancel booking?', `${name} will be notified.${refundNote}`, [
       { text: 'Keep booking', style: 'cancel' },
       {
@@ -145,33 +140,38 @@ export default function LiveTracking() {
       ? etaMinutes(straightKm, location?.speed)
       : null;
 
-  // Scatter nearby artisans around the destination (catalogue carries distance,
-  // not coordinates — see lib/tracking/geo destinationPoint).
-  const nearby: NearbyMarker[] = useMemo(
-    () =>
-      (nearbyArtisans ?? [])
-        .filter((a) => a.id !== artisanId)
-        .slice(0, 6)
-        .map((a, i) => ({
-          id: a.id,
-          position: destinationPoint(destination, a.distanceKm || 0.6 + i * 0.4, (i * 67) % 360),
-        })),
-    [nearbyArtisans, destination, artisanId],
-  );
-
+  // The headline follows the booking's real status; only OnMyWay makes an ETA claim.
+  const bookingStatus = booking?.status;
+  const distanceText = km != null && km > 0 ? formatDistance(km) : null;
   const status = (() => {
-    if (state === 'ended') return { title: 'Artisan has arrived', sub: 'They’re at your location' };
-    if (state === 'error') return { title: 'Live tracking unavailable', sub: 'We’ll keep your booking updated' };
-    if (state === 'connecting') return { title: 'Connecting…', sub: 'Locating your artisan' };
+    if (!booking) return { title: 'Loading…', sub: 'Getting your booking' };
+    if (bookingStatus === 'Arrived') return { title: 'Artisan has arrived', sub: 'They’re at your location' };
+    if (bookingStatus === 'InProgress') return { title: 'Work in progress', sub: `${name.split(' ')[0]} is working on your job` };
+    if (bookingStatus === 'AwaitingConfirmation') return { title: 'Work finished', sub: 'Review and confirm the job' };
+    if (bookingStatus === 'Accepted' || bookingStatus === 'Pending') {
+      return { title: 'Not on the way yet', sub: 'You’ll see them here once they set off' };
+    }
+    if (bookingStatus !== 'OnMyWay') return { title: 'Live tracking off', sub: 'This booking is not active' };
+    if (state === 'error') return { title: 'Artisan on the way', sub: 'Live location unavailable right now' };
+    if (state === 'connecting') return { title: 'Artisan on the way', sub: 'Locating your artisan' };
     if (!location)
       return {
         title: 'Artisan on the way',
-        sub: basePos
-          ? `Last known position shown · ~${formatDistance(km ?? 0)} away`
-          : 'Waiting for live location…',
+        sub:
+          basePos && distanceText
+            ? `Last known position shown · about ${distanceText} away`
+            : 'Waiting for live location…',
       };
-    return { title: 'Artisan on the way', sub: `ETA ${eta} min · ${formatDistance(km ?? 0)} away` };
+    return {
+      title: 'Artisan on the way',
+      sub: [eta != null ? `ETA ${eta} min` : null, distanceText ? `${distanceText} away` : null]
+        .filter(Boolean)
+        .join(' · '),
+    };
   })();
+  // Only an en-route artisan gets an ETA in the bottom card.
+  const showEta = bookingStatus === 'OnMyWay' && eta != null;
+  const arrivedLook = bookingStatus === 'Arrived' || bookingStatus === 'InProgress';
 
   return (
     <SafeAreaView className="flex-1 bg-gray-100" edges={['top', 'bottom']}>
@@ -200,12 +200,12 @@ export default function LiveTracking() {
           className="absolute left-5 right-5 top-3 z-10 flex-row items-center rounded-2xl bg-white p-3.5 shadow"
         >
           <View
-            className={`h-10 w-10 items-center justify-center rounded-full ${state === 'ended' ? 'bg-green-100' : 'bg-primary/10'}`}
+            className={`h-10 w-10 items-center justify-center rounded-full ${arrivedLook ? 'bg-green-100' : 'bg-primary/10'}`}
           >
             <Ionicons
-              name={state === 'ended' ? 'checkmark-circle' : 'navigate'}
+              name={arrivedLook ? 'checkmark-circle' : 'navigate'}
               size={20}
-              color={state === 'ended' ? '#16A34A' : colors.primary}
+              color={arrivedLook ? '#16A34A' : colors.primary}
             />
           </View>
           <View className="ml-3 flex-1">
@@ -218,7 +218,6 @@ export default function LiveTracking() {
         <LiveMap
           destination={destination}
           artisan={artisanPos}
-          nearby={nearby}
           route={routeForMap}
           showsUserLocation
           artisanLabel={name.split(' ')[0]}
@@ -231,21 +230,24 @@ export default function LiveTracking() {
         <ArtisanRow
           name={name}
           specialty={specialty}
-          rating={artisan?.rating ?? 0}
-          jobsCount={artisan?.jobsCount ?? ''}
+          rating={artisan?.rating}
+          reviewCount={artisan?.reviewCount}
+          completedJobs={artisan?.completedJobs}
           imageKey={imageKey}
           photoUrl={artisan?.photoUrl}
           right={
-            eta != null ? (
+            showEta ? (
               <View className="items-end">
                 <AppText weight="semibold" className="text-[18px] text-primary">{eta} min</AppText>
-                <AppText className="text-[11px] text-gray-400">{formatDistance(km ?? 0)}</AppText>
+                {distanceText ? (
+                  <AppText className="text-[11px] text-gray-400">{distanceText}</AppText>
+                ) : null}
               </View>
             ) : undefined
           }
         />
         <View className="mt-3">
-          <VerifiedBadges />
+          <VerifiedBadges verified={artisan?.isVerified} certified={artisan?.hasCertificate} />
         </View>
         <View className="mt-4 flex-row gap-3">
           <ActionPill
@@ -264,8 +266,9 @@ export default function LiveTracking() {
           <ArtisanRow
             name={name}
             specialty={specialty}
-            rating={artisan?.rating ?? 0}
-            jobsCount={artisan?.jobsCount ?? ''}
+            rating={artisan?.rating}
+            reviewCount={artisan?.reviewCount}
+            completedJobs={artisan?.completedJobs}
             imageKey={imageKey}
             photoUrl={artisan?.photoUrl}
           />
@@ -273,11 +276,11 @@ export default function LiveTracking() {
         <View className="mt-4 flex-row gap-3">
           <View className="flex-1 rounded-2xl bg-gray-50 p-3">
             <AppText className="text-[11px] text-gray-400">ETA</AppText>
-            <AppText weight="semibold" className="text-[15px] text-gray-900">{eta != null ? `${eta} min` : '—'}</AppText>
+            <AppText weight="semibold" className="text-[15px] text-gray-900">{showEta ? `${eta} min` : '—'}</AppText>
           </View>
           <View className="flex-1 rounded-2xl bg-gray-50 p-3">
             <AppText className="text-[11px] text-gray-400">Distance</AppText>
-            <AppText weight="semibold" className="text-[15px] text-gray-900">{km != null ? formatDistance(km) : '—'}</AppText>
+            <AppText weight="semibold" className="text-[15px] text-gray-900">{distanceText ?? '—'}</AppText>
           </View>
         </View>
         <View className="mt-4 rounded-2xl bg-gray-50 p-3">

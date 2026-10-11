@@ -24,9 +24,14 @@ export interface ArtisanSummary {
   specialty: string;
   rating: number;
   reviewCount: number;
-  distanceKm: number;
+  /** Km from the selected area; null when unknown (never show "0 km"). */
+  distanceKm: number | null;
   isAvailable: boolean;
   accent: string;
+  /** Passed the admin review desk (identity checked). Missing on older APIs. */
+  isVerified?: boolean;
+  /** Real count of completed jobs. Missing on older APIs. */
+  completedJobs?: number;
   /** Real position for the Explore map pin; null for artisans who haven't
    * shared a location yet (they appear in lists but not on the map). */
   latitude: number | null;

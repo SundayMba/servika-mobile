@@ -11,7 +11,7 @@ import { ArtisanRow, StatusTimeline } from '@/components/active-booking/parts';
 import { Button } from '@/components/ui/Button';
 import { colors } from '@/constants/colors';
 import { TRACK_STEPS } from '@/lib/active-booking/mock';
-import { statusStyle, isEnRoute, formatDate } from '@/lib/booking/display';
+import { cancelRefundNote, statusStyle, isEnRoute, formatDate, shortRef } from '@/lib/booking/display';
 import { useBooking, useCancelBooking } from '@/lib/booking/hooks';
 import { useArtisan } from '@/lib/catalogue/hooks';
 import { useOpenChat } from '@/lib/chat/hooks';
@@ -26,10 +26,10 @@ const STEP_INDEX: Record<string, number> = {
   InProgress: 4,
 };
 
-function shortRef(id?: string) {
-  if (!id) return 'SVK-78D45';
-  return `SVK-${id.replace(/-/g, '').slice(0, 5).toUpperCase()}`;
-}
+// Statuses where the artisan is (or will soon be) working the job, so the
+// live-tracking steps and buttons make sense. Open/Rejected/Cancelled/Expired/
+// Disputed get a plain status card instead.
+const LIVE_STATUSES = new Set(['Pending', 'Accepted', 'OnMyWay', 'Arrived', 'InProgress']);
 
 export default function ActiveBookingDashboard() {
   const router = useRouter();
@@ -51,6 +51,7 @@ export default function ActiveBookingDashboard() {
   const serviceName = params.serviceName || booking?.serviceName || 'Your booking';
   const status = booking?.status;
   const chip = status ? statusStyle(status) : null;
+  const isLive = !!status && LIVE_STATUSES.has(status);
 
   const linkParams = {
     id: params.bookingId || 'demo',
@@ -86,7 +87,7 @@ export default function ActiveBookingDashboard() {
   const canCancel = status === 'Pending' || status === 'Accepted';
   const cancel = () => {
     if (!bookingId) return;
-    appAlert('Cancel booking?', 'This will withdraw your request.', [
+    appAlert('Cancel booking?', `This will withdraw your request.${booking ? cancelRefundNote(booking) : ''}`, [
       { text: 'Keep booking', style: 'cancel' },
       {
         text: 'Cancel booking',
@@ -158,9 +159,9 @@ export default function ActiveBookingDashboard() {
                 {serviceName}
               </AppText>
             </View>
-            <View className={`rounded-full px-2.5 py-1 ${chip?.bg ?? 'bg-green-100'}`}>
-              <AppText weight="semibold" className={`text-[11px] ${chip?.text ?? 'text-green-700'}`}>
-                {chip?.label ?? 'Accepted'}
+            <View className={`rounded-full px-2.5 py-1 ${chip?.bg ?? 'bg-gray-100'}`}>
+              <AppText weight="semibold" className={`text-[11px] ${chip?.text ?? 'text-gray-500'}`}>
+                {chip?.label ?? 'Loading…'}
               </AppText>
             </View>
           </View>
@@ -181,7 +182,7 @@ export default function ActiveBookingDashboard() {
             <View className="flex-row items-center gap-2">
               <Ionicons name="receipt-outline" size={14} color={colors.textMuted} />
               <AppText className="text-[12px] text-gray-600">
-                Booking ID: {shortRef(params.bookingId)}
+                Booking ID: {shortRef(bookingId) || '—'}
               </AppText>
             </View>
           </View>
@@ -191,8 +192,9 @@ export default function ActiveBookingDashboard() {
           <ArtisanRow
             name={artisanName}
             specialty={artisan?.specialty ?? ''}
-            rating={artisan?.rating ?? 0}
-            jobsCount={artisan?.jobsCount ?? ''}
+            rating={artisan?.rating}
+            reviewCount={artisan?.reviewCount}
+            completedJobs={artisan?.completedJobs}
             imageKey={artisan?.imageKey ?? ''}
             photoUrl={artisan?.photoUrl}
             right={
@@ -206,7 +208,9 @@ export default function ActiveBookingDashboard() {
           />
         </View>
 
-        {/* Timeline */}
+        {/* Timeline + live tracking only make sense while the job is live. */}
+        {isLive ? (
+        <>
         <View className="mt-4 rounded-3xl border border-gray-100 bg-white p-4">
           <StatusTimeline steps={TRACK_STEPS} current={status ? STEP_INDEX[status] ?? 0 : 0} />
           {chip ? (
@@ -228,6 +232,22 @@ export default function ActiveBookingDashboard() {
           </View>
           <Ionicons name="chevron-forward" size={18} color={colors.primary} />
         </Pressable>
+        </>
+        ) : status ? (
+          <Pressable
+            onPress={() => bookingId && router.push({ pathname: '/booking/[id]', params: { id: bookingId } })}
+            className="mt-4 flex-row items-center rounded-2xl bg-gray-50 p-4 active:opacity-80"
+          >
+            <Ionicons name="information-circle-outline" size={22} color={colors.textMuted} />
+            <View className="ml-3 flex-1">
+              <AppText weight="semibold" className="text-[13px] text-gray-900">{chip?.label}</AppText>
+              <AppText className="mt-0.5 text-[12px] leading-4 text-gray-600">
+                Open the booking for details.
+              </AppText>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+          </Pressable>
+        ) : null}
 
         {/* Actions */}
         <View className="mt-5 flex-row gap-3">
@@ -237,15 +257,17 @@ export default function ActiveBookingDashboard() {
               onPress={openChat}
             />
           </View>
-          <View className="flex-1">
-            <Button
-              label="View Tracking"
-              variant="outline"
-              onPress={() =>
-                router.push({ pathname: '/active-booking/tracking', params: linkParams })
-              }
-            />
-          </View>
+          {isLive ? (
+            <View className="flex-1">
+              <Button
+                label="View Tracking"
+                variant="outline"
+                onPress={() =>
+                  router.push({ pathname: '/active-booking/tracking', params: linkParams })
+                }
+              />
+            </View>
+          ) : null}
         </View>
 
         {canCancel ? (

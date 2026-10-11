@@ -48,7 +48,7 @@ const SLIDES = [
     title: 'Your money waits',
     titleAccent: "until it's fixed.",
     subtitle:
-      'Pay when you book, but the artisan is only paid once you confirm the job is done.',
+      'Booking is free. You pay once you accept a price, and Servika holds it until you confirm the job is done.',
   },
 ] as const;
 

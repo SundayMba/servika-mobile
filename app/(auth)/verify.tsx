@@ -7,11 +7,14 @@ import { AppText } from '@/components/ui/AppText';
 import { colors } from '@/constants/colors';
 import { resendOtp, verifyOtp } from '@/lib/api/auth';
 import { useAuth } from '@/lib/auth/AuthContext';
+import { isAxiosError } from 'axios';
+
+const TRIES_WORDS = ['', 'One', 'Two', 'Three', 'Four', 'Five'];
 
 const LENGTH = 6;
 const RESEND_COOLDOWN = 60; // the backend's resend throttle
 const CODE_LIFE_MS = 10 * 60_000; // the backend's code lifetime
-const MAX_TRIES = 3; // we stop before the server's own limit so the copy stays true
+const MAX_TRIES = 5; // the server's attempt limit per code
 
 type Phase = 'clean' | 'checking' | 'wrong' | 'expired' | 'locked' | 'offline' | 'done';
 
@@ -19,7 +22,7 @@ type Phase = 'clean' | 'checking' | 'wrong' | 'expired' | 'locked' | 'offline' |
  * Six digits, nothing else (design 12 and its edges, then 14). The code is
  * emailed at registration or on an unverified sign-in, so the screen opens in
  * cooldown. Digits land straight on the page; the sixth one verifies at once.
- * Wrong three times reaches the locked state, which offers a fresh code or a
+ * Wrong five times (the server's limit) reaches the locked state, which offers a fresh code or a
  * password reset instead of a dead end.
  */
 export default function Verify() {
@@ -57,9 +60,15 @@ export default function Verify() {
       }
     } catch (e) {
       const f = classifyAuthError(e);
+      const httpStatus = isAxiosError(e) ? e.response?.status : undefined;
       if (f.kind === 'offline') setPhase('offline');
       else if (f.kind === 'rate') { setMessage(f.message); setPhase('locked'); }
-      else fail();
+      // Only a 400 from the server means the code itself was wrong.
+      else if (httpStatus === 400) fail();
+      else {
+        setMessage('Something went wrong, try again.');
+        setPhase('clean');
+      }
     }
   };
 
@@ -141,7 +150,7 @@ export default function Verify() {
       {phase === 'locked' ? (
         <>
           <Headline>Let us start{'\n'}that again.</Headline>
-          <Lede>The code you were given is dead now.</Lede>
+          <Lede>That code will not work any more.</Lede>
         </>
       ) : (
         <>
@@ -154,11 +163,13 @@ export default function Verify() {
         <CodeDigits value={phase === 'locked' || phase === 'expired' ? '' : code} onChange={onChange} tone={digitsTone} editable={phase === 'clean' || phase === 'wrong' || phase === 'offline'} />
         <Rule tone={phase === 'wrong' || phase === 'locked' ? 'wrong' : 'normal'} />
         {phase === 'wrong' ? (
-          <AppText weight="medium" style={styles.wrong}>That is not the code. {left === 1 ? 'One try left' : `${['', '', 'Two'][left] ?? left} tries left`}, then we start over.</AppText>
+          <AppText weight="medium" style={styles.wrong}>That is not the code. {left === 1 ? 'One try left' : `${TRIES_WORDS[left] ?? left} tries left`}, then you will need a fresh code.</AppText>
         ) : phase === 'locked' ? (
           <View style={{ gap: 9 }}>
-            <AppText weight="semibold" style={styles.lockedTitle}>That was three tries.</AppText>
-            <AppText style={styles.lockedBody}>{message ?? 'We stopped that code so nobody can guess their way in. Ask for a fresh one, or reset your password and skip the guessing.'}</AppText>
+            <AppText weight="semibold" style={styles.lockedTitle}>
+              {message ? 'Too many tries for now.' : 'That was five tries.'}
+            </AppText>
+            <AppText style={styles.lockedBody}>{message ?? 'Ask for a fresh code, or reset your password instead.'}</AppText>
           </View>
         ) : phase === 'expired' ? (
           <AppText weight="medium" style={styles.expired}>That code timed out. Ten minutes is all it gets.</AppText>

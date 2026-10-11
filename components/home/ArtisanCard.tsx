@@ -11,6 +11,7 @@ import {
 
 import { AppText } from '@/components/ui/AppText';
 import { colors } from '@/constants/colors';
+import { distanceLabel, ratingLabel } from '@/lib/catalogue/display';
 
 /** Minimal shape an artisan card needs — works for static and API-backed data. */
 export type ArtisanCardItem = {
@@ -18,7 +19,12 @@ export type ArtisanCardItem = {
   specialty: string;
   available: boolean;
   rating: number;
-  distanceKm: number;
+  /** Number of reviews; 0 shows "New" instead of a rating. */
+  reviewCount?: number;
+  /** Null or 0 = unknown, so no distance is shown. */
+  distanceKm: number | null;
+  /** Show the verified tick only when the API says so. */
+  verified?: boolean;
   avatar?: ImageSourcePropType;
 };
 
@@ -81,11 +87,13 @@ function ArtisanCardBase({
             <AppText weight="semibold" numberOfLines={1} style={styles.name}>
               {artisan.name}
             </AppText>
-            <MaterialCommunityIcons
-              name="check-decagram"
-              size={14}
-              color={colors.accentDeep}
-            />
+            {artisan.verified ? (
+              <MaterialCommunityIcons
+                name="check-decagram"
+                size={14}
+                color={colors.accentDeep}
+              />
+            ) : null}
           </View>
 
           <View style={styles.metaRow}>
@@ -95,19 +103,21 @@ function ArtisanCardBase({
             <View style={styles.metaItem}>
               <Ionicons name="star" size={12} color={colors.accentDeep} />
               <AppText weight="medium" style={styles.metaValue}>
-                {artisan.rating.toFixed(1)}
+                {ratingLabel(artisan.rating, artisan.reviewCount)}
               </AppText>
             </View>
-            <View style={styles.metaItemTight}>
-              <Ionicons
-                name="location-outline"
-                size={12}
-                color={colors.inkSubtle}
-              />
-              <AppText
-                style={styles.metaMuted}
-              >{`${artisan.distanceKm} km`}</AppText>
-            </View>
+            {distanceLabel(artisan.distanceKm) ? (
+              <View style={styles.metaItemTight}>
+                <Ionicons
+                  name="location-outline"
+                  size={12}
+                  color={colors.inkSubtle}
+                />
+                <AppText style={styles.metaMuted}>
+                  {distanceLabel(artisan.distanceKm)}
+                </AppText>
+              </View>
+            ) : null}
           </View>
         </View>
 

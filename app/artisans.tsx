@@ -18,6 +18,8 @@ import { artisanPhotoSource } from '@/lib/catalogue/assets';
 import type { ArtisanSummary } from '@/lib/catalogue/types';
 import { useNearbyArtisans } from '@/lib/catalogue/hooks';
 import { useOpenChat } from '@/lib/chat/hooks';
+import { distanceLabel, isNewArtisan } from '@/lib/catalogue/display';
+import { useSelectedCoords } from '@/lib/location/areaStore';
 
 /** Full-width artisan row for the vertical listing (the carousel card is compact). */
 function ArtisanRow({
@@ -66,7 +68,9 @@ function ArtisanRow({
             >
               {artisan.fullName}
             </AppText>
-            <MaterialCommunityIcons name="check-decagram" size={15} color="#3B82F6" />
+            {artisan.isVerified ? (
+              <MaterialCommunityIcons name="check-decagram" size={15} color="#3B82F6" />
+            ) : null}
           </View>
 
           <AppText weight="medium" numberOfLines={1} className="mt-0.5 text-[12px] text-primary">
@@ -76,15 +80,23 @@ function ArtisanRow({
           <View className="mt-1.5 flex-row items-center gap-3">
             <View className="flex-row items-center gap-1">
               <Ionicons name="star" size={13} color="#FBBF24" />
-              <AppText weight="semibold" className="text-[12px] text-gray-700">
-                {artisan.rating.toFixed(1)}
-              </AppText>
-              <AppText className="text-[12px] text-gray-400">({artisan.reviewCount})</AppText>
+              {isNewArtisan(artisan.reviewCount) ? (
+                <AppText weight="semibold" className="text-[12px] text-gray-700">New</AppText>
+              ) : (
+                <>
+                  <AppText weight="semibold" className="text-[12px] text-gray-700">
+                    {artisan.rating.toFixed(1)}
+                  </AppText>
+                  <AppText className="text-[12px] text-gray-400">({artisan.reviewCount})</AppText>
+                </>
+              )}
             </View>
-            <View className="flex-row items-center gap-0.5">
-              <Ionicons name="location-outline" size={13} color={colors.textMuted} />
-              <AppText className="text-[12px] text-gray-500">{artisan.distanceKm} km</AppText>
-            </View>
+            {distanceLabel(artisan.distanceKm) ? (
+              <View className="flex-row items-center gap-0.5">
+                <Ionicons name="location-outline" size={13} color={colors.textMuted} />
+                <AppText className="text-[12px] text-gray-500">{distanceLabel(artisan.distanceKm)}</AppText>
+              </View>
+            ) : null}
           </View>
 
           <View className="mt-1.5 flex-row items-center gap-1">
@@ -148,7 +160,8 @@ export default function ArtisansList() {
 
   const { isAuthenticated, guard, promptVisible, hidePrompt, onSignedIn } = useAuthGate();
   const { openWithArtisan } = useOpenChat();
-  const artisansQuery = useNearbyArtisans();
+  const coords = useSelectedCoords();
+  const artisansQuery = useNearbyArtisans(coords);
   const artisans = artisansQuery.data ?? [];
 
   return (

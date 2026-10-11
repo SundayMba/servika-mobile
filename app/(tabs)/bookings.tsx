@@ -14,7 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppText } from '@/components/ui/AppText';
 import { colors } from '@/constants/colors';
-import { formatDate, statusTone } from '@/lib/booking/display';
+import { formatDate, isActiveBooking, statusTone } from '@/lib/booking/display';
 import { useBookings } from '@/lib/booking/hooks';
 import type { BookingStatus, BookingSummary } from '@/lib/booking/types';
 
@@ -28,19 +28,10 @@ import type { BookingStatus, BookingSummary } from '@/lib/booking/types';
 
 type TabId = 'active' | 'completed' | 'cancelled';
 
-const ACTIVE: BookingStatus[] = [
-  'Open',
-  'Pending',
-  'Accepted',
-  'OnMyWay',
-  'Arrived',
-  'InProgress',
-  'AwaitingConfirmation',
-];
-const CANCELLED: BookingStatus[] = ['Cancelled', 'Rejected', 'Expired', 'Disputed'];
+const CANCELLED: BookingStatus[] = ['Cancelled', 'Rejected', 'Expired'];
 
 function inTab(status: BookingStatus, tab: TabId): boolean {
-  if (tab === 'active') return ACTIVE.includes(status);
+  if (tab === 'active') return isActiveBooking(status);
   if (tab === 'completed') return status === 'Completed';
   return CANCELLED.includes(status);
 }

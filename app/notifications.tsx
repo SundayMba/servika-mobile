@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppText } from '@/components/ui/AppText';
 import { colors } from '@/constants/colors';
+import { notificationTarget } from '@/lib/notifications/route';
 import { useAuth } from '@/lib/auth/AuthContext';
 import {
   timeAgo,
@@ -64,19 +65,8 @@ export default function Notifications() {
 
   const onPressItem = (n: AppNotification) => {
     if (!n.isRead) markRead.mutate(n.id);
-    // Chat notifications deep-link to the conversation thread (both roles).
-    if (n.conversationId) {
-      router.push({ pathname: '/chat/[id]', params: { id: n.conversationId } });
-      return;
-    }
-    // Open-job broadcasts target artisans — their pool lives in the Servika Pro
-    // app now, so here the tap just marks it read.
-    if (n.type === 'OpenJob') return;
-    if (!n.bookingId) return;
-    // Every booking-shaped notification opens the booking DETAIL — the summary of
-    // where things stand — never the map directly. The detail screen offers
-    // "Track artisan live" when the artisan is en route.
-    router.push({ pathname: '/booking/[id]', params: { id: n.bookingId } });
+    const target = notificationTarget(n);
+    if (target) router.push(target);
   };
 
   return (

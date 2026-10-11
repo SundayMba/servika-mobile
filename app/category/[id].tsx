@@ -16,6 +16,7 @@ import { useAuthGate } from '@/lib/auth/useAuthGate';
 import { artisanPhotoSource } from '@/lib/catalogue/assets';
 import { useCategories, useCategoryArtisans } from '@/lib/catalogue/hooks';
 import type { ArtisanSummary } from '@/lib/catalogue/types';
+import { distanceLabel } from '@/lib/catalogue/display';
 
 /**
  * Category detail, per the "Servika Category v2" canvas — the same system as
@@ -80,10 +81,10 @@ function ArtisanRow({
               name in its place, but we do not know where an artisan is when the
               distance is unknown, and printing the browsing area here would
               assert a location the API never gave us. */}
-          {artisan.distanceKm > 0 ? (
+          {distanceLabel(artisan.distanceKm) ? (
             <View style={styles.metaItemTight}>
               <Ionicons name="location-outline" size={12} color={colors.inkSubtle} />
-              <AppText style={styles.metaMuted}>{`${artisan.distanceKm} km`}</AppText>
+              <AppText style={styles.metaMuted}>{distanceLabel(artisan.distanceKm)}</AppText>
             </View>
           ) : null}
         </View>
@@ -103,7 +104,12 @@ export default function CategoryListing() {
 
   const { data: categories, isLoading } = useCategories();
   const category = categories?.find((c) => c.slug === id);
-  const { data: artisans, isLoading: loadingArtisans } = useCategoryArtisans(id);
+  const {
+    data: artisans,
+    isLoading: loadingArtisans,
+    isError: artisansError,
+    refetch: refetchArtisans,
+  } = useCategoryArtisans(id);
 
   if (isLoading) {
     return (
@@ -166,7 +172,7 @@ export default function CategoryListing() {
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.body}>
           <Animated.View entering={FadeInDown.duration(420)} style={styles.stack}>
-            {/* Post an open request — matched with the first available pro. */}
+            {/* Post an open request: nearby pros respond. */}
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={`Post an open ${category.name} request`}
@@ -189,7 +195,7 @@ export default function CategoryListing() {
                   Not sure who to pick?
                 </AppText>
                 <AppText style={styles.promoSub}>
-                  {`Post a request and the first available ${service} pro takes it.`}
+                  {`Post a request and ${service} pros near you respond.`}
                 </AppText>
               </View>
               <Ionicons name="chevron-forward" size={17} color={colors.accentDeep} />
@@ -198,11 +204,24 @@ export default function CategoryListing() {
             <AppText weight="medium" style={styles.count}>
               {loadingArtisans
                 ? 'Finding artisans…'
-                : `${count} artisan${count === 1 ? '' : 's'} available`}
+                : artisansError
+                  ? "Couldn't load artisans"
+                  : `${count} artisan${count === 1 ? '' : 's'}`}
             </AppText>
 
             {loadingArtisans ? (
               <ActivityIndicator color={colors.accentDeep} style={styles.loading} />
+            ) : artisansError ? (
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => void refetchArtisans()}
+                hitSlop={8}
+                style={styles.empty}
+              >
+                <AppText weight="semibold" style={styles.emptyTitle}>
+                  Tap to try again
+                </AppText>
+              </Pressable>
             ) : count === 0 ? (
               <View style={styles.empty}>
                 <View style={styles.emptyIcon}>

@@ -1,6 +1,6 @@
 /** Mirrors the backend ReferralSummaryDto / ReferredArtisanDto. */
 
-import type { ReferralStatus } from '@/lib/referral/mock';
+import type { ReferralStatus } from '@/lib/referral/display';
 
 export type ReferredArtisan = {
   id: string;
@@ -17,4 +17,6 @@ export type ReferralSummary = {
   paidOutNaira: number;
   pendingCount: number;
   referred: ReferredArtisan[];
+  /** Smallest cash-out (added later; may be missing on an older API). */
+  minWithdrawalNaira?: number;
 };

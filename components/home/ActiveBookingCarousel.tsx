@@ -13,12 +13,20 @@ import { colors } from '@/constants/colors';
 import type { BookingStatus, BookingSummary } from '@/lib/booking/types';
 
 // Friendly one-liner for each in-flight status.
-const SUBTITLE: Partial<Record<BookingStatus, string>> = {
+const SUBTITLE: Record<BookingStatus, string> = {
+  Draft: 'Not sent yet',
+  Open: 'Finding an artisan',
   Pending: 'Waiting for the artisan to accept',
   Accepted: 'Confirmed, preparing to head out',
+  Rejected: 'The artisan could not take it',
   OnMyWay: 'On the way to you',
   Arrived: 'Your artisan has arrived',
   InProgress: 'Work in progress',
+  AwaitingConfirmation: 'Work done, waiting for your confirmation',
+  Completed: 'Completed',
+  Cancelled: 'Cancelled',
+  Disputed: 'Issue under review',
+  Expired: 'Expired',
 };
 
 /** A green "live" dot with a slow expanding ring — mirrors the hero badge. */
@@ -89,7 +97,7 @@ export function ActiveBookingCarousel({
   }));
 
   const current = bookings[Math.min(index, n - 1)];
-  const subtitle = SUBTITLE[current.status] ?? 'In progress';
+  const subtitle = SUBTITLE[current.status] ?? 'Booking update';
 
   return (
     <TouchableOpacity

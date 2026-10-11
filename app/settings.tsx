@@ -2,18 +2,19 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
-import { Linking, Pressable, ScrollView, View } from 'react-native';
+import Constants from 'expo-constants';
+import { Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppText } from '@/components/ui/AppText';
 import { appAlert } from '@/components/ui/AppAlert';
 import { authErrorMessage, deleteAccount } from '@/lib/api/auth';
 import { colors } from '@/constants/colors';
+import { openSupportEmail, openUrl, SITE_URL, SUPPORT_EMAIL } from '@/constants/links';
 import { useAuth } from '@/lib/auth/AuthContext';
 
-const SUPPORT_EMAIL = 'support@servika.com.ng';
-const openSupport = () =>
-  Linking.openURL(`mailto:${SUPPORT_EMAIL}?subject=Servika%20Support`).catch(() => {});
+const openSupport = () => openSupportEmail();
+const APP_VERSION = Constants.expoConfig?.version ?? '';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -97,17 +98,17 @@ export default function Settings() {
   const handleDeleteAccount = () => {
     appAlert(
       'Delete account?',
-      'This permanently deletes your account, bookings and messages. It cannot be undone.',
+      `Your account closes now and is erased for good after 30 days. To restore it, email ${SUPPORT_EMAIL} within those 30 days. Any referral balance you have not withdrawn is lost.`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Continue',
           style: 'destructive',
           onPress: () =>
-            appAlert('Are you absolutely sure?', 'Your account will be gone forever.', [
+            appAlert('Are you sure?', 'You will be signed out now. After 30 days your account and bookings are erased.', [
               { text: 'Keep my account', style: 'cancel' },
               {
-                text: 'Delete forever',
+                text: 'Delete account',
                 style: 'destructive',
                 onPress: async () => {
                   try {
@@ -204,7 +205,7 @@ export default function Settings() {
           <MenuRow
             icon="information-circle-outline"
             label="About Servika"
-            onPress={() => Linking.openURL('https://servika.com.ng').catch(() => {})}
+            onPress={() => openUrl(SITE_URL)}
             last
           />
         </MenuSection>
@@ -224,7 +225,7 @@ export default function Settings() {
         </Pressable>
 
         <AppText className="mt-5 text-center text-[12px] text-gray-400">
-          Servika v1.0.0
+          {APP_VERSION ? `Servika v${APP_VERSION}` : 'Servika'}
         </AppText>
       </ScrollView>
     </SafeAreaView>

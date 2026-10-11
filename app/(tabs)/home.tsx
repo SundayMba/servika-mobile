@@ -3,6 +3,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useMemo, useState, type ComponentProps } from 'react';
 import {
+  Linking,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -35,7 +36,7 @@ import { colors } from '@/constants/colors';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useAuthGate } from '@/lib/auth/useAuthGate';
 import { useBookings } from '@/lib/booking/hooks';
-import type { BookingStatus } from '@/lib/booking/types';
+import { isActiveBooking, isTrackable } from '@/lib/booking/display';
 import { artisanPhotoSource, categoryImage } from '@/lib/catalogue/assets';
 import { useCategories, useNearbyArtisans,
   useFeaturedServices,
@@ -43,11 +44,14 @@ import { useCategories, useNearbyArtisans,
 import { useOpenChat } from '@/lib/chat/hooks';
 import {
   setSelectedArea,
+  useAreaResolved,
   useSelectedArea,
   useSelectedCoords,
 } from '@/lib/location/areaStore';
 import { useUnreadCount } from '@/lib/notifications/hooks';
+import { useFeeSchedule } from '@/lib/payments/fees';
 import { FALLBACK_CATEGORIES } from '@/constants/fallback-categories';
+import { SERVIKA_PRO_STORE_URL } from '@/constants/links';
 
 /**
  * Home, per the "Servika Home v2" design canvas.
@@ -58,14 +62,6 @@ import { FALLBACK_CATEGORIES } from '@/constants/fallback-categories';
  * earlier than it used to.
  */
 
-// Bookings still "in flight" — worth surfacing a resume card on Home.
-const ACTIVE_STATUSES: BookingStatus[] = [
-  'Pending',
-  'Accepted',
-  'OnMyWay',
-  'Arrived',
-  'InProgress',
-];
 
 // Approx. height of the custom bottom tab bar (excluding the safe-area inset,
 // which we add separately) so scroll content clears it.
@@ -151,6 +147,15 @@ function SectionHeader({
   );
 }
 
+/** One quiet line when a section failed to load (Home rule: no loud errors). */
+function SectionRetry({ onRetry }: { onRetry: () => void }) {
+  return (
+    <Pressable accessibilityRole="button" onPress={onRetry} hitSlop={6} style={styles.sectionEmpty}>
+      <AppText style={styles.sectionEmptyLabel}>Couldn&apos;t load. Tap to retry</AppText>
+    </Pressable>
+  );
+}
+
 /** Shown when a section has no data and isn't loading. */
 function SectionEmpty() {
   return (
@@ -173,6 +178,8 @@ export default function Home() {
   // Service area — shared store so the map picker can hand its result back.
   const area = useSelectedArea();
   const areaCoords = useSelectedCoords();
+  const areaResolved = useAreaResolved();
+  const usersBearFees = useFeeSchedule().data?.usersBearFees === true;
   const [refreshing, setRefreshing] = useState(false);
   const { width } = useWindowDimensions();
   const scale = typeScale(width);
@@ -228,7 +235,7 @@ export default function Home() {
   // In-flight bookings → resume card.
   const activeBookings = useMemo(
     () =>
-      (bookingsQuery.data ?? []).filter((b) => ACTIVE_STATUSES.includes(b.status)),
+      (bookingsQuery.data ?? []).filter((b) => isActiveBooking(b.status)),
     [bookingsQuery.data],
   );
 
@@ -282,14 +289,14 @@ export default function Home() {
               </AppText>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Change service location"
+                accessibilityLabel={area ? 'Change service location' : 'Set your area'}
                 onPress={() => setLocationVisible(true)}
                 hitSlop={6}
                 style={styles.locationRow}
               >
                 <Ionicons name="location" size={13} color={colors.accentDeep} />
                 <AppText weight="medium" numberOfLines={1} style={styles.location}>
-                  {area}
+                  {area || (areaResolved ? 'Set your area' : 'Finding your area…')}
                 </AppText>
                 <Ionicons name="chevron-down" size={13} color={colors.inkSubtle} />
               </Pressable>
@@ -348,16 +355,31 @@ export default function Home() {
               <View style={styles.gutter}>
                 <ActiveBookingCarousel
                   bookings={activeBookings}
-                  onPress={(b) =>
-                    router.push({
-                      pathname: '/active-booking/dashboard',
-                      params: {
-                        bookingId: b.id,
-                        serviceName: b.serviceName,
-                        artisanName: b.artisanName ?? undefined,
-                      },
-                    })
-                  }
+                  onPress={(b) => {
+                    if (b.status === 'AwaitingConfirmation') {
+                      router.push({
+                        pathname: '/active-booking/completion',
+                        params: {
+                          id: b.id,
+                          name: b.artisanName ?? undefined,
+                          serviceName: b.serviceName,
+                        },
+                      });
+                    } else if (isTrackable(b.status)) {
+                      router.push({
+                        pathname: '/active-booking/dashboard',
+                        params: {
+                          bookingId: b.id,
+                          serviceName: b.serviceName,
+                          artisanName: b.artisanName ?? undefined,
+                        },
+                      });
+                    } else {
+                      // Open, Pending, Disputed: the booking page is where the
+                      // customer acts (offers, waiting, the issue card).
+                      router.push({ pathname: '/booking/[id]', params: { id: b.id } });
+                    }
+                  }}
                 />
               </View>
             )}
@@ -374,7 +396,7 @@ export default function Home() {
           {servicesPending ? (
             <ServiceGridSkeleton />
           ) : popularServices.length === 0 ? (
-            categoriesQuery.isError ? <ServiceGridSkeleton /> : <SectionEmpty />
+            <SectionEmpty />
           ) : (
             <View style={styles.serviceGrid}>
               {popularServices.map((category) => (
@@ -404,7 +426,11 @@ export default function Home() {
         <View style={styles.sectionTight}>
           <SectionHeader
             title="Services close to you"
-            subtitle="The price you see is the price you pay."
+            subtitle={
+              usersBearFees
+                ? 'Set prices. A small payment fee is added at checkout.'
+                : 'The price you see is the price you pay.'
+            }
             onViewAll={() => router.push('/services')}
             scale={scale}
           />
@@ -429,7 +455,11 @@ export default function Home() {
           {artisansPending ? (
             <ArtisanCarouselSkeleton />
           ) : (artisansQuery.data?.length ?? 0) === 0 ? (
-            artisansQuery.isError ? <ArtisanCarouselSkeleton /> : <SectionEmpty />
+            artisansQuery.isError ? (
+              <SectionRetry onRetry={() => void artisansQuery.refetch()} />
+            ) : (
+              <SectionEmpty />
+            )
           ) : (
             <ScrollView
               horizontal
@@ -444,7 +474,9 @@ export default function Home() {
                     specialty: artisan.specialty,
                     available: artisan.isAvailable,
                     rating: artisan.rating,
+                    reviewCount: artisan.reviewCount,
                     distanceKm: artisan.distanceKm,
+                    verified: artisan.isVerified,
                     avatar: artisanPhotoSource(artisan.photoUrl, artisan.imageKey),
                   }}
                   onPress={() =>
@@ -527,12 +559,10 @@ export default function Home() {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Earn as an artisan on Servika Pro"
-            // The artisan surface is the separate Servika Pro app now; until
-            // it's on the stores, this card explains where to earn.
+            // The artisan surface is the separate Servika Pro app.
             onPress={() =>
-              appAlert(
-                'Servika Pro',
-                'Artisans work from the Servika Pro app. Get verified, receive jobs near you and cash out your earnings. Coming to the app stores soon.',
+              Linking.openURL(SERVIKA_PRO_STORE_URL).catch(() =>
+                appAlert('Servika Pro', 'Search "Servika Pro" on Google Play to get the app.'),
               )
             }
             android_ripple={{ color: 'rgba(255,255,255,0.18)' }}

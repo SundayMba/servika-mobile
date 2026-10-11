@@ -31,6 +31,8 @@ export interface JobCompletion {
   photos: string[];
   /** The materials receipt the artisan attached, shown apart from the work photos. */
   receiptPhoto?: string | null;
+  /** When the job confirms itself if the customer does nothing (null/missing = unknown). */
+  autoConfirmAtUtc?: string | null;
 }
 
 /** Artisan submits proof of completed work. */
@@ -77,6 +79,9 @@ export interface BookingSummary {
   urgency: string;
   amountNaira: number | null;
   createdAt: string;
+  paymentMethod?: 'Online' | 'Cash';
+  paymentState?: string;
+  completedAtUtc?: string | null;
   /** "Inspection" or "RemoteQuote" (bidding). */
   assessmentMode: 'Inspection' | 'RemoteQuote';
   /** API paths of the customer's job photos. */
@@ -125,6 +130,8 @@ export interface BookingDetail {
   cancelledAtUtc: string | null;
   /** When the artisan started the work — drives the live job timer. */
   workStartedAtUtc: string | null;
+  /** When an AwaitingConfirmation job confirms itself; null/missing = unknown. */
+  autoConfirmAtUtc?: string | null;
   assessmentMode: 'Inspection' | 'RemoteQuote';
   mediaUrls: string[];
   videoUrl: string | null;

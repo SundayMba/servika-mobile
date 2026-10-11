@@ -29,6 +29,15 @@ export interface FeeSchedule {
   cardFeeFlatFromNaira: number;
   cardFeeCapNaira: number;
   transferFeeTiers: { upToNaira: number | null; feeNaira: number }[];
+  /** Platform levers (added later; may be missing on an older API). */
+  commissionRate?: number;
+  emergencyCommissionRate?: number;
+  autoConfirmHours?: number;
+  minWithdrawalNaira?: number;
+  referralRewardNaira?: number;
+  referralMinWithdrawalNaira?: number;
+  reviewTargetHours?: number;
+  maxCounterRounds?: number;
 }
 
 /** GET /fees/quote?amount=: the exact fees for an amount, computed server-side. */

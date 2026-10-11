@@ -17,15 +17,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
 import { colors } from '@/constants/colors';
-import { formatDate } from '@/lib/booking/display';
+import { formatDate, shortRef } from '@/lib/booking/display';
+import { useBooking } from '@/lib/booking/hooks';
 import { artisanPhotoSource, formatNaira } from '@/lib/catalogue/assets';
 import { useArtisan } from '@/lib/catalogue/hooks';
-
-/** Short, human-friendly reference from the booking GUID, e.g. "SVK-8374A30F". */
-function shortRef(id?: string) {
-  if (!id) return 'SVK-—';
-  return `SVK-${id.replace(/-/g, '').slice(0, 8).toUpperCase()}`;
-}
+import { useFeeSchedule } from '@/lib/payments/fees';
 
 // ── Confetti: a one-shot celebratory drop across the whole screen ──
 
@@ -163,7 +159,11 @@ export default function BookingSuccess() {
 
   const isOpen = params.open === '1';
   const isFixed = params.fixed === '1';
-  const amount = params.amount ? Number(params.amount) : null;
+  // The price comes from the created booking, never from a route param.
+  const { data: booking } = useBooking(params.bookingId || undefined);
+  const amount = booking?.initialQuoteAmountNaira ?? null;
+  const usersBearFees = useFeeSchedule().data?.usersBearFees === true;
+  const feeNote = usersBearFees ? ' plus a small payment fee' : '';
   const { data: artisan } = useArtisan(params.artisanId || undefined);
   const avatar = artisan ? artisanPhotoSource(artisan.photoUrl, artisan.imageKey) : undefined;
   const [copied, setCopied] = useState(false);
@@ -196,7 +196,7 @@ export default function BookingSuccess() {
                 ? 'Artisans are reviewing your photos and will send price offers. Compare them and pick your favourite.'
                 : 'We’re finding you a verified pro nearby. You’ll be notified the moment one accepts.'
               : isFixed
-                ? `${params.artisanName || 'The artisan'} will confirm your booking${amount != null ? `, then you pay ${formatNaira(amount)}` : ''}, held securely until the job is done.`
+                ? `${params.artisanName || 'The artisan'} will confirm your booking${amount != null ? `, then you pay ${formatNaira(amount)}${feeNote}` : ''}, held securely until the job is done.`
                 : `${params.artisanName || 'The artisan'} will review your request and send you a quote. You only pay after you accept it.`}
           </AppText>
         </View>
@@ -213,7 +213,7 @@ export default function BookingSuccess() {
               className="flex-row items-center gap-1.5 active:opacity-60"
             >
               <AppText weight="semibold" className="text-[14px] text-gray-900">
-                {shortRef(params.bookingId)}
+                {shortRef(params.bookingId) || '—'}
               </AppText>
               <Ionicons
                 name={copied ? 'checkmark-circle' : 'copy-outline'}
@@ -256,11 +256,11 @@ export default function BookingSuccess() {
           </ReceiptRow>
           <ReceiptRow label="Amount due now">
             <AppText weight="semibold" className="text-[14px] text-primary">
-              {isFixed && amount != null
-                ? `₦0 now, ${formatNaira(amount)} after the artisan accepts`
-                : amount != null
-                  ? formatNaira(amount)
-                  : '₦0 now, pay after you accept a quote'}
+              {isFixed
+                ? amount != null
+                  ? `₦0 now, ${formatNaira(amount)}${feeNote} after the artisan accepts`
+                  : '₦0 now'
+                : '₦0 now, pay after you accept a quote'}
             </AppText>
           </ReceiptRow>
         </View>

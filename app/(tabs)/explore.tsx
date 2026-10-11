@@ -1,6 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -30,7 +29,8 @@ import {
   useSelectedCoords,
 } from '@/lib/location/areaStore';
 import { resolveCurrentArea } from '@/lib/location/search';
-import { etaMinutes, formatDistance, type LatLng } from '@/lib/tracking/geo';
+import { type LatLng } from '@/lib/tracking/geo';
+import { distanceLabel, ratingLabel } from '@/lib/catalogue/display';
 
 /**
  * Explore — the Uber/Bolt-style discovery map (the app's raised center tab).
@@ -159,7 +159,7 @@ function ArtisanRow({
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${artisan.fullName}, ${artisan.specialty}, ${formatDistance(artisan.distanceKm)} away`}
+      accessibilityLabel={`${artisan.fullName}, ${artisan.specialty}${distanceLabel(artisan.distanceKm) ? `, ${distanceLabel(artisan.distanceKm)} away` : ''}`}
       onPress={onPress}
       className="flex-row items-center gap-3 border-b border-gray-100 bg-white px-5 py-3.5 active:bg-gray-50"
     >
@@ -187,7 +187,9 @@ function ArtisanRow({
           <AppText weight="semibold" numberOfLines={1} className="flex-shrink text-[15px] text-gray-900">
             {artisan.fullName}
           </AppText>
-          <MaterialCommunityIcons name="check-decagram" size={14} color="#3B82F6" />
+          {artisan.isVerified ? (
+            <MaterialCommunityIcons name="check-decagram" size={14} color="#3B82F6" />
+          ) : null}
         </View>
         <AppText weight="medium" numberOfLines={1} className="mt-0.5 text-[12px] text-primary">
           {artisan.specialty}
@@ -195,21 +197,22 @@ function ArtisanRow({
         <View className="mt-1 flex-row items-center gap-2">
           <Ionicons name="star" size={12} color="#FBBF24" />
           <AppText weight="semibold" className="-ml-1 text-[12px] text-gray-700">
-            {artisan.rating.toFixed(1)}
+            {ratingLabel(artisan.rating, artisan.reviewCount)}
           </AppText>
-          <AppText className="text-[12px] text-gray-400">
-            ({artisan.reviewCount})
-          </AppText>
+          {artisan.reviewCount > 0 ? (
+            <AppText className="text-[12px] text-gray-400">
+              ({artisan.reviewCount})
+            </AppText>
+          ) : null}
         </View>
       </View>
 
       <View className="items-end">
-        <AppText weight="semibold" className="text-[13px] text-gray-900">
-          {formatDistance(artisan.distanceKm)}
-        </AppText>
-        <AppText className="mt-0.5 text-[11px] text-gray-400">
-          ~{etaMinutes(artisan.distanceKm)} min away
-        </AppText>
+        {distanceLabel(artisan.distanceKm) ? (
+          <AppText weight="semibold" className="text-[13px] text-gray-900">
+            {distanceLabel(artisan.distanceKm)}
+          </AppText>
+        ) : null}
         {onLocate ? (
           <Pressable
             accessibilityRole="button"
@@ -301,30 +304,8 @@ export default function Explore() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [coords?.latitude, coords?.longitude]);
 
-  // First open: if location permission is already granted, quietly snap the
-  // area to the device's real position — so the map works in any state of
-  // Nigeria without a manual pick. (No prompt here; the locate button asks.)
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const { status } = await Location.getForegroundPermissionsAsync();
-        if (status !== Location.PermissionStatus.GRANTED) return;
-        const current = await resolveCurrentArea();
-        if (!cancelled) {
-          setSelectedArea(current.label, {
-            latitude: current.lat,
-            longitude: current.lng,
-          });
-        }
-      } catch {
-        // Best-effort — keep the previously selected area.
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  // The saved area / silent GPS fix is handled once at app start
+  // (initSelectedArea), so a manual pick is never overwritten here.
 
   const locateMe = async () => {
     setLocating(true);
@@ -363,12 +344,11 @@ export default function Explore() {
     router.push({ pathname: '/artisan/[id]', params: { id } });
 
   const count = artisans?.length ?? 0;
-  const initialRegion = {
-    latitude: coords?.latitude ?? 6.4478,
-    longitude: coords?.longitude ?? 3.4723,
-    latitudeDelta: AREA_DELTA,
-    longitudeDelta: AREA_DELTA,
-  };
+  // No area yet: start on the whole of Nigeria rather than pretending the
+  // customer is somewhere specific.
+  const initialRegion = coords
+    ? { ...coords, latitudeDelta: AREA_DELTA, longitudeDelta: AREA_DELTA }
+    : { latitude: 9.082, longitude: 8.6753, latitudeDelta: 9, longitudeDelta: 9 };
 
   return (
     <View className="flex-1 bg-background">
@@ -423,14 +403,14 @@ export default function Explore() {
         <View className="flex-row items-center gap-2">
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={`Service area: ${area}. Change area`}
+            accessibilityLabel={area ? `Service area: ${area}. Change area` : 'Set your area'}
             onPress={() => setLocationVisible(true)}
             style={overlayShadow}
             className="h-12 flex-1 flex-row items-center gap-2 rounded-full bg-white pl-4 pr-3"
           >
             <Ionicons name="location" size={18} color={colors.primary} />
             <AppText weight="semibold" numberOfLines={1} className="flex-1 text-[14px] text-gray-900">
-              {area}
+              {area || 'Set your area'}
             </AppText>
             <Ionicons name="chevron-down" size={16} color={colors.textMuted} />
           </Pressable>
@@ -507,12 +487,18 @@ export default function Explore() {
                 <AppText weight="semibold" numberOfLines={1} className="flex-shrink text-[15px] text-gray-900">
                   {selected.fullName}
                 </AppText>
-                <MaterialCommunityIcons name="check-decagram" size={14} color="#3B82F6" />
+                {selected.isVerified ? (
+                  <MaterialCommunityIcons name="check-decagram" size={14} color="#3B82F6" />
+                ) : null}
               </View>
               <AppText numberOfLines={1} className="text-[12px] text-gray-500">
-                {selected.specialty} · ⭐ {selected.rating.toFixed(1)} ·{' '}
-                {formatDistance(selected.distanceKm)} · ~
-                {etaMinutes(selected.distanceKm)} min
+                {[
+                  selected.specialty,
+                  `⭐ ${ratingLabel(selected.rating, selected.reviewCount)}`,
+                  distanceLabel(selected.distanceKm),
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
               </AppText>
             </View>
             <Pressable
@@ -570,7 +556,7 @@ export default function Explore() {
                 : `${count} artisan${count === 1 ? '' : 's'} nearby`}
             </AppText>
             <AppText numberOfLines={1} className="mt-0.5 text-[12px] text-gray-400">
-              Sorted by distance from {area}
+              {area ? `Available and best rated first, near ${area}` : 'Set your area to see who is close'}
             </AppText>
           </View>
         </View>

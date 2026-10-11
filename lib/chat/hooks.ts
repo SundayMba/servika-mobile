@@ -7,6 +7,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect } from 'react';
 
+import { appAlert } from '@/components/ui/AppAlert';
+import { authErrorMessage } from '@/lib/api/auth';
 import { tokenStorage } from '@/lib/auth/tokenStorage';
 import {
   getChatUnreadCount,
@@ -115,7 +117,7 @@ export function useOpenChat() {
       } catch (e) {
         // If the server requires a verified phone, prompt for it, then re-open.
         if (phoneGate.handle(e, () => openWithArtisan(artisanId, name))) return;
-        // best-effort — the artisan profile / card action just no-ops on failure
+        appAlert('Could not open chat', authErrorMessage(e, 'Please try again.'));
       }
     },
     [router, phoneGate],
@@ -126,8 +128,8 @@ export function useOpenChat() {
       try {
         const ref = await startConversationForBooking(bookingId);
         openConversation(ref.id, name ?? ref.counterpartyName);
-      } catch {
-        // best-effort
+      } catch (e) {
+        appAlert('Could not open chat', authErrorMessage(e, 'Please try again.'));
       }
     },
     [openConversation],

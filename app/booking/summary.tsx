@@ -16,6 +16,7 @@ import { useCreateBooking } from '@/lib/booking/hooks';
 import { bookingMedia } from '@/lib/booking/mediaStore';
 import type { CreateBookingRequest, Urgency } from '@/lib/booking/types';
 import { artisanPhotoSource, formatNaira } from '@/lib/catalogue/assets';
+import { useFeeSchedule } from '@/lib/payments/fees';
 import { useArtisan } from '@/lib/catalogue/hooks';
 import { usePhoneGate } from '@/lib/phone/PhoneGate';
 
@@ -80,7 +81,14 @@ export default function BookingSummary() {
   );
 
   const serviceName = params.service ?? 'Service Request';
-  const categorySlug = isOpen ? params.categorySlug : artisan?.categorySlugs?.[0];
+  // Direct request: the category of the service picked on the request step when
+  // it is one of this artisan's, else the artisan's first category.
+  const categorySlug = isOpen
+    ? params.categorySlug
+    : params.categorySlug && artisan?.categorySlugs?.includes(params.categorySlug)
+      ? params.categorySlug
+      : artisan?.categorySlugs?.[0];
+  const isBidding = bookingMedia.get().assessment === 'RemoteQuote';
   const photoCount = (() => {
     try {
       return params.photos ? (JSON.parse(params.photos) as string[]).length : 0;
@@ -88,6 +96,8 @@ export default function BookingSummary() {
       return 0;
     }
   })();
+
+  const usersBearFees = useFeeSchedule().data?.usersBearFees === true;
 
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -142,7 +152,6 @@ export default function BookingSummary() {
           open: isOpen ? '1' : '',
           mode: booking.assessmentMode,
           fixed: isFixed ? '1' : '',
-          amount: isFixed && fixedPrice != null ? String(fixedPrice) : '',
         },
       });
     } catch (err) {
@@ -197,8 +206,9 @@ export default function BookingSummary() {
             <View className="ml-3 flex-1">
               <AppText weight="semibold" className="text-[15px] text-gray-900">Open request</AppText>
               <AppText className="text-[12px] leading-4 text-gray-500">
-                We&apos;ll match you with a verified {serviceName.toLowerCase()} pro nearby. The
-                first to accept takes the job.
+                {isBidding
+                  ? `Verified ${serviceName.toLowerCase()} pros nearby send their prices. You pick from the offers.`
+                  : `We'll match you with a verified ${serviceName.toLowerCase()} pro nearby. The first to accept takes the job.`}
               </AppText>
             </View>
           </View>
@@ -225,7 +235,7 @@ export default function BookingSummary() {
               <View className="flex-row items-center gap-1">
                 <Ionicons name="star" size={13} color={colors.primary} />
                 <AppText className="text-[12px] text-gray-600">
-                  {artisan.rating.toFixed(1)} ({artisan.reviewCount} reviews)
+                  {artisan.reviewCount ? `${artisan.rating.toFixed(1)} (${artisan.reviewCount} reviews)` : 'New on Servika'}
                 </AppText>
               </View>
             </View>
@@ -283,8 +293,9 @@ export default function BookingSummary() {
               <Row label="Fixed price" value={formatNaira(fixedPrice!)} />
               <AppText className="mt-1 text-[12px] leading-4 text-gray-500">
                 {artisan?.fullName ?? 'The artisan'} confirms your booking, then you
-                pay {formatNaira(fixedPrice!)} securely. Servika holds it until the
-                job is done. Nothing to pay now.
+                pay {formatNaira(fixedPrice!)}
+                {usersBearFees ? ' plus a small payment fee' : ''} securely. Servika
+                holds it until the job is done. Nothing to pay now.
               </AppText>
             </>
           ) : (
@@ -296,8 +307,10 @@ export default function BookingSummary() {
                 </AppText>
               </View>
               <AppText className="mt-1 text-[12px] leading-4 text-gray-500">
-                {isOpen
+                {isOpen && isBidding
                   ? 'Artisans review your request and send their prices. You only pay after you accept an offer, and your payment is held securely until the job is done.'
+                  : isOpen
+                    ? 'A pro takes the job, then sends you a price (after a free look if needed). You only pay after you accept it, and your payment is held securely until the job is done.'
                   : `${artisan?.fullName ?? 'The artisan'} will review your request and send you a quote (or come inspect for free). You only pay after you accept, and your payment is held securely until the job is done.`}
               </AppText>
             </>

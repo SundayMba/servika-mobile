@@ -1,12 +1,14 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppText } from '@/components/ui/AppText';
 import { colors } from '@/constants/colors';
+import { openSupportEmail } from '@/constants/links';
 import { useAuth } from '@/lib/auth/AuthContext';
+import { isActiveBooking } from '@/lib/booking/display';
 import { useBookings } from '@/lib/booking/hooks';
 import { useUnreadCount } from '@/lib/notifications/hooks';
 
@@ -19,19 +21,8 @@ import { useUnreadCount } from '@/lib/notifications/hooks';
  * Instrument Sans at 500/600, one orange, hairline-bordered white surfaces.
  */
 
-/** Where "Contact support" / "Help" open. */
-const SUPPORT_EMAIL = 'support@servika.com.ng';
-const openSupport = () =>
-  Linking.openURL(`mailto:${SUPPORT_EMAIL}?subject=Servika%20Support`).catch(() => {});
+const openSupport = () => openSupportEmail();
 
-const ACTIVE_STATUSES = [
-  'Pending',
-  'Accepted',
-  'OnMyWay',
-  'Arrived',
-  'InProgress',
-  'AwaitingConfirmation',
-];
 
 /** Clearance for the floating tab bar (see components/navigation/TabBar). */
 const TAB_BAR_HEIGHT = 60;
@@ -117,7 +108,7 @@ export default function Profile() {
   const bottomPadding = TAB_BAR_HEIGHT + Math.max(insets.bottom, 14) + 24;
   const hasUnread = (unread?.count ?? 0) > 0;
   const total = bookings?.length ?? 0;
-  const activeCount = bookings?.filter((b) => ACTIVE_STATUSES.includes(b.status)).length ?? 0;
+  const activeCount = bookings?.filter((b) => isActiveBooking(b.status)).length ?? 0;
   const completedCount = bookings?.filter((b) => b.status === 'Completed').length ?? 0;
 
   // Guests are normally gated before reaching this tab; safe fallback.
@@ -255,11 +246,11 @@ export default function Profile() {
           </View>
 
           <View style={styles.stats}>
-            <Stat icon="calendar-outline" value={String(total)} label="Bookings" />
-            <Stat icon="time-outline" value={String(activeCount)} label="Active" divided />
+            <Stat icon="calendar-outline" value={bookings ? String(total) : '–'} label="Bookings" />
+            <Stat icon="time-outline" value={bookings ? String(activeCount) : '–'} label="Active" divided />
             <Stat
               icon="checkmark-done-outline"
-              value={String(completedCount)}
+              value={bookings ? String(completedCount) : '–'}
               label="Completed"
               divided
             />

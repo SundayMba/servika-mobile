@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
 
 import { useAuth } from '@/lib/auth/AuthContext';
+import { notificationTarget } from '@/lib/notifications/route';
 
 /**
  * Opens the relevant screen when a push notification is tapped — both when the app
@@ -32,18 +33,15 @@ export function useNotificationObserver() {
     const open = async (response?: Notifications.NotificationResponse | null) => {
       const data = response?.notification.request.content.data;
 
-      // Chat push → open the conversation thread (either role).
-      const conversationId = data?.conversationId;
-      if (typeof conversationId === 'string' && conversationId.length > 0) {
-        if (!mounted) return;
-        router.push({ pathname: '/chat/[id]', params: { id: conversationId } });
-        return;
-      }
-
-      const bookingId = data?.bookingId;
-      if (typeof bookingId !== 'string' || bookingId.length === 0) return;
-      if (!mounted) return;
-      router.push({ pathname: '/booking/[id]', params: { id: bookingId } });
+      if (!data || !mounted) return;
+      const str = (v: unknown) => (typeof v === 'string' && v.length > 0 ? v : null);
+      const target = notificationTarget({
+        kind: str(data.kind) ?? str(data.type),
+        type: str(data.type),
+        bookingId: str(data.bookingId),
+        conversationId: str(data.conversationId),
+      });
+      if (target) router.push(target);
     };
 
     // Cold start: app launched by tapping a notification. Also the replay path

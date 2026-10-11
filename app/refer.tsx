@@ -5,7 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, Share, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, Share, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppText } from '@/components/ui/AppText';
@@ -13,21 +13,25 @@ import { colors } from '@/constants/colors';
 import { formatNaira } from '@/lib/catalogue/assets';
 import { timeAgo } from '@/lib/notifications/hooks';
 import { useMyReferrals } from '@/lib/referral/hooks';
-import { REFERRAL_STEPS, referralStatusStyle } from '@/lib/referral/mock';
+import { referralStatusStyle, referralSteps } from '@/lib/referral/display';
+import { useFeeSchedule } from '@/lib/payments/fees';
 import type { ReferredArtisan } from '@/lib/referral/types';
 
 /**
- * Referral program screen — refer an artisan, help them onboard, earn ₦500 cash
- * once they finish their first job. Reads the live referral dashboard; cash-out
- * lands with the referral-withdrawal step.
+ * Referral program screen: refer an artisan, help them onboard, earn the reward
+ * once they finish their first job. Every number comes from the live referral
+ * dashboard; nothing is shown until it has loaded.
  */
 export default function Refer() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { data: referral } = useMyReferrals();
+  const { data: referral, isError, refetch } = useMyReferrals();
+  const feeSchedule = useFeeSchedule();
+  const reward = referral?.rewardNaira ?? feeSchedule.data?.referralRewardNaira ?? null;
+  const steps = referralSteps(reward);
   const data = referral ?? {
     code: '—',
-    rewardNaira: 500,
+    rewardNaira: 0,
     availableNaira: 0,
     paidOutNaira: 0,
     pendingCount: 0,
@@ -93,7 +97,7 @@ export default function Refer() {
             <Ionicons name="gift" size={32} color={colors.primary} />
           </View>
           <AppText weight="semibold" className="mt-4 text-center text-[22px] text-white">
-            Earn {formatNaira(data.rewardNaira)} per artisan
+            {reward ? `Earn ${formatNaira(reward)} per artisan` : 'Earn cash for every artisan'}
           </AppText>
           <AppText className="mt-1.5 text-center text-[13px] leading-5 text-white/60">
             Bring skilled artisans onto Servika and help them get started. You
@@ -102,6 +106,27 @@ export default function Refer() {
         </View>
       </View>
 
+      {!referral ? (
+        <View className="flex-1 items-center justify-center px-10">
+          {isError ? (
+            <>
+              <AppText className="text-center text-[14px] text-gray-600">
+                Couldn&apos;t load your referrals.
+              </AppText>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => void refetch()}
+                hitSlop={8}
+                className="mt-3 rounded-xl bg-primary px-5 py-2.5"
+              >
+                <AppText weight="semibold" className="text-[14px] text-white">Try again</AppText>
+              </Pressable>
+            </>
+          ) : (
+            <ActivityIndicator color={colors.primary} />
+          )}
+        </View>
+      ) : (
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}
@@ -226,10 +251,10 @@ export default function Refer() {
             How it works
           </AppText>
           <View className="rounded-3xl border border-gray-100 bg-white px-4 py-2">
-            {REFERRAL_STEPS.map((step, i) => (
+            {steps.map((step, i) => (
               <View
                 key={step.title}
-                className={`flex-row items-start gap-3 py-3 ${i < REFERRAL_STEPS.length - 1 ? 'border-b border-gray-100' : ''}`}
+                className={`flex-row items-start gap-3 py-3 ${i < steps.length - 1 ? 'border-b border-gray-100' : ''}`}
               >
                 <View
                   className="h-10 w-10 items-center justify-center rounded-2xl"
@@ -264,12 +289,14 @@ export default function Refer() {
               <ReferralRow
                 key={artisan.id}
                 artisan={artisan}
+                rewardNaira={data.rewardNaira}
                 last={i === data.referred.length - 1}
               />
             ))}
           </View>
         </View>
       </ScrollView>
+      )}
     </View>
   );
 }
@@ -277,11 +304,13 @@ export default function Refer() {
 function ReferralRow({
   artisan,
   last,
+  rewardNaira,
 }: {
   artisan: ReferredArtisan;
   last: boolean;
+  rewardNaira: number;
 }) {
-  const chip = referralStatusStyle(artisan.status);
+  const chip = referralStatusStyle(artisan.status, rewardNaira);
   const initials = artisan.name
     .split(/\s+/)
     .slice(0, 2)

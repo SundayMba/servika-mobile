@@ -25,6 +25,7 @@ import {
   formatNaira,
   galleryImages,
 } from '@/lib/catalogue/assets';
+import { distanceLabel, isNewArtisan } from '@/lib/catalogue/display';
 import { useArtisan, invalidateCatalogueLists } from '@/lib/catalogue/hooks';
 import { useOpenChat } from '@/lib/chat/hooks';
 import { timeAgo, useArtisanReviews } from '@/lib/reviews/hooks';
@@ -203,22 +204,32 @@ export default function ArtisanProfile() {
               <AppText weight="semibold" className="text-[20px] text-gray-900">
                 {artisan.fullName}
               </AppText>
-              <MaterialCommunityIcons
-                name="check-decagram"
-                size={18}
-                color="#3B82F6"
-              />
+              {artisan.isVerified ? (
+                <MaterialCommunityIcons
+                  name="check-decagram"
+                  size={18}
+                  color="#3B82F6"
+                />
+              ) : null}
             </View>
 
             {/* Rating + experience */}
             <View className="mt-1.5 flex-row items-center gap-2">
               <Ionicons name="star" size={15} color="#FBBF24" />
-              <AppText weight="semibold" className="text-[13px] text-gray-700">
-                {artisan.rating.toFixed(1)}
-              </AppText>
-              <AppText className="text-[13px] text-gray-400">
-                ({artisan.reviewCount} reviews)
-              </AppText>
+              {isNewArtisan(artisan.reviewCount) ? (
+                <AppText weight="semibold" className="text-[13px] text-gray-700">
+                  New on Servika
+                </AppText>
+              ) : (
+                <>
+                  <AppText weight="semibold" className="text-[13px] text-gray-700">
+                    {artisan.rating.toFixed(1)}
+                  </AppText>
+                  <AppText className="text-[13px] text-gray-400">
+                    ({artisan.reviewCount} reviews)
+                  </AppText>
+                </>
+              )}
               <AppText className="text-[13px] text-gray-300">•</AppText>
               <AppText className="text-[13px] text-gray-500">
                 {artisan.experienceYears}+ years experience
@@ -227,20 +238,28 @@ export default function ArtisanProfile() {
 
             {/* Info row */}
             <View className="mt-4 flex-row items-center justify-center gap-5">
-              <InfoStat
-                icon="location-outline"
-                label={`${artisan.distanceKm} km away`}
-              />
-              <View className="h-3.5 w-px bg-gray-200" />
+              {distanceLabel(artisan.distanceKm) ? (
+                <>
+                  <InfoStat
+                    icon="location-outline"
+                    label={`${distanceLabel(artisan.distanceKm)} away`}
+                  />
+                  <View className="h-3.5 w-px bg-gray-200" />
+                </>
+              ) : null}
               <InfoStat
                 icon="briefcase-outline"
                 label={`${artisan.experienceYears}+ years exp.`}
               />
-              <View className="h-3.5 w-px bg-gray-200" />
-              <InfoStat
-                icon={artisan.hasCertificate ? 'ribbon-outline' : 'shield-checkmark-outline'}
-                label={artisan.hasCertificate ? 'Certified' : 'Verified'}
-              />
+              {artisan.hasCertificate || artisan.isVerified ? (
+                <>
+                  <View className="h-3.5 w-px bg-gray-200" />
+                  <InfoStat
+                    icon={artisan.hasCertificate ? 'ribbon-outline' : 'shield-checkmark-outline'}
+                    label={artisan.hasCertificate ? 'Certified' : 'Verified'}
+                  />
+                </>
+              ) : null}
             </View>
           </View>
 

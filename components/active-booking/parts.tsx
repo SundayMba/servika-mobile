@@ -136,25 +136,44 @@ export function StatusTimeline({
   );
 }
 
-/** Artisan identity row used on tracking / arrived / completion cards. */
+/**
+ * Artisan identity row used on tracking / dashboard / review cards. The rating
+ * line only renders once the artisan has loaded (`rating` defined), so nothing
+ * reads "0.0 · jobs completed" while it is still fetching; a new artisan shows
+ * "New".
+ */
 export function ArtisanRow({
   name,
   specialty,
   rating,
-  jobsCount,
+  reviewCount,
+  completedJobs,
   imageKey,
   photoUrl,
   right,
 }: {
   name: string;
   specialty: string;
-  rating: number;
-  jobsCount: string;
+  /** Undefined while the artisan is loading. */
+  rating?: number;
+  reviewCount?: number;
+  completedJobs?: number;
   imageKey: string;
   photoUrl?: string | null;
   right?: React.ReactNode;
 }) {
   const avatar = artisanPhotoSource(photoUrl, imageKey);
+  const meta =
+    rating === undefined
+      ? null
+      : [
+          reviewCount ? rating.toFixed(1) : 'New',
+          completedJobs && completedJobs > 0
+            ? `${completedJobs} job${completedJobs === 1 ? '' : 's'} done`
+            : null,
+        ]
+          .filter(Boolean)
+          .join(' · ');
   return (
     <View className="flex-row items-center">
       {avatar ? (
@@ -171,25 +190,31 @@ export function ArtisanRow({
       <View className="ml-3 flex-1">
         <AppText weight="semibold" className="text-[15px] text-gray-900">{name}</AppText>
         <AppText className="text-[12px] text-primary">{specialty}</AppText>
-        <View className="mt-0.5 flex-row items-center gap-1">
-          <Ionicons name="star" size={12} color={colors.primary} />
-          <AppText className="text-[12px] text-gray-500">
-            {rating.toFixed(1)} · {jobsCount} jobs completed
-          </AppText>
-        </View>
+        {meta ? (
+          <View className="mt-0.5 flex-row items-center gap-1">
+            <Ionicons name="star" size={12} color={colors.primary} />
+            <AppText className="text-[12px] text-gray-500">{meta}</AppText>
+          </View>
+        ) : null}
       </View>
       {right}
     </View>
   );
 }
 
-/** Trust pills: background-checked / ID-verified / insured. */
-export function VerifiedBadges() {
+/** Trust pills: only facts the API confirms (verified by the review desk, certificate on file). */
+export function VerifiedBadges({
+  verified,
+  certified,
+}: {
+  verified?: boolean;
+  certified?: boolean;
+}) {
   const items = [
-    { icon: 'shield-checkmark', label: 'Background checked' },
-    { icon: 'card', label: 'ID verified' },
-    { icon: 'umbrella', label: 'Insured' },
-  ] as const;
+    verified ? ({ icon: 'shield-checkmark', label: 'Verified by Servika' } as const) : null,
+    certified ? ({ icon: 'ribbon', label: 'Certified' } as const) : null,
+  ].filter((x): x is NonNullable<typeof x> => x !== null);
+  if (items.length === 0) return null;
   return (
     <View className="flex-row flex-wrap gap-x-3 gap-y-1">
       {items.map((it) => (

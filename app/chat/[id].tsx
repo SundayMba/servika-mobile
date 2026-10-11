@@ -22,6 +22,7 @@ import { useAuth } from '@/lib/auth/AuthContext';
 import {
   useChatMessages,
   useChatRealtime,
+  useConversations,
   useSendMessage,
 } from '@/lib/chat/hooks';
 
@@ -47,9 +48,13 @@ export default function ChatScreen() {
   const params = useLocalSearchParams<{ id?: string; name?: string; artisanId?: string }>();
   // The `id` route param is the conversation id (customer↔artisan thread).
   const conversationId = params.id && params.id !== 'demo' ? params.id : undefined;
-  const name = params.name || 'Chat';
+  // Opened from a notification or a cold link the params may be missing; fall
+  // back to the conversation list for the name and artisan.
+  const { data: conversations } = useConversations();
+  const known = conversations?.find((c) => c.id === conversationId);
+  const name = params.name || known?.counterpartyName || 'Chat';
   // Present only on a customer-side, pre-booking thread → show the "Book" CTA.
-  const artisanId = params.artisanId || undefined;
+  const artisanId = params.artisanId || known?.artisanId || undefined;
 
   const [showSafety, setShowSafety] = useState(true);
 

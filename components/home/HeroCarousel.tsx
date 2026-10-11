@@ -228,7 +228,7 @@ export function HeroCarousel({
             <View style={styles.pillDot} />
           </View>
           <AppText weight="semibold" numberOfLines={1} style={styles.pillLabel}>
-            24/7 Available
+            Urgent help
           </AppText>
         </View>
 

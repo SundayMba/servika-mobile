@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { colors } from '@/constants/colors';
 import { authErrorMessage } from '@/lib/api/auth';
+import { formatDateTime } from '@/lib/booking/display';
 import { useCompleteBooking, useJobCompletion } from '@/lib/booking/hooks';
 import { artisanPhotoSource } from '@/lib/catalogue/assets';
 import { useArtisan } from '@/lib/catalogue/hooks';
@@ -35,7 +36,7 @@ export default function ServiceCompletion() {
 
   const bookingId = params.id && params.id !== 'demo' ? params.id : undefined;
   const { data: artisan } = useArtisan(params.artisanId);
-  const { data: completion, isLoading } = useJobCompletion(bookingId);
+  const { data: completion, isLoading, isError, refetch } = useJobCompletion(bookingId);
   const complete = useCompleteBooking();
 
   const name = artisan?.fullName || params.name || 'Your artisan';
@@ -43,6 +44,8 @@ export default function ServiceCompletion() {
   const serviceName = params.serviceName || 'your job';
   const avatar = artisanPhotoSource(artisan?.photoUrl, artisan?.imageKey);
   const alreadyCompleted = completion?.status === 'Completed';
+  const awaiting = completion?.status === 'AwaitingConfirmation';
+  const autoConfirmLabel = formatDateTime(completion?.autoConfirmAtUtc);
 
   const goRate = () =>
     router.replace({
@@ -100,11 +103,15 @@ export default function ServiceCompletion() {
             <AppText weight="semibold" className="text-[16px] text-gray-900">{name}</AppText>
             <AppText className="text-[13px] text-gray-500">{specialty}</AppText>
           </View>
-          <View className="rounded-full bg-orange-100 px-2.5 py-1">
-            <AppText weight="semibold" className="text-[11px] text-orange-700">
-              {alreadyCompleted ? 'Completed' : 'Finished the job'}
-            </AppText>
-          </View>
+          {alreadyCompleted ? (
+            <View className="rounded-full bg-green-100 px-2.5 py-1">
+              <AppText weight="semibold" className="text-[11px] text-green-700">Completed</AppText>
+            </View>
+          ) : awaiting ? (
+            <View className="rounded-full bg-orange-100 px-2.5 py-1">
+              <AppText weight="semibold" className="text-[11px] text-orange-700">Finished the job</AppText>
+            </View>
+          ) : null}
         </View>
 
         {/* Proof of work */}
@@ -115,6 +122,16 @@ export default function ServiceCompletion() {
           <View className="items-center py-8">
             <ActivityIndicator color={colors.primary} />
           </View>
+        ) : isError ? (
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => void refetch()}
+            className="rounded-2xl border border-gray-100 bg-white p-5"
+          >
+            <AppText className="text-center text-[13px] text-gray-500">
+              Couldn&apos;t load the proof. Tap to try again.
+            </AppText>
+          </Pressable>
         ) : (completion?.photos.length ?? 0) === 0 ? (
           <View className="rounded-2xl border border-gray-100 bg-white p-5">
             <AppText className="text-center text-[13px] text-gray-400">
@@ -168,8 +185,10 @@ export default function ServiceCompletion() {
         <View className="mt-5 flex-row items-start gap-2 rounded-2xl bg-primary/5 p-3.5">
           <Ionicons name="information-circle-outline" size={18} color={colors.primary} />
           <AppText className="flex-1 text-[12px] leading-4 text-gray-600">
-            Confirming finalises the job and lets you rate {name.split(' ')[0]}. If
-            you don’t confirm within 48 hours, it confirms automatically.
+            {`Confirming finalises the job and lets you rate ${name.split(' ')[0]}.`}
+            {awaiting && autoConfirmLabel
+              ? ` If you do nothing, it confirms itself on ${autoConfirmLabel}.`
+              : ''}
           </AppText>
         </View>
 

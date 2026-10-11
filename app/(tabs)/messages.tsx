@@ -72,7 +72,7 @@ export default function Messages() {
               onPress={() =>
                 router.push({
                   pathname: '/chat/[id]',
-                  params: { id: c.id, name: c.counterpartyName },
+                  params: { id: c.id, name: c.counterpartyName, artisanId: c.artisanId },
                 })
               }
             />

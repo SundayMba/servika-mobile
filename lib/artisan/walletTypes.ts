@@ -19,6 +19,11 @@ export type Withdrawal = {
   accountName: string;
   createdAt: string;
   processedAtUtc: string | null;
+  /** Transfer charge taken out of this withdrawal (0 while Servika covers it). */
+  feeNaira?: number;
+  /** What reaches the bank: amount minus the charge. */
+  netNaira?: number;
+  feeBearer?: string;
 };
 
 export type RequestWithdrawalRequest = {

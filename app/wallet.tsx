@@ -27,7 +27,7 @@ export default function Wallet() {
   const router = useRouter();
   const { status } = useAuth();
   const signedIn = status === 'authenticated';
-  const { data: txns, isLoading } = useWalletTransactions({ enabled: signedIn });
+  const { data: txns, isLoading, isError, refetch } = useWalletTransactions({ enabled: signedIn });
 
   const spent = (txns ?? [])
     .filter((t) => t.type === 'BookingPayment')
@@ -56,6 +56,20 @@ export default function Wallet() {
       {isLoading ? (
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator color={colors.primary} />
+        </View>
+      ) : isError ? (
+        <View className="flex-1 items-center justify-center px-10">
+          <AppText className="text-center text-[14px] text-gray-600">
+            Couldn&apos;t load your payments.
+          </AppText>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => void refetch()}
+            hitSlop={8}
+            className="mt-3 rounded-xl bg-primary px-5 py-2.5"
+          >
+            <AppText weight="semibold" className="text-[14px] text-white">Try again</AppText>
+          </Pressable>
         </View>
       ) : (
         <ScrollView

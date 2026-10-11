@@ -21,6 +21,7 @@ import { NotificationObserver } from '@/components/NotificationObserver';
 import { AppAlertHost } from '@/components/ui/AppAlert';
 import { AppErrorBoundary } from '@/components/AppErrorBoundary';
 import { initSentry, withSentry } from '@/lib/observability/sentry';
+import { initSelectedArea } from '@/lib/location/areaStore';
 
 ExpoSplashScreen.preventAutoHideAsync();
 // Crash reporting first, so even a failure while the tree mounts is recorded.
@@ -49,6 +50,11 @@ function RootLayout() {
 
   // Hide the native splash once the animated one has painted AND the fonts are
   // in, whichever lands last — gating on only one of them can strand it.
+  // Restore the saved service area (or a silent GPS fix) as early as possible.
+  useEffect(() => {
+    void initSelectedArea();
+  }, []);
+
   useEffect(() => {
     if (splashPainted && fontsLoaded) void ExpoSplashScreen.hideAsync();
   }, [splashPainted, fontsLoaded]);

@@ -11,6 +11,7 @@ import { useAuth } from '@/lib/auth/AuthContext';
 import { artisanPhotoSource } from '@/lib/catalogue/assets';
 import type { ArtisanSummary } from '@/lib/catalogue/types';
 import { useFavorites } from '@/lib/favorites/hooks';
+import { distanceLabel, ratingLabel } from '@/lib/catalogue/display';
 
 function SavedRow({ artisan, onPress }: { artisan: ArtisanSummary; onPress: () => void }) {
   const avatar = artisanPhotoSource(artisan.photoUrl, artisan.imageKey);
@@ -31,9 +32,11 @@ function SavedRow({ artisan, onPress }: { artisan: ArtisanSummary; onPress: () =
         <View className="mt-1 flex-row items-center gap-1">
           <Ionicons name="star" size={12} color="#FBBF24" />
           <AppText weight="semibold" className="text-[12px] text-gray-700">
-            {artisan.rating.toFixed(1)}
+            {ratingLabel(artisan.rating, artisan.reviewCount)}
           </AppText>
-          <AppText className="text-[12px] text-gray-400">· {artisan.distanceKm} km</AppText>
+          {distanceLabel(artisan.distanceKm) ? (
+            <AppText className="text-[12px] text-gray-400">· {distanceLabel(artisan.distanceKm)}</AppText>
+          ) : null}
         </View>
       </View>
       <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />

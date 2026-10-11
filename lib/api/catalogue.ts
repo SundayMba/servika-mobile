@@ -35,8 +35,10 @@ export async function getArtisans(
   return data;
 }
 
-export async function getArtisan(id: string): Promise<ArtisanDetail> {
-  const { data } = await apiClient.get<ArtisanDetail>(`/api/v1/artisans/${id}`);
+export async function getArtisan(id: string, coords?: LatLng | null): Promise<ArtisanDetail> {
+  const { data } = await apiClient.get<ArtisanDetail>(`/api/v1/artisans/${id}`, {
+    params: coords ? { lat: coords.latitude, lng: coords.longitude } : undefined,
+  });
   return data;
 }
 

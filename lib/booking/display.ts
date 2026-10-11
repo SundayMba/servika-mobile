@@ -1,4 +1,5 @@
-import type { BookingStatus } from '@/lib/booking/types';
+import { formatNaira } from '@/lib/catalogue/assets';
+import type { BookingDetail, BookingStatus } from '@/lib/booking/types';
 
 /**
  * Presentation helpers shared by the bookings list and detail screens so a
@@ -70,6 +71,35 @@ export function statusTone(status: BookingStatus): StatusTone {
   return STATUS_TONES[status] ?? STATUS_TONES.Pending;
 }
 
+/**
+ * Bookings still in flight. One list, used by Home's resume card, the Profile
+ * count and the Bookings "Active" tab, so they always agree. Disputed is active:
+ * it is waiting on a decision, not finished.
+ */
+export const ACTIVE_BOOKING_STATUSES: BookingStatus[] = [
+  'Open',
+  'Pending',
+  'Accepted',
+  'OnMyWay',
+  'Arrived',
+  'InProgress',
+  'AwaitingConfirmation',
+  'Disputed',
+];
+
+export function isActiveBooking(status: BookingStatus): boolean {
+  return ACTIVE_BOOKING_STATUSES.includes(status);
+}
+
+/**
+ * A short reference shown to customers ("SVK-1A2B3C4D"). The same 8 characters
+ * everywhere so the customer can quote it to support.
+ */
+export function shortRef(id: string | null | undefined): string {
+  if (!id) return '';
+  return `SVK-${id.replace(/-/g, '').slice(0, 8).toUpperCase()}`;
+}
+
 /** A booking can still be cancelled by the customer only in these states. */
 export function canCancel(status: BookingStatus): boolean {
   // Cancellable up to and including Arrived (full refund if paid); once work is
@@ -125,4 +155,40 @@ export function formatDate(iso: string | null | undefined): string {
     month: 'short',
     year: 'numeric',
   });
+}
+
+/** "Tue 14 Oct, 3:40 pm" for a due time; empty string if unparseable. */
+export function formatDateTime(iso: string | null | undefined): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toLocaleString('en-NG', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
+/**
+ * The refund line for a cancel confirmation. A released materials advance is
+ * never refunded (the customer approved it and the parts exist), so when one
+ * was released the refund is the paid price minus that advance.
+ */
+export function cancelRefundNote(
+  booking: Pick<
+    BookingDetail,
+    'paymentState' | 'initialQuoteAmountNaira' | 'materialsAdvanceStatus' | 'materialsAdvanceNaira'
+  >,
+): string {
+  if (booking.paymentState !== 'Paid') return '';
+  const advance =
+    booking.materialsAdvanceStatus === 'Approved' ? (booking.materialsAdvanceNaira ?? 0) : 0;
+  if (advance > 0) {
+    const paid = booking.initialQuoteAmountNaira ?? 0;
+    const back = Math.max(0, paid - advance);
+    return ` You get back ${formatNaira(back)}: what you paid minus the ${formatNaira(advance)} materials advance already released.`;
+  }
+  return ' Your payment will be refunded in full.';
 }

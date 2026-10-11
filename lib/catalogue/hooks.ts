@@ -7,6 +7,7 @@ import {
   getNearbyServices,
   getService,
 } from '@/lib/api/catalogue';
+import { useSelectedCoords } from '@/lib/location/areaStore';
 import type { LatLng } from '@/lib/tracking/geo';
 
 /**
@@ -63,9 +64,11 @@ export function useExploreArtisans(
 
 /** Artisans serving a given category slug. */
 export function useCategoryArtisans(categorySlug: string | undefined) {
+  // Distances come from the customer's selected area; none set → no distances.
+  const coords = useSelectedCoords();
   return useQuery({
-    queryKey: ['artisans', { category: categorySlug }],
-    queryFn: () => getArtisans(categorySlug),
+    queryKey: ['artisans', { category: categorySlug }, coordsKey(coords)],
+    queryFn: () => getArtisans(categorySlug, coords),
     enabled: !!categorySlug,
     staleTime: 60_000,
     refetchInterval: 60_000,
@@ -73,9 +76,10 @@ export function useCategoryArtisans(categorySlug: string | undefined) {
 }
 
 export function useArtisan(id: string | undefined) {
+  const coords = useSelectedCoords();
   return useQuery({
-    queryKey: ['artisan', id],
-    queryFn: () => getArtisan(id as string),
+    queryKey: ['artisan', id, coordsKey(coords)],
+    queryFn: () => getArtisan(id as string, coords),
     enabled: !!id,
   });
 }

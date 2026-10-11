@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/Button';
 import { colors } from '@/constants/colors';
 import { config } from '@/lib/config';
 import { authErrorMessage } from '@/lib/api/auth';
+import { distanceLabel } from '@/lib/catalogue/display';
 import {
   canCancel,
   canDispute,
@@ -26,6 +27,7 @@ import {
   isEnRoute,
   isTrackable,
   statusStyle,
+  cancelRefundNote,
 } from '@/lib/booking/display';
 import { BottomSheet } from '@/components/BottomSheet';
 import {
@@ -306,8 +308,12 @@ export default function BookingDetailScreen() {
   // The payment fee, from the server: 0 while Servika covers it, shown plainly once users pay it.
   const feeQuote = useFeeQuote(booking?.initialQuoteAmountNaira, paySheetOpen);
   const feeSchedule = useFeeSchedule();
-  const payFee = feeQuote.data?.serviceFeeNaira ?? 0;
-  const payTotal = (booking?.initialQuoteAmountNaira ?? 0) + payFee;
+  // Null while the quote is loading: never show "₦0" before the server answers.
+  const payFee = feeQuote.data ? feeQuote.data.serviceFeeNaira : null;
+  const payTotal = feeQuote.data
+    ? feeQuote.data.totalNaira
+    : null;
+  const usersBearFees = feeQuote.data?.usersBearFees ?? feeSchedule.data?.usersBearFees;
   const feeCoveredUntil = feeSchedule.data && !feeSchedule.data.usersBearFees ? feeStartLabel(feeSchedule.data.feesStartAtUtc) : null;
 
   const [paying, setPaying] = useState(false);
@@ -332,7 +338,12 @@ export default function BookingDetailScreen() {
       } else {
         // Dev stub: no page to open; the stub webhook settles it.
         refetch();
-        appAlert('Payment started', 'This test build has no gateway page. The payment settles when the test webhook fires.');
+        appAlert(
+          'Payment started',
+          __DEV__
+            ? 'This test build has no gateway page. The payment settles when the test webhook fires.'
+            : 'We will update this booking once the payment is confirmed.',
+        );
       }
     } catch (err) {
       appAlert('Payment failed', authErrorMessage(err, 'Please try again.'));
@@ -399,7 +410,7 @@ export default function BookingDetailScreen() {
     appAlert(
       'Cancel booking?',
       booking?.paymentState === 'Paid'
-        ? 'This will withdraw your request. Your payment will be refunded in full.'
+        ? `This will withdraw your request.${cancelRefundNote(booking)}`
         : 'This will withdraw your request. You can always book again.',
       [
         { text: 'Keep booking', style: 'cancel' },
@@ -601,8 +612,8 @@ export default function BookingDetailScreen() {
                         <View className="mt-0.5 flex-row items-center gap-1">
                           <Ionicons name="star" size={12} color="#FBBF24" />
                           <AppText className="text-[12px] text-gray-500">
-                            {bid.rating.toFixed(1)} ({bid.reviewCount} reviews)
-                            {bid.distanceKm != null ? ` · ${bid.distanceKm} km away` : ''}
+                            {bid.reviewCount ? `${bid.rating.toFixed(1)} (${bid.reviewCount} reviews)` : 'New'}
+                            {distanceLabel(bid.distanceKm) ? ` · ${distanceLabel(bid.distanceKm)} away` : ''}
                           </AppText>
                         </View>
                       </View>
@@ -811,7 +822,10 @@ export default function BookingDetailScreen() {
                 </AppText>
               </View>
             ) : booking.paymentState === 'Paid' ? (
-              <Row label="Payment" value="Paid (held in escrow)" />
+              <Row
+                label="Payment"
+                value={booking.status === 'Completed' ? 'Paid · released to the artisan' : 'Paid (held in escrow)'}
+              />
             ) : booking.paymentMethod === 'Cash' &&
               booking.initialQuoteAmountNaira != null ? (
               // Cash chosen — remind, and leave the door open to switch back.
@@ -861,7 +875,9 @@ export default function BookingDetailScreen() {
                   </AppText>
                 </Pressable>
                 <AppText className="mt-2 text-center text-[11.5px] leading-4 text-gray-400">
-                  Work starts once your payment is secured.
+                  {feeSchedule.data?.usersBearFees
+                    ? 'Work starts once your payment is secured. A small payment fee is added at checkout.'
+                    : 'Work starts once your payment is secured.'}
                 </AppText>
                 {!['InProgress', 'AwaitingConfirmation', 'Completed'].includes(booking.status) ? (
                   <Pressable
@@ -1113,20 +1129,24 @@ export default function BookingDetailScreen() {
               </View>
               <View className="mt-1.5 flex-row items-center justify-between">
                 <AppText className="text-[13px] text-gray-600">Payment fee</AppText>
-                <AppText weight="medium" className="text-[13px] text-gray-900">{payFee > 0 ? formatNaira(payFee) : '₦0'}</AppText>
+                <AppText weight="medium" className="text-[13px] text-gray-900">
+                  {payFee == null ? (feeQuote.isError ? 'Shown at checkout' : 'Checking…') : formatNaira(payFee)}
+                </AppText>
               </View>
-              {payFee === 0 ? (
+              {usersBearFees === false ? (
                 <AppText className="mt-1 text-[11.5px] leading-4 text-gray-400">
                   {feeCoveredUntil ? `Servika covers the card fee until ${feeCoveredUntil}.` : 'Servika covers the card fee for now.'}
                 </AppText>
-              ) : (
+              ) : usersBearFees === true ? (
                 <AppText className="mt-1 text-[11.5px] leading-4 text-gray-400">
-                  The card processing charge, shown up front. The artisan receives the agreed price in full.
+                  The card processing charge, shown up front.
                 </AppText>
-              )}
+              ) : null}
               <View className="mt-2 flex-row items-center justify-between border-t border-gray-200 pt-2">
                 <AppText weight="semibold" className="text-[14px] text-gray-900">You pay</AppText>
-                <AppText weight="semibold" className="text-[15px] text-gray-900">{formatNaira(payTotal)}</AppText>
+                <AppText weight="semibold" className="text-[15px] text-gray-900">
+                  {payTotal != null ? formatNaira(payTotal) : '…'}
+                </AppText>
               </View>
             </View>
           ) : null}

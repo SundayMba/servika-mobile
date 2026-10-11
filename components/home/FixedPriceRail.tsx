@@ -175,9 +175,9 @@ function FixedPriceCardBase({
         <View style={styles.metaRow}>
           <Ionicons name="star" size={13} color="#FBBF24" />
           <AppText weight="semibold" style={styles.metaStrong}>
-            {item.rating.toFixed(1)}
+            {item.reviewCount ? item.rating.toFixed(1) : 'New'}
           </AppText>
-          <AppText style={styles.metaMuted}>({item.reviewCount})</AppText>
+          {item.reviewCount ? <AppText style={styles.metaMuted}>({item.reviewCount})</AppText> : null}
           {item.distanceKm != null ? (
             <>
               <AppText style={styles.metaDot}>·</AppText>
