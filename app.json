@@ -2,7 +2,7 @@
   "expo": {
     "name": "Servika",
     "slug": "servika",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/general-sizes/servika-orange-clean-icon-1024x1024.png",
     "scheme": "servika",
