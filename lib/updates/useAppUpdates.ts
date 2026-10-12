@@ -74,6 +74,9 @@ export function useStoreUpdates() {
         await SecureStore.setItemAsync(STORE_PROMPT_KEY, String(Date.now()));
         await InApp.startUpdate(immediate);
       } catch (error) {
+        // No Play Store to talk to (emulators, Play's pre-launch test devices, sideloaded
+        // installs, phones without Google services). Expected, not a crash: stay quiet.
+        if (/bind to the service|not (?:installed|available)|API_NOT_AVAILABLE|ERROR_APP_NOT_OWNED|-6\b/i.test(String((error as Error)?.message ?? error))) return;
         reportError(error, { where: 'store-update' });
       }
     })();

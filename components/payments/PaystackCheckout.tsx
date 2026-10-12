@@ -3,6 +3,12 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, AppState, Linking, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { WebView, type WebViewNavigation } from 'react-native-webview';
+import * as WebBrowser from 'expo-web-browser';
+
+// Android WebViews announce themselves with "; wv" and Paystack's bot shield then
+// challenges them, which breaks steps like OPay inside the checkout. Present as the
+// phone's normal Chrome instead (same engine, same cookies, nothing else changes).
+const ANDROID_UA = 'Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Mobile Safari/537.36';
 
 /**
  * The gateway checkout, inside the app. Paystack's page renders in a WebView we
@@ -161,6 +167,19 @@ export function PaystackCheckout({ url, reference, returnScheme, title = 'Secure
     [check, finish, returnScheme, startPolling],
   );
 
+  // Fallback for anything that still will not load inside the app: the same payment
+  // in the phone's browser. Paystack's return link closes it; the server decides.
+  const openInBrowser = async () => {
+    try {
+      await WebBrowser.openAuthSessionAsync(current.url, returnScheme);
+    } catch {
+      // Closed or no browser; the check below still runs.
+    }
+    setPhase('checking');
+    const r = await check('callback');
+    if (r === 'pending') startPolling();
+  };
+
   const leave = () => {
     Alert.alert('Leave this payment?', 'Nothing is charged unless you complete it. You can start again from the booking.', [
       { text: 'Stay', style: 'cancel' },
@@ -224,6 +243,12 @@ export function PaystackCheckout({ url, reference, returnScheme, title = 'Secure
         />
       ) : (
         <View style={{ flex: 1 }}>
+          {phase === 'checkout' ? (
+            <Pressable accessibilityRole="button" onPress={() => void openInBrowser()} style={styles.browserRow} hitSlop={6}>
+              <Ionicons name="open-outline" size={13} color="#475569" />
+              <Text style={styles.browserText}>Having trouble? Open in your browser</Text>
+            </Pressable>
+          ) : null}
           {phase === 'waiting' ? (
             <View style={styles.strip}>
               <ActivityIndicator size="small" color="#C2560B" />
@@ -236,6 +261,7 @@ export function PaystackCheckout({ url, reference, returnScheme, title = 'Secure
             style={{ flex: 1, backgroundColor: '#F2F4F8' }}
             originWhitelist={['*']}
             onShouldStartLoadWithRequest={onShouldStart}
+            userAgent={Platform.OS === 'android' ? ANDROID_UA : undefined}
             onLoadStart={() => setPageLoading(true)}
             onLoadEnd={() => setPageLoading(false)}
             javaScriptEnabled
@@ -314,6 +340,8 @@ const styles = StyleSheet.create({
   title: { fontSize: 16, fontWeight: '600', color: '#0B1220' },
   secureRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 1 },
   secure: { fontSize: 11.5, color: '#0E9E70' },
+  browserRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 8, backgroundColor: '#F8FAFC', borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },
+  browserText: { fontSize: 12.5, color: '#475569' },
   strip: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingVertical: 10, backgroundColor: '#FFF3E8', borderBottomWidth: 1, borderBottomColor: '#FBD9BE' },
   stripText: { flex: 1, fontSize: 13, color: '#C2560B' },
   loader: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF', gap: 12 },
