@@ -1,14 +1,18 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { Pressable, StyleSheet, View } from 'react-native';
+import Animated, { Easing, FadeOut, SlideInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppText } from '@/components/ui/AppText';
 import { useOtaUpdates, useStoreUpdates } from '@/lib/updates/useAppUpdates';
 
+/** Room for the tab bar, so the bar never covers navigation. */
+const ABOVE_TABS = 76;
+
 /**
- * Sits at the top of the app. Appears only once a JS update has finished
- * downloading, offers a restart, and gets out of the way on "Later" (the
- * update then applies on the next cold start). Also kicks off Google Play's
- * own in-app update flow for native releases.
+ * A short snackbar near the bottom once a JS update has downloaded: "Update
+ * ready · Restart". The close button dismisses it; the update then applies the
+ * next time the app opens. Also starts Google Play's in-app update flow.
  */
 export function UpdateBanner() {
   const insets = useSafeAreaInsets();
@@ -16,34 +20,34 @@ export function UpdateBanner() {
   useStoreUpdates();
   if (!ota.ready) return null;
   return (
-    <View pointerEvents="box-none" style={[styles.host, { paddingTop: insets.top + 8 }]}>
-      <View style={styles.card}>
-        <View style={{ flex: 1 }}>
-          <AppText weight="semibold" style={styles.title}>A small update is ready</AppText>
-          <AppText style={styles.body}>Restart to get it now, or it applies next time you open the app.</AppText>
-        </View>
-        <Pressable accessibilityRole="button" onPress={ota.later} hitSlop={8} style={styles.later}>
-          <AppText weight="medium" style={styles.laterText}>Later</AppText>
-        </Pressable>
-        <Pressable accessibilityRole="button" onPress={ota.restart} style={styles.restart}>
+    <View pointerEvents="box-none" style={[styles.host, { bottom: insets.bottom + ABOVE_TABS }]}>
+      <Animated.View
+        entering={SlideInDown.duration(320).easing(Easing.out(Easing.cubic))}
+        exiting={FadeOut.duration(160)}
+        style={styles.bar}
+      >
+        <Ionicons name="sparkles" size={15} color="#FDBA74" />
+        <AppText weight="semibold" style={styles.text} numberOfLines={1}>Update ready</AppText>
+        <Pressable accessibilityRole="button" accessibilityLabel="Restart to update" onPress={ota.restart} hitSlop={8} style={styles.restart}>
           <AppText weight="semibold" style={styles.restartText}>Restart</AppText>
         </Pressable>
-      </View>
+        <Pressable accessibilityRole="button" accessibilityLabel="Dismiss" onPress={ota.later} hitSlop={10} style={styles.close}>
+          <Ionicons name="close" size={16} color="rgba(255,255,255,0.6)" />
+        </Pressable>
+      </Animated.View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  host: { position: 'absolute', top: 0, left: 0, right: 0, paddingHorizontal: 12, zIndex: 50 },
-  card: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    backgroundColor: '#0B1220', borderRadius: 18, paddingVertical: 12, paddingHorizontal: 14,
-    shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 12, shadowOffset: { width: 0, height: 6 }, elevation: 8,
+  host: { position: 'absolute', left: 12, right: 12, alignItems: 'center', zIndex: 50 },
+  bar: {
+    flexDirection: 'row', alignItems: 'center', gap: 10, alignSelf: 'stretch',
+    backgroundColor: '#0B1220', borderRadius: 14, paddingLeft: 14, paddingRight: 6, height: 48,
+    shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 12, shadowOffset: { width: 0, height: 6 }, elevation: 10,
   },
-  title: { fontSize: 14, color: '#FFFFFF' },
-  body: { fontSize: 12, lineHeight: 16, color: 'rgba(255,255,255,0.72)', marginTop: 2 },
-  later: { paddingHorizontal: 6, paddingVertical: 8 },
-  laterText: { fontSize: 13, color: 'rgba(255,255,255,0.8)' },
-  restart: { backgroundColor: '#F97316', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10 },
-  restartText: { fontSize: 13, color: '#221004' },
+  text: { flex: 1, fontSize: 14, color: '#FFFFFF' },
+  restart: { paddingHorizontal: 10, paddingVertical: 8 },
+  restartText: { fontSize: 14, color: '#FB923C' },
+  close: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
 });
