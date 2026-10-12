@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppTextInput } from '@/components/ui/AppTextInput';
 import { AppText } from '@/components/ui/AppText';
 import { appAlert } from '@/components/ui/AppAlert';
+import { FieldError } from '@/components/FieldError';
 import { colors } from '@/constants/colors';
 import { ISSUE_TYPES } from '@/lib/active-booking/mock';
 import { authErrorMessage } from '@/lib/api/auth';
@@ -28,12 +29,13 @@ export default function ReportIssue() {
   const { bookingId } = useLocalSearchParams<{ bookingId?: string }>();
   const [selected, setSelected] = useState<string | null>(null);
   const [details, setDetails] = useState('');
+  const [issueErr, setIssueErr] = useState<string | undefined>();
 
   const raiseDispute = useRaiseDispute(bookingId ?? '');
 
   const submit = async () => {
     if (!selected) {
-      appAlert('Select an issue', 'Please choose what went wrong.');
+      setIssueErr('Choose what went wrong.');
       return;
     }
 
@@ -105,7 +107,7 @@ export default function ReportIssue() {
             return (
               <Pressable
                 key={it.id}
-                onPress={() => setSelected(it.id)}
+                onPress={() => { setSelected(it.id); setIssueErr(undefined); }}
                 className={
                   active
                     ? 'mb-3 flex-row items-center rounded-2xl border-2 p-4'
@@ -131,6 +133,7 @@ export default function ReportIssue() {
               </Pressable>
             );
           })}
+          {issueErr ? <View className="-mt-1 mb-2"><FieldError text={issueErr} /></View> : null}
 
           <AppText weight="semibold" className="mb-1.5 mt-2 text-[13px] text-gray-700">
             Additional details (optional)

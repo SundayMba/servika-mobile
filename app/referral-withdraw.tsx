@@ -11,6 +11,7 @@ import { AppTextInput } from '@/components/ui/AppTextInput';
 import { AppText } from '@/components/ui/AppText';
 import { appAlert } from '@/components/ui/AppAlert';
 import { BottomSheet } from '@/components/BottomSheet';
+import { FieldError, hasFieldErrors } from '@/components/FieldError';
 import { colors } from '@/constants/colors';
 import { authErrorMessage } from '@/lib/api/auth';
 import { resolveBankAccount } from '@/lib/api/referrals';
@@ -45,6 +46,8 @@ export default function ReferralWithdraw() {
   const [accountNumber, setAccountNumber] = useState('');
   const [accountName, setAccountName] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [errs, setErrs] = useState<{ bank?: string; accountNumber?: string; amount?: string }>({});
+  const clear = (k: keyof typeof errs) => setErrs((e) => (e[k] ? { ...e, [k]: undefined } : e));
   const [pickerOpen, setPickerOpen] = useState(false);
   // The bank's answer for (bank, number).
   const [lookup, setLookup] = useState<'idle' | 'checking' | 'found' | 'missing' | 'failed'>('idle');
@@ -61,7 +64,7 @@ export default function ReferralWithdraw() {
     setLookedUp(key);
     setLookup('checking');
     setAccountName('');
-    setError(null);
+    clear('accountNumber');
     let cancelled = false;
     resolveBankAccount(bank.code, digits)
       .then((res) => { if (!cancelled) { setAccountName(res.accountName); setLookup('found'); } })
@@ -69,7 +72,8 @@ export default function ReferralWithdraw() {
         if (cancelled) return;
         const status = (e as { response?: { status?: number } })?.response?.status;
         setLookup(status === 404 ? 'missing' : 'failed');
-        setError(status === 404 ? 'No account with that number at this bank. Check the digits.' : status === 429 ? 'That is enough account checks for today. Try again tomorrow.' : 'Could not reach the bank. Try again in a moment.');
+        const msg = status === 404 ? 'No account with that number at this bank. Check the digits.' : status === 429 ? 'That is enough account checks for today. Try again tomorrow.' : 'Could not reach the bank. Try again in a moment.';
+        setErrs((e) => ({ ...e, accountNumber: msg }));
       });
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -83,22 +87,16 @@ export default function ReferralWithdraw() {
 
   const onWithdraw = async () => {
     setError(null);
-    if (amountNaira < MIN_WITHDRAWAL) {
-      setError(`Minimum withdrawal is ${formatNaira(MIN_WITHDRAWAL)}.`);
-      return;
+    const next: typeof errs = {};
+    if (!bank) next.bank = 'Choose your bank.';
+    if (accountNumber.replace(/\D/g, '').length !== 10) next.accountNumber = 'Enter your ten-digit account number.';
+    else if (bank && (lookup !== 'found' || !accountName.trim())) {
+      next.accountNumber = lookup === 'checking' ? 'One moment, the bank is still answering.' : 'We could not confirm this account. Check the number.';
     }
-    if (amountNaira > available) {
-      setError(`You can withdraw at most ${formatNaira(available)}.`);
-      return;
-    }
-    if (!bank || accountNumber.replace(/\D/g, '').length !== 10) {
-      setError('Choose your bank and enter your ten-digit account number.');
-      return;
-    }
-    if (lookup !== 'found' || !accountName.trim()) {
-      setError(lookup === 'checking' ? 'One moment, the bank is still answering.' : 'We could not confirm this account. Check the number.');
-      return;
-    }
+    if (amountNaira < MIN_WITHDRAWAL) next.amount = `Minimum withdrawal is ${formatNaira(MIN_WITHDRAWAL)}.`;
+    else if (amountNaira > available) next.amount = `You can withdraw at most ${formatNaira(available)}.`;
+    setErrs(next);
+    if (hasFieldErrors(next) || !bank) return;
     try {
       const result = await requestWithdrawal.mutateAsync({
         amountNaira,
@@ -122,7 +120,10 @@ export default function ReferralWithdraw() {
         [{ text: 'OK', onPress: () => router.back() }],
       );
     } catch (e) {
-      setError(authErrorMessage(e, 'Could not process the withdrawal.'));
+      const msg = authErrorMessage(e, 'Could not process the withdrawal.');
+      if (/minimum|at most|balance|amount/i.test(msg)) setErrs((x) => ({ ...x, amount: msg }));
+      else if (/account/i.test(msg)) setErrs((x) => ({ ...x, accountNumber: msg }));
+      else setError(msg);
     }
   };
 
@@ -176,21 +177,23 @@ export default function ReferralWithdraw() {
           <Pressable
             accessibilityRole="button"
             onPress={() => setPickerOpen(true)}
-            className="flex-row items-center justify-between rounded-2xl border border-gray-200 bg-white px-4 py-3.5 active:bg-gray-50"
+            className={`flex-row items-center justify-between rounded-2xl border bg-white px-4 py-3.5 active:bg-gray-50 ${errs.bank ? 'border-red-400' : 'border-gray-200'}`}
           >
             <AppText className={`text-[15px] ${bank ? 'text-gray-900' : 'text-gray-400'}`}>
               {bank?.name ?? 'Select your bank'}
             </AppText>
             <Ionicons name="chevron-down" size={18} color={colors.textMuted} />
           </Pressable>
+          <FieldError text={errs.bank} />
         </View>
         <Field
           label="Account number"
           value={accountNumber}
-          onChangeText={(t) => setAccountNumber(t.replace(/[^0-9]/g, ''))}
+          onChangeText={(t) => { setAccountNumber(t.replace(/[^0-9]/g, '')); clear('accountNumber'); }}
           placeholder="0123456789"
           keyboardType="number-pad"
           maxLength={10}
+          error={errs.accountNumber}
         />
         <View className="mb-3 rounded-2xl border border-gray-200 bg-white px-4 py-3.5">
           <AppText className="text-[11px] uppercase tracking-wider text-gray-400">Account name</AppText>
@@ -202,11 +205,11 @@ export default function ReferralWithdraw() {
 
         {/* Amount */}
         <AppText weight="semibold" className="mb-2 mt-3 text-[15px] text-gray-900">Amount</AppText>
-        <View className="flex-row items-center rounded-2xl border border-gray-200 bg-white px-4">
+        <View className={`flex-row items-center rounded-2xl border bg-white px-4 ${errs.amount ? 'border-red-400' : 'border-gray-200'}`}>
           <AppText weight="semibold" className="text-[18px] text-gray-400">₦</AppText>
           <AppTextInput weight="semibold"
             value={amount}
-            onChangeText={(t) => setAmount(t.replace(/[^0-9]/g, ''))}
+            onChangeText={(t) => { setAmount(t.replace(/[^0-9]/g, '')); clear('amount'); }}
             keyboardType="number-pad"
             placeholder="0"
             placeholderTextColor={colors.textMuted}
@@ -214,7 +217,7 @@ export default function ReferralWithdraw() {
           />
           <Pressable
             accessibilityRole="button"
-            onPress={() => setAmount(String(available))}
+            onPress={() => { setAmount(String(available)); clear('amount'); }}
             disabled={available <= 0}
             hitSlop={8}
             className="rounded-xl px-3 py-1.5"
@@ -223,6 +226,7 @@ export default function ReferralWithdraw() {
             <AppText weight="semibold" className="text-[12px] text-primary">Max</AppText>
           </Pressable>
         </View>
+        <FieldError text={errs.amount} />
 
         {MIN_WITHDRAWAL > 0 ? (
           <AppText className="mt-2 text-[12px] text-gray-500">
@@ -279,6 +283,7 @@ export default function ReferralWithdraw() {
         onClose={() => setPickerOpen(false)}
         onSelect={(b) => {
           setBank(b);
+          clear('bank');
           setPickerOpen(false);
         }}
       />
@@ -353,16 +358,18 @@ function BankPickerSheet({
 
 function Field({
   label,
+  error,
   ...inputProps
-}: { label: string } & React.ComponentProps<typeof TextInput>) {
+}: { label: string; error?: string } & React.ComponentProps<typeof TextInput>) {
   return (
     <View className="mb-3">
       <AppText weight="medium" className="mb-1.5 text-[12px] text-gray-500">{label}</AppText>
       <AppTextInput
         placeholderTextColor={colors.textMuted}
-        className="rounded-2xl border border-gray-200 bg-white px-4 py-3.5 text-[15px] text-gray-900"
+        className={`rounded-2xl border bg-white px-4 py-3.5 text-[15px] text-gray-900 ${error ? 'border-red-400' : 'border-gray-200'}`}
         {...inputProps}
       />
+      <FieldError text={error} />
     </View>
   );
 }

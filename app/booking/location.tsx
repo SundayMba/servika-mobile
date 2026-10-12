@@ -13,7 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppTextInput } from '@/components/ui/AppTextInput';
 import { AppText } from '@/components/ui/AppText';
-import { appAlert } from '@/components/ui/AppAlert';
+import { FieldError } from '@/components/FieldError';
 import { BookingSteps } from '@/components/booking/BookingSteps';
 import { Button } from '@/components/ui/Button';
 import { colors } from '@/constants/colors';
@@ -100,14 +100,16 @@ export default function BookingLocation() {
   };
 
   const canConfirm = addressText.trim().length > 0;
+  const [locateErr, setLocateErr] = useState<string | undefined>();
 
   const handleUseCurrentLocation = async () => {
     setIsLoadingLocation(true);
+    setLocateErr(undefined);
 
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== Location.PermissionStatus.GRANTED) {
-        throw new Error('Location permission denied.');
+        throw new Error('Allow location access, or type the address below.');
       }
 
       const position = await Location.getCurrentPositionAsync({
@@ -142,8 +144,8 @@ export default function BookingLocation() {
       const message =
         error instanceof Error
           ? error.message
-          : 'Unable to retrieve your current location.';
-      appAlert('Location Error', message);
+          : 'Could not find your location. Type the address below.';
+      setLocateErr(message);
     } finally {
       setIsLoadingLocation(false);
     }
@@ -238,6 +240,7 @@ export default function BookingLocation() {
             </View>
             {coords ? <Ionicons name="checkmark-circle" size={20} color="#22C55E" /> : null}
           </Pressable>
+          <FieldError text={locateErr} />
 
           {/* Service address (editable) */}
           <View className="mt-4">
@@ -248,6 +251,7 @@ export default function BookingLocation() {
               value={addressText}
               onChangeText={(t) => {
                 setAddressText(t);
+                setLocateErr(undefined);
                 setCoords(null); // typed address no longer matches the GPS fix
               }}
               placeholder="Enter the address the artisan should come to"

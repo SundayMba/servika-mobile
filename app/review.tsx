@@ -15,6 +15,7 @@ import { AppText } from '@/components/ui/AppText';
 import { appAlert } from '@/components/ui/AppAlert';
 import { ArtisanRow } from '@/components/active-booking/parts';
 import { Button } from '@/components/ui/Button';
+import { FieldError } from '@/components/FieldError';
 import { colors } from '@/constants/colors';
 import { authErrorMessage } from '@/lib/api/auth';
 import { useArtisan } from '@/lib/catalogue/hooks';
@@ -65,12 +66,13 @@ export default function ServiceReview() {
   // No default: the customer must pick a rating themselves.
   const [overall, setOverall] = useState(0);
   const [text, setText] = useState('');
+  const [ratingErr, setRatingErr] = useState<string | undefined>();
 
   const { mutateAsync, isPending } = useSubmitReview();
 
   const submit = async () => {
     if (overall < 1) {
-      appAlert('Pick a rating', 'Tap the stars to rate the job first.');
+      setRatingErr('Tap the stars to rate the job first.');
       return;
     }
     if (!params.bookingId) {
@@ -142,11 +144,12 @@ export default function ServiceReview() {
               How would you rate your experience?
             </AppText>
             <View className="mt-3">
-              <Stars value={overall} onChange={setOverall} size={34} />
+              <Stars value={overall} onChange={(v) => { setOverall(v); setRatingErr(undefined); }} size={34} />
             </View>
             <AppText weight="semibold" className="mt-2 text-[13px] text-primary">
               {overall > 0 ? RATING_LABELS[overall] : 'Tap a star'}
             </AppText>
+            <FieldError text={ratingErr} style={{ textAlign: 'center' }} />
           </View>
 
           {/* Write */}

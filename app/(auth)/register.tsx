@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Keyboard, Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { AuthScreen, Banner, classifyAuthError, FooterLink, GoogleInFlight, Headline, inkStyles, Lede, OutlineButton, passwordChecks, passwordPasses, PasswordStrength, PrimaryButton, StepRule, TextAccessory, UnderlineField } from '@/components/auth/kit';
+import { FieldError } from '@/components/FieldError';
 import { GoogleAuthButton } from '@/components/GoogleAuthButton';
 import { AppText } from '@/components/ui/AppText';
 import { openUrl, PRIVACY_URL, TERMS_URL } from '@/constants/links';
@@ -27,6 +28,8 @@ export default function Register() {
   const [submitting, setSubmitting] = useState(false);
   const [googleBusy, setGoogleBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errs, setErrs] = useState<{ name?: string; email?: string }>({});
+  const clear = (k: keyof typeof errs) => setErrs((e) => (e[k] ? { ...e, [k]: undefined } : e));
   const [offline, setOffline] = useState(false);
   const [taken, setTaken] = useState(false);
   const [weakAttempt, setWeakAttempt] = useState(false);
@@ -54,16 +57,20 @@ export default function Register() {
       return;
     }
     setEmail(v.includes('@') ? v.replace(/@.*$/, d) : v + d);
+    clear('email');
   };
 
   const submit = async () => {
     if (submitting) return;
     const name = fullName.trim();
     const emailValue = email.trim().toLowerCase();
-    if (name.length < 2) return setError('Your name first, the way artisans should say it.');
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue)) return setError('That does not look like an email. Your code goes there.');
+    const next: typeof errs = {};
+    if (name.length < 2) next.name = 'Your name first, the way artisans should say it.';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue)) next.email = 'That does not look like an email. Your code goes there.';
+    setErrs(next);
+    if (!passes) setWeakAttempt(true);
+    if (next.name || next.email) return;
     if (!passes) {
-      setWeakAttempt(true);
       passwordRef.current?.focus();
       return;
     }
@@ -77,6 +84,8 @@ export default function Register() {
       const f = classifyAuthError(e);
       if (f.kind === 'conflict') setTaken(true);
       else if (f.kind === 'offline') setOffline(true);
+      else if (f.kind === 'invalid' && /email/i.test(f.message)) setErrs({ email: f.message });
+      else if (f.kind === 'invalid' && /name/i.test(f.message)) setErrs({ name: f.message });
       else setError(f.message);
     } finally {
       setSubmitting(false);
@@ -155,7 +164,8 @@ export default function Register() {
         <UnderlineField
           label="Name"
           value={fullName}
-          onChangeText={setFullName}
+          onChangeText={(t) => { setFullName(t); clear('name'); }}
+          tone={errs.name ? 'error' : 'normal'}
           placeholder="What artisans should call you"
           autoCapitalize="words"
           autoComplete="name"
@@ -163,10 +173,12 @@ export default function Register() {
           onSubmitEditing={() => emailRef.current?.focus()}
           onFocus={() => setFocus('name')}
         />
+        <FieldError text={errs.name} />
         <UnderlineField
           label="Email"
           value={email}
-          onChangeText={setEmail}
+          onChangeText={(t) => { setEmail(t); clear('email'); }}
+          tone={errs.email ? 'error' : 'normal'}
           placeholder="you@example.com"
           keyboardType="email-address"
           autoComplete="email"
@@ -175,6 +187,7 @@ export default function Register() {
           onSubmitEditing={() => passwordRef.current?.focus()}
           onFocus={() => setFocus('email')}
         />
+        <FieldError text={errs.email} />
         <UnderlineField
           label="Password"
           value={password}

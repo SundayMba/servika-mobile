@@ -14,22 +14,25 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppTextInput } from '@/components/ui/AppTextInput';
 import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
+import { FieldError } from '@/components/FieldError';
 import { colors } from '@/constants/colors';
 import { authErrorMessage, updateProfile } from '@/lib/api/auth';
 import { useAuth } from '@/lib/auth/AuthContext';
 
 function Field({
   label,
+  error,
   ...inputProps
-}: { label: string } & React.ComponentProps<typeof TextInput>) {
+}: { label: string; error?: string } & React.ComponentProps<typeof TextInput>) {
   return (
     <View className="mb-4">
       <AppText weight="semibold" className="mb-1.5 text-[13px] text-gray-700">{label}</AppText>
       <AppTextInput
         placeholderTextColor={colors.textMuted}
-        className="h-14 rounded-2xl border border-gray-200 bg-white px-4 text-[15px] text-gray-900"
+        className={`h-14 rounded-2xl border bg-white px-4 text-[15px] text-gray-900 ${error ? 'border-red-400' : 'border-gray-200'}`}
         {...inputProps}
       />
+      <FieldError text={error} />
     </View>
   );
 }
@@ -41,22 +44,27 @@ export default function EditProfile() {
   const [fullName, setFullName] = useState(user?.fullName ?? '');
   const [phone, setPhone] = useState(user?.phoneNumber ?? '');
   const [error, setError] = useState<string | null>(null);
+  const [errs, setErrs] = useState<{ fullName?: string; phone?: string }>({});
   const [saving, setSaving] = useState(false);
 
   const save = async () => {
     if (saving) return;
     setError(null);
     if (!fullName.trim()) {
-      setError('Please enter your full name.');
+      setErrs({ fullName: 'Enter your full name.' });
       return;
     }
+    setErrs({});
     setSaving(true);
     try {
       const updated = await updateProfile({ fullName: fullName.trim(), phoneNumber: phone.trim() });
       await updateUser(updated);
       router.back();
     } catch (e) {
-      setError(authErrorMessage(e, 'Could not save your profile.'));
+      const msg = authErrorMessage(e, 'Could not save your profile.');
+      if (/phone/i.test(msg)) setErrs({ phone: msg });
+      else if (/name/i.test(msg)) setErrs({ fullName: msg });
+      else setError(msg);
     } finally {
       setSaving(false);
     }
@@ -90,14 +98,16 @@ export default function EditProfile() {
           <Field
             label="Full name"
             value={fullName}
-            onChangeText={setFullName}
+            onChangeText={(t) => { setFullName(t); if (errs.fullName) setErrs((e) => ({ ...e, fullName: undefined })); }}
+            error={errs.fullName}
             autoCapitalize="words"
             placeholder="Your full name"
           />
           <Field
             label="Phone number"
             value={phone}
-            onChangeText={setPhone}
+            onChangeText={(t) => { setPhone(t); if (errs.phone) setErrs((e) => ({ ...e, phone: undefined })); }}
+            error={errs.phone}
             keyboardType="phone-pad"
             placeholder="+234…"
           />

@@ -16,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppText } from '@/components/ui/AppText';
 import { appAlert } from '@/components/ui/AppAlert';
 import { Button } from '@/components/ui/Button';
+import { FieldError } from '@/components/FieldError';
 import { colors } from '@/constants/colors';
 import { bookingMedia, type AssessmentChoice } from '@/lib/booking/mediaStore';
 
@@ -77,6 +78,8 @@ export default function BookingPhotos() {
   const isOpen = params.open === '1' && !params.artisanId;
 
   const [photos, setPhotos] = useState<{ uri: string; base64: string }[]>([]);
+
+  const [mediaErr, setMediaErr] = useState<string | undefined>();
   const [video, setVideo] = useState<{ uri: string } | null>(null);
   const [assessment, setAssessment] = useState<AssessmentChoice>('Inspection');
   const [working, setWorking] = useState(false);
@@ -144,10 +147,7 @@ export default function BookingPhotos() {
 
   const handleContinue = () => {
     if (bidding && photos.length === 0 && !video) {
-      appAlert(
-        'Add the job details',
-        'For price offers, artisans need at least one photo (or a short clip) of the job.',
-      );
+      setMediaErr('For price offers, add at least one photo or a short clip of the job.');
       return;
     }
     bookingMedia.setPhotos(photos.map((p) => p.base64), photos.map((p) => p.uri));
@@ -248,7 +248,7 @@ export default function BookingPhotos() {
           accessibilityRole="button"
           onPress={pickPhotos}
           disabled={photos.length >= MAX_PHOTOS || working}
-          className="items-center rounded-3xl border-2 border-dashed border-gray-200 bg-white px-6 py-8 active:opacity-90"
+          className={`items-center rounded-3xl border-2 border-dashed bg-white px-6 py-8 active:opacity-90 ${mediaErr && photos.length === 0 && !video ? 'border-red-400' : 'border-gray-200'}`}
         >
           <View className="h-14 w-14 items-center justify-center rounded-full bg-primary/10">
             {working ? (
@@ -264,6 +264,7 @@ export default function BookingPhotos() {
             Tap to choose from your library · up to {MAX_PHOTOS}
           </AppText>
         </Pressable>
+        <FieldError text={mediaErr && photos.length === 0 && !video ? mediaErr : undefined} />
 
         {/* Thumbnails */}
         {photos.length > 0 ? (

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { AuthScreen, Banner, CheckTile, classifyAuthError, CodeDigits, FooterLink, Headline, inkStyles, Lede, passwordChecks, passwordPasses, PasswordStrength, PrimaryButton, ResendRow, Rule, TextAccessory, UnderlineField } from '@/components/auth/kit';
+import { FieldError } from '@/components/FieldError';
 import { AppText } from '@/components/ui/AppText';
 import { colors } from '@/constants/colors';
 import { forgotPassword, login, resetPassword } from '@/lib/api/auth';
@@ -32,6 +33,8 @@ export default function ForgotPassword() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [errs, setErrs] = useState<{ email?: string; code?: string; password?: string; confirm?: string }>({});
+  const clear = (k: keyof typeof errs) => setErrs((e) => (e[k] ? { ...e, [k]: undefined } : e));
   const [offline, setOffline] = useState(false);
   const [cooldown, setCooldown] = useState(0);
 
@@ -48,7 +51,8 @@ export default function ForgotPassword() {
   const request = async () => {
     if (submitting) return;
     const value = email.trim().toLowerCase();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) && !/^\+?\d{10,14}$/.test(value)) return setError('That does not look like an email. The code goes there.');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) && !/^\+?\d{10,14}$/.test(value)) return setErrs({ email: 'That does not look like an email. The code goes there.' });
+    setErrs({});
     setError(null);
     setOffline(false);
     setSubmitting(true);
@@ -81,8 +85,11 @@ export default function ForgotPassword() {
 
   const save = async () => {
     if (submitting) return;
-    if (!passes) return setError('Eight characters and a number is the floor.');
-    if (!matches) return setError('The two passwords do not match yet.');
+    const next: typeof errs = {};
+    if (!passes) next.password = 'Eight characters and a number is the floor.';
+    if (!matches) next.confirm = 'The two passwords do not match yet.';
+    setErrs(next);
+    if (next.password || next.confirm) return;
     setError(null);
     setOffline(false);
     setSubmitting(true);
@@ -98,7 +105,7 @@ export default function ForgotPassword() {
       else if (f.kind === 'invalid') {
         setCodeWrong(true);
         setStep('code');
-        setError('That code is wrong or has timed out. Try it again or ask for a fresh one.');
+        setErrs({ code: 'That code is wrong or has timed out. Try it again or ask for a fresh one.' });
       } else setError(f.message);
     } finally {
       setSubmitting(false);
@@ -124,7 +131,7 @@ export default function ForgotPassword() {
         onBack={() => setStep('email')}
         footer={
           <>
-            <PrimaryButton label="Continue" disabled={code.length < 6} onPress={() => { setError(null); setStep('password'); }} />
+            <PrimaryButton label="Continue" disabled={code.length < 6} onPress={() => { setError(null); clear('code'); setStep('password'); }} />
             <FooterLink action="Wrong email? Change it" onPress={() => setStep('email')} />
           </>
         }
@@ -132,8 +139,11 @@ export default function ForgotPassword() {
         <Headline>Six digits to{'\n'}prove it is you.</Headline>
         <Lede>Sent to {email}</Lede>
         <View style={{ marginTop: 36, gap: 24 }}>
-          <CodeDigits value={code} onChange={(v) => { setCode(v); setCodeWrong(false); setError(null); }} tone={codeWrong ? 'wrong' : 'normal'} />
-          <Rule tone={codeWrong ? 'wrong' : 'normal'} />
+          <CodeDigits value={code} onChange={(v) => { setCode(v); setCodeWrong(false); setError(null); clear('code'); }} tone={codeWrong ? 'wrong' : 'normal'} />
+          <View>
+            <Rule tone={codeWrong ? 'wrong' : 'normal'} />
+            <FieldError text={errs.code} />
+          </View>
           <ResendRow cooldown={cooldown} onResend={resend} onPaste={setCode} />
           {notice ? <AppText style={inkStyles.notice}>{notice}</AppText> : null}
           {error ? <AppText style={[inkStyles.error, { marginTop: 0 }]}>{error}</AppText> : null}
@@ -156,19 +166,22 @@ export default function ForgotPassword() {
           <UnderlineField
             label="New password"
             value={password}
-            onChangeText={setPassword}
+            onChangeText={(t) => { setPassword(t); clear('password'); }}
+            tone={errs.password ? 'error' : 'normal'}
             placeholder="At least eight characters"
             secure={!show}
             autoComplete="new-password"
             autoFocus
             right={<TextAccessory label={show ? 'Hide' : 'Show'} onPress={() => setShow((v) => !v)} />}
           />
+          <FieldError text={errs.password} />
           <PasswordStrength password={password} checks={checks} showChecklist={password.length > 0 && !passes} />
           <View style={{ marginTop: 10 }}>
             <UnderlineField
               label="Type it again"
               value={confirm}
-              onChangeText={setConfirm}
+              onChangeText={(t) => { setConfirm(t); clear('confirm'); }}
+              tone={errs.confirm ? 'error' : 'normal'}
               placeholder="Same again"
               secure={!show}
               autoComplete="new-password"
@@ -182,6 +195,7 @@ export default function ForgotPassword() {
                 ) : null
               }
             />
+            <FieldError text={errs.confirm} />
           </View>
           {error ? <AppText style={inkStyles.error}>{error}</AppText> : null}
         </View>
@@ -207,15 +221,16 @@ export default function ForgotPassword() {
         <UnderlineField
           label="Email"
           value={email}
-          onChangeText={(t) => { setEmail(t); if (error) setError(null); }}
+          onChangeText={(t) => { setEmail(t); if (error) setError(null); clear('email'); }}
           placeholder="you@example.com"
           keyboardType="email-address"
           autoComplete="username"
           returnKeyType="done"
           onSubmitEditing={request}
           autoFocus={!email}
-          tone={error ? 'error' : 'normal'}
+          tone={errs.email ? 'error' : 'normal'}
         />
+        <FieldError text={errs.email} />
         <AppText style={styles.hint}>The code only goes out if an account uses this address. Check spam if it takes more than a minute.</AppText>
         {error ? <AppText style={inkStyles.error}>{error}</AppText> : null}
       </View>

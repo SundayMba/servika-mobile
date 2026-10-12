@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { AuthScreen, Banner, classifyAuthError, FooterLink, GoogleInFlight, Headline, inkStyles, Lede, PrimaryButton, TextAccessory, UnderlineField } from '@/components/auth/kit';
+import { FieldError } from '@/components/FieldError';
 import { GoogleAuthButton } from '@/components/GoogleAuthButton';
 import { AppText } from '@/components/ui/AppText';
 import { colors } from '@/constants/colors';
@@ -31,6 +32,7 @@ export default function Login() {
   const [googleBusy, setGoogleBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [offline, setOffline] = useState(false);
+  const [errs, setErrs] = useState<{ identifier?: string; password?: string }>({});
   const passwordRef = useRef<TextInput>(null);
 
   useEffect(() => {
@@ -52,8 +54,12 @@ export default function Login() {
   const submit = async () => {
     if (submitting) return;
     const emailOrPhone = identifier.trim();
-    if (!emailOrPhone || !password) return setError('Your email and your password, then we are in.');
+    const next: typeof errs = {};
+    if (!emailOrPhone) next.identifier = 'Your email or phone first.';
+    if (!password) next.password = 'Your password, then we are in.';
+    setErrs(next);
     setError(null);
+    if (next.identifier || next.password) return;
     setOffline(false);
     setSubmitting(true);
     try {
@@ -69,7 +75,8 @@ export default function Login() {
     } catch (e) {
       const f = classifyAuthError(e, 'That email and password do not match.');
       if (f.kind === 'offline') setOffline(true);
-      else if (f.kind === 'unauthorized') setError(f.message === 'Invalid email/phone or password.' ? 'That password does not match this email. Try again, or reset it.' : f.message);
+      else if (f.kind === 'unauthorized' && f.message === 'Invalid email/phone or password.') setErrs({ password: 'That password does not match this email. Try again, or reset it.' });
+      else if (f.kind === 'unauthorized') setError(f.message);
       else setError(f.message);
     } finally {
       setSubmitting(false);
@@ -120,7 +127,8 @@ export default function Login() {
           <UnderlineField
             label="Email or phone"
             value={identifier}
-            onChangeText={setIdentifier}
+            onChangeText={(t) => { setIdentifier(t); if (errs.identifier) setErrs((e) => ({ ...e, identifier: undefined })); }}
+            tone={errs.identifier ? 'error' : 'normal'}
             placeholder="you@example.com"
             keyboardType="email-address"
             autoComplete="username"
@@ -129,10 +137,11 @@ export default function Login() {
             autoFocus={!identifier}
           />
         )}
+        {returning && last ? null : <FieldError text={errs.identifier} />}
         <UnderlineField
           label="Password"
           value={password}
-          onChangeText={(t) => { setPassword(t); if (error) setError(null); }}
+          onChangeText={(t) => { setPassword(t); if (error) setError(null); if (errs.password) setErrs((e) => ({ ...e, password: undefined })); }}
           placeholder="Your password"
           secure={!show}
           autoComplete="password"
@@ -140,9 +149,10 @@ export default function Login() {
           returnKeyType="done"
           onSubmitEditing={submit}
           autoFocus={returning}
-          tone={error ? 'error' : 'normal'}
+          tone={errs.password ? 'error' : 'normal'}
           right={<TextAccessory label={show ? 'Hide' : 'Show'} onPress={() => setShow((v) => !v)} />}
         />
+        <FieldError text={errs.password} />
         <Pressable accessibilityRole="button" hitSlop={8} onPress={() => router.push({ pathname: '/forgot-password', params: identifier ? { email: identifier } : {} })} style={styles.forgot}>
           <AppText weight="semibold" style={styles.forgotText}>Forgot it? We will email you a code</AppText>
         </Pressable>

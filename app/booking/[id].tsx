@@ -29,6 +29,7 @@ import {
   statusStyle,
   cancelRefundNote,
 } from '@/lib/booking/display';
+import { FieldError } from '@/components/FieldError';
 import { BottomSheet } from '@/components/BottomSheet';
 import {
   useAcceptBid,
@@ -272,23 +273,27 @@ export default function BookingDetailScreen() {
   const [counterAmount, setCounterAmount] = useState('');
   const [counterNote, setCounterNote] = useState('');
   const [counterError, setCounterError] = useState<string | null>(null);
+  const [counterAmountErr, setCounterAmountErr] = useState<string | undefined>();
   const openCounter = (bid: Bid) => {
     setCounterFor(bid);
     setCounterAmount(bid.pendingCounterNaira != null ? String(bid.pendingCounterNaira) : '');
     setCounterNote(bid.pendingCounterNote ?? '');
     setCounterError(null);
+    setCounterAmountErr(undefined);
   };
   const sendCounter = () => {
     if (!counterFor) return;
     const workmanshipNaira = Number(counterAmount) || 0;
     if (workmanshipNaira <= 0) {
-      setCounterError('Enter the workmanship price you would pay.');
+      setCounterAmountErr('Enter the workmanship price you would pay.');
       return;
     }
     if (workmanshipNaira === counterFor.workmanshipNaira) {
-      setCounterError('That is already their price. Accept the offer instead.');
+      setCounterAmountErr('That is already their price. Accept the offer instead.');
       return;
     }
+    setCounterAmountErr(undefined);
+    setCounterError(null);
     counterBidMutation.mutate(
       { bookingId: id, bidId: counterFor.id, workmanshipNaira, note: counterNote.trim() || null },
       {
@@ -1053,17 +1058,18 @@ export default function BookingDetailScreen() {
           <AppText weight="medium" className="mb-1.5 mt-5 text-[12px] text-gray-500">
             Your workmanship offer (₦)
           </AppText>
-          <View className="flex-row items-center rounded-2xl border border-gray-200 bg-white px-4">
+          <View className={`flex-row items-center rounded-2xl border bg-white px-4 ${counterAmountErr ? 'border-red-400' : 'border-gray-200'}`}>
             <AppText weight="semibold" className="text-[18px] text-gray-400">₦</AppText>
             <TextInput
               value={counterAmount}
-              onChangeText={(t) => setCounterAmount(t.replace(/[^0-9]/g, ''))}
+              onChangeText={(t) => { setCounterAmount(t.replace(/[^0-9]/g, '')); setCounterAmountErr(undefined); }}
               keyboardType="number-pad"
               placeholder="0"
               placeholderTextColor="#9CA3AF"
               className="ml-1 flex-1 py-3.5 text-[18px] font-bold text-gray-900"
             />
           </View>
+          <FieldError text={counterAmountErr} />
           {counterFor && counterFor.materialsNaira > 0 ? (
             <AppText className="mt-2 text-[12px] text-gray-500">
               Total you would pay: {formatNaira((Number(counterAmount) || 0) + counterFor.materialsNaira)}
