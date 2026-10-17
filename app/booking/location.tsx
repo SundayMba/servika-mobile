@@ -3,11 +3,7 @@ import * as Location from 'expo-location';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
-import {
-  Pressable,
-  ScrollView,
-  View,
-} from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -17,7 +13,11 @@ import { FieldError } from '@/components/FieldError';
 import { BookingSteps } from '@/components/booking/BookingSteps';
 import { Button } from '@/components/ui/Button';
 import { colors } from '@/constants/colors';
-import { geocodeText, searchPlaces, type PlaceResult } from '@/lib/location/search';
+import {
+  geocodeText,
+  searchPlaces,
+  type PlaceResult,
+} from '@/lib/location/search';
 
 const dropShadow = {
   shadowColor: '#0F172A',
@@ -168,9 +168,7 @@ export default function BookingLocation() {
         photos,
         instructions,
         addressText,
-        ...(coords
-          ? { lat: String(coords.lat), lng: String(coords.lng) }
-          : {}),
+        ...(coords ? { lat: String(coords.lat), lng: String(coords.lng) } : {}),
       },
     });
   };
@@ -205,10 +203,7 @@ export default function BookingLocation() {
         <BookingSteps current={2} />
       </View>
 
-      <KeyboardAvoidingView
-        className="flex-1"
-        behavior="padding"
-      >
+      <KeyboardAvoidingView className="flex-1" behavior="padding">
         <ScrollView
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
@@ -232,19 +227,26 @@ export default function BookingLocation() {
             </View>
             <View className="flex-1">
               <AppText weight="semibold" className="text-[14px] text-primary">
-                {isLoadingLocation ? 'Getting your location…' : 'Use my current location'}
+                {isLoadingLocation
+                  ? 'Getting your location…'
+                  : 'Use my current location'}
               </AppText>
               <AppText className="mt-0.5 text-[12px] text-gray-500">
                 We&apos;ll fill in your address automatically.
               </AppText>
             </View>
-            {coords ? <Ionicons name="checkmark-circle" size={20} color="#22C55E" /> : null}
+            {coords ? (
+              <Ionicons name="checkmark-circle" size={20} color="#22C55E" />
+            ) : null}
           </Pressable>
           <FieldError text={locateErr} />
 
           {/* Service address (editable) */}
           <View className="mt-4">
-            <AppText weight="semibold" className="mb-1.5 text-[13px] text-gray-700">
+            <AppText
+              weight="semibold"
+              className="mb-1.5 text-[13px] text-gray-700"
+            >
               Service address
             </AppText>
             <AppTextInput
@@ -261,25 +263,41 @@ export default function BookingLocation() {
               className="min-h-[72px] rounded-2xl border border-gray-200 bg-white px-4 py-3 text-[15px] text-gray-900"
             />
             {suggestions.length > 0 ? (
-              <View className="mt-2 overflow-hidden rounded-2xl border border-gray-100 bg-white" style={dropShadow}>
+              <View
+                className="mt-2 overflow-hidden rounded-2xl border border-gray-100 bg-white"
+                style={dropShadow}
+              >
                 {suggestions.map((sug, i) => (
                   <Pressable
                     key={sug.id}
                     accessibilityRole="button"
                     onPress={() => pickSuggestion(sug)}
                     className={`flex-row items-center gap-3 px-4 py-3 active:bg-gray-50 ${
-                      i === suggestions.length - 1 ? '' : 'border-b border-gray-50'
+                      i === suggestions.length - 1
+                        ? ''
+                        : 'border-b border-gray-50'
                     }`}
                   >
                     <View className="h-8 w-8 items-center justify-center rounded-full bg-primary/10">
-                      <Ionicons name="location-outline" size={15} color={colors.primary} />
+                      <Ionicons
+                        name="location-outline"
+                        size={15}
+                        color={colors.primary}
+                      />
                     </View>
                     <View className="flex-1">
-                      <AppText weight="semibold" className="text-[14px] text-gray-900" numberOfLines={1}>
+                      <AppText
+                        weight="semibold"
+                        className="text-[14px] text-gray-900"
+                        numberOfLines={1}
+                      >
                         {sug.label}
                       </AppText>
                       {sug.sub ? (
-                        <AppText className="text-[12px] text-gray-400" numberOfLines={1}>
+                        <AppText
+                          className="text-[12px] text-gray-400"
+                          numberOfLines={1}
+                        >
                           {sug.sub}
                         </AppText>
                       ) : null}
@@ -292,13 +310,16 @@ export default function BookingLocation() {
 
           {/* Access instructions (gate codes, directions for the artisan) */}
           <View className="mt-5">
-            <AppText weight="semibold" className="mb-1.5 text-[13px] text-gray-700">
+            <AppText
+              weight="semibold"
+              className="mb-1.5 text-[13px] text-gray-700"
+            >
               Access instructions (optional)
             </AppText>
             <AppTextInput
               value={instructions}
               onChangeText={setInstructions}
-              placeholder="e.g. Gate code, floor, landmark, 'call at the gate'"
+              placeholder="e.g. Gate code, directions, landmarks."
               placeholderTextColor={colors.textMuted}
               className="h-14 rounded-2xl border border-gray-200 bg-white px-4 text-[15px] text-gray-900"
             />
@@ -306,7 +327,11 @@ export default function BookingLocation() {
 
           {/* Confirm */}
           <View className="mt-7">
-            <Button label="Confirm Location" disabled={!canConfirm} onPress={handleConfirm} />
+            <Button
+              label="Confirm Location"
+              disabled={!canConfirm}
+              onPress={handleConfirm}
+            />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
