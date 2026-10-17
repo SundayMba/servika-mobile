@@ -21,10 +21,23 @@ const OTA_RECHECK_MS = 15 * 60 * 1000;
 const STORE_PROMPT_KEY = 'store-update-prompted-at';
 const STORE_PROMPT_EVERY_MS = 24 * 60 * 60 * 1000;
 
+// A store install carries the JavaScript that was current at build time. If a newer
+// update is already published, a fresh install should simply start on it instead of
+// asking a person who has used the app for five seconds to "restart". Within this
+// window after launch, while still running the embedded bundle, a fetched update is
+// applied immediately.
+const FRESH_LAUNCH_APPLY_MS = 20 * 1000;
+
 export function useOtaUpdates() {
   const { isUpdatePending } = Updates.useUpdates();
   const [dismissed, setDismissed] = useState(false);
   const lastCheck = useRef(0);
+  const launchedAt = useRef(Date.now());
+  const applyNow = useCallback(() => {
+    Updates.reloadAsync().catch((error) => reportError(error, { where: 'ota-reload' }));
+  }, []);
+  const freshEmbeddedLaunch = () =>
+    Updates.isEmbeddedLaunch && Date.now() - launchedAt.current < FRESH_LAUNCH_APPLY_MS;
 
   const check = useCallback(async () => {
     if (__DEV__ || !Updates.isEnabled) return;
@@ -33,7 +46,10 @@ export function useOtaUpdates() {
     lastCheck.current = now;
     try {
       const result = await Updates.checkForUpdateAsync();
-      if (result.isAvailable) await Updates.fetchUpdateAsync();
+      if (result.isAvailable) {
+        const fetched = await Updates.fetchUpdateAsync();
+        if (fetched.isNew && freshEmbeddedLaunch()) applyNow();
+      }
     } catch (error) {
       // No network, a captive portal, or the update server unreachable: the next
       // foreground retries. Only something other than a failed fetch is worth a report.
@@ -41,7 +57,7 @@ export function useOtaUpdates() {
       if (/failed to (?:check for|download|fetch) (?:the )?update|network|timed? ?out|unreachable|ERR_UPDATES_(?:CHECK|FETCH)/i.test(message)) return;
       reportError(error, { where: 'ota-check' });
     }
-  }, []);
+  }, [applyNow]);
 
   useEffect(() => {
     void check();
@@ -51,9 +67,12 @@ export function useOtaUpdates() {
     return () => sub.remove();
   }, [check]);
 
-  const restart = useCallback(() => {
-    Updates.reloadAsync().catch((error) => reportError(error, { where: 'ota-reload' }));
-  }, []);
+  // expo-updates may have downloaded the update itself before JS started (ON_LOAD).
+  useEffect(() => {
+    if (isUpdatePending && freshEmbeddedLaunch()) applyNow();
+  }, [isUpdatePending, applyNow]);
+
+  const restart = applyNow;
   const later = useCallback(() => setDismissed(true), []);
 
   return { ready: isUpdatePending && !dismissed, restart, later };

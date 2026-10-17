@@ -48,6 +48,12 @@ export default function Register() {
   const checks = useMemo(() => passwordChecks(password, fullName, email), [password, fullName, email]);
   const passes = passwordPasses(checks);
   const weak = weakAttempt && !passes;
+  // Which rule is still failing, so the held button never looks broken.
+  const weakReason = !weak
+    ? null
+    : !checks[2].ok && checks[0].ok && checks[1].ok
+      ? 'Your password still contains your name or email. Change it and the button wakes up.'
+      : 'Eight characters with a number, and the button wakes up.';
 
   const addDomain = (d: string) => {
     const v = email.trim();
@@ -139,6 +145,7 @@ export default function Register() {
             </AppText>
           )}
           <PrimaryButton label="Send my code" loadingLabel="Sending your code" loading={submitting} disabled={weak} onPress={submit} />
+          {weakReason ? <AppText style={styles.weakReason}>{weakReason}</AppText> : null}
           {keyboardUp ? null : (
             <>
               <GoogleAuthButton variant="dark" onBusyChange={setGoogleBusy} />
@@ -151,7 +158,13 @@ export default function Register() {
       {weak ? (
         <>
           <Headline compact={keyboardUp}>That one is{keyboardUp ? ' ' : '\n'}too easy.</Headline>
-          {keyboardUp ? null : <Lede>Your account can hold money in escrow. Eight characters and a number is the floor.</Lede>}
+          {keyboardUp ? null : (
+            <Lede>
+              {!checks[2].ok && checks[0].ok && checks[1].ok
+                ? 'It has your name or email in it, the first thing anyone would try. Pick something only you would guess.'
+                : 'Your account can hold money in escrow. Eight characters and a number is the floor.'}
+            </Lede>
+          )}
         </>
       ) : (
         <>
@@ -211,6 +224,7 @@ export default function Register() {
 }
 
 const styles = StyleSheet.create({
+  weakReason: { marginTop: 10, textAlign: 'center', fontSize: 12.5, lineHeight: 18, color: colors.dangerOnInk },
   consent: { textAlign: 'center', fontSize: 11.5, lineHeight: 17, color: colors.onInkMeta, paddingHorizontal: 8 },
   consentLink: { fontSize: 11.5, color: colors.onInk },
   takenNote: { paddingTop: 14, fontSize: 13.5, color: colors.dangerOnInk },

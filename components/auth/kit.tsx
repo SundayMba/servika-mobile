@@ -255,9 +255,12 @@ export function PasswordStrength({ password, checks, showChecklist }: { password
   const strong = passed === 3 && (/[^A-Za-z0-9]/.test(password) || password.length >= 12);
   const segments = !password ? 0 : passed < 3 ? 1 : strong ? 3 : 2;
   const failing = passed < 3 && password.length > 0;
+  const personalOnly = failing && password.length >= 8 && /\d/.test(password);
   const verdict = !password
     ? 'Eight characters and a number keeps it out of reach.'
-    : failing
+    : personalOnly
+      ? 'Too close to your name or email'
+      : failing
       ? `${password.length < 8 ? `${['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven'][password.length] ?? password.length} characters` : 'Eight characters'}${/\d/.test(password) ? '' : ', no number'}`
       : strong
         ? 'Strong. That one will hold.'
