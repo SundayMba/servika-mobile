@@ -38,6 +38,8 @@ export interface FeeSchedule {
   referralMinWithdrawalNaira?: number;
   reviewTargetHours?: number;
   maxCounterRounds?: number;
+  /** Whether a customer may choose cash after service. Off = every job is paid in the app. */
+  allowCashPayments?: boolean;
 }
 
 /** GET /fees/quote?amount=: the exact fees for an amount, computed server-side. */

@@ -308,7 +308,8 @@ export default function BookingDetailScreen() {
       { onError: (err) => appAlert('Could not update', authErrorMessage(err, 'Please try again.')) },
     );
   const rebroadcast = useRebroadcast();
-  // Opens after a quote is accepted: escrow (recommended) vs cash after service.
+  // Opens after a quote is accepted: pay into escrow. Cash after service only exists
+  // while the admin switch allows it (off by default: every job is paid in the app).
   const [paySheetOpen, setPaySheetOpen] = useState(false);
   // The payment fee, from the server: 0 while Servika covers it, shown plainly once users pay it.
   const feeQuote = useFeeQuote(booking?.initialQuoteAmountNaira, paySheetOpen);
@@ -320,6 +321,7 @@ export default function BookingDetailScreen() {
     : null;
   const usersBearFees = feeQuote.data?.usersBearFees ?? feeSchedule.data?.usersBearFees;
   const feeCoveredUntil = feeSchedule.data && !feeSchedule.data.usersBearFees ? feeStartLabel(feeSchedule.data.feesStartAtUtc) : null;
+  const cashAllowed = feeSchedule.data?.allowCashPayments === true;
 
   const [paying, setPaying] = useState(false);
   const payNow = async () => {
@@ -863,7 +865,7 @@ export default function BookingDetailScreen() {
               ['Accepted', 'OnMyWay', 'Arrived', 'InProgress', 'AwaitingConfirmation', 'Completed'].includes(
                 booking.status,
               ) ? (
-              // Unpaid with an agreed price → pay into escrow (or fall back to cash).
+              // Unpaid with an agreed price → pay into escrow (cash only while allowed).
               <>
                 <Pressable
                   accessibilityRole="button"
@@ -884,7 +886,7 @@ export default function BookingDetailScreen() {
                     ? 'Work starts once your payment is secured. A small payment fee is added at checkout.'
                     : 'Work starts once your payment is secured.'}
                 </AppText>
-                {!['InProgress', 'AwaitingConfirmation', 'Completed'].includes(booking.status) ? (
+                {cashAllowed && !['InProgress', 'AwaitingConfirmation', 'Completed'].includes(booking.status) ? (
                   <Pressable
                     accessibilityRole="button"
                     disabled={choosePayment.isPending}
@@ -1172,20 +1174,23 @@ export default function BookingDetailScreen() {
             </AppText>
           </Pressable>
 
-          <Pressable
-            accessibilityRole="button"
-            disabled={choosePayment.isPending}
-            onPress={chooseCash}
-            className="mt-2.5 h-13 flex-row items-center justify-center gap-2 rounded-2xl border border-gray-200 py-3.5 active:opacity-70"
-          >
-            <Ionicons name="cash-outline" size={17} color={colors.textPrimary} />
-            <AppText weight="semibold" className="text-[14px] text-gray-700">
-              {choosePayment.isPending ? 'Saving…' : 'Pay cash after service'}
-            </AppText>
-          </Pressable>
+          {cashAllowed ? (
+            <Pressable
+              accessibilityRole="button"
+              disabled={choosePayment.isPending}
+              onPress={chooseCash}
+              className="mt-2.5 h-13 flex-row items-center justify-center gap-2 rounded-2xl border border-gray-200 py-3.5 active:opacity-70"
+            >
+              <Ionicons name="cash-outline" size={17} color={colors.textPrimary} />
+              <AppText weight="semibold" className="text-[14px] text-gray-700">
+                {choosePayment.isPending ? 'Saving…' : 'Pay cash after service'}
+              </AppText>
+            </Pressable>
+          ) : null}
           <AppText className="mt-2.5 text-center text-[11.5px] leading-4 text-gray-400">
-            Online payment is protected by escrow and released to the artisan only
-            when you confirm the job. Cash jobs have limited dispute protection.
+            {cashAllowed
+              ? 'Online payment is protected by escrow and released to the artisan only when you confirm the job. Cash jobs have limited dispute protection.'
+              : 'Servika holds your payment and releases it to the artisan only when you confirm the job. Card, bank transfer, USSD and OPay all work.'}
           </AppText>
         </View>
       </BottomSheet>
