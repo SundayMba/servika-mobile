@@ -35,7 +35,10 @@ export function useOtaUpdates() {
       const result = await Updates.checkForUpdateAsync();
       if (result.isAvailable) await Updates.fetchUpdateAsync();
     } catch (error) {
-      // No network, or the update server is unreachable: nothing to do now.
+      // No network, a captive portal, or the update server unreachable: the next
+      // foreground retries. Only something other than a failed fetch is worth a report.
+      const message = error instanceof Error ? `${error.message} ${(error as { cause?: { message?: string } }).cause?.message ?? ''}` : String(error);
+      if (/failed to (?:check for|download|fetch) (?:the )?update|network|timed? ?out|unreachable|ERR_UPDATES_(?:CHECK|FETCH)/i.test(message)) return;
       reportError(error, { where: 'ota-check' });
     }
   }, []);
