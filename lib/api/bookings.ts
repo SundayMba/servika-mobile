@@ -5,6 +5,7 @@ import type {
   BookingSummary,
   CreateBookingRequest,
   JobCompletion,
+  PastArtisan,
 } from '@/lib/booking/types';
 
 /**
@@ -24,6 +25,12 @@ export async function createBooking(
 }
 
 /** The current customer's bookings (history), newest first; optional status filter. */
+/** Artisans you have completed jobs with, most recent first. */
+export async function getPastArtisans(): Promise<PastArtisan[]> {
+  const { data } = await apiClient.get<PastArtisan[]>('/api/v1/bookings/past-artisans');
+  return data;
+}
+
 export async function getBookings(status?: string): Promise<BookingSummary[]> {
   const { data } = await apiClient.get<BookingSummary[]>(BASE, {
     params: status ? { status } : undefined,

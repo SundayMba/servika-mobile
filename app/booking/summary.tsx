@@ -66,6 +66,8 @@ export default function BookingSummary() {
     lat?: string;
     lng?: string;
     photos?: string;
+    bookingCode?: string;
+    rebook?: string;
   }>();
 
   // Open request: no artisan chosen — any matching artisan can claim/bid.
@@ -132,6 +134,9 @@ export default function BookingSummary() {
         // A published fixed-price service books at its listed price (server reads
         // the price from the listing — never trusts the client's `fixedPrice`).
         artisanServiceId: params.artisanServiceId ?? null,
+        // A personal booking code or a Book-again request; the server records the source.
+        bookingCode: params.bookingCode || null,
+        rebook: params.rebook === '1',
         // Job media + pricing mode from the photos step (module store — the
         // base64 blobs are too big for route params).
         assessmentMode: bookingMedia.get().assessment,

@@ -13,6 +13,7 @@ import {
   rebroadcastBooking,
   decideMaterialsAdvance,
   counterBid,
+  getPastArtisans,
 } from '@/lib/api/bookings';
 
 /**
@@ -20,6 +21,11 @@ import {
  * job progresses, so they get a short stale time and mutations invalidate the
  * cached list/detail so the UI re-fetches.
  */
+
+/** The artisans this customer has used before (Book again). */
+export function usePastArtisans(enabled = true) {
+  return useQuery({ queryKey: ['past-artisans'], queryFn: getPastArtisans, enabled, staleTime: 60_000 });
+}
 
 export function useBookings(status?: string, options?: { enabled?: boolean }) {
   return useQuery({

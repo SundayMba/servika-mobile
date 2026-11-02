@@ -4,6 +4,7 @@ import type {
   ArtisanDetail,
   ArtisanSummary,
   Category,
+  ArtisanByCode,
 } from '@/lib/catalogue/types';
 import type { LatLng } from '@/lib/tracking/geo';
 
@@ -32,6 +33,13 @@ export async function getArtisans(
       ...(coords ? { lat: coords.latitude, lng: coords.longitude } : {}),
     },
   });
+  return data;
+}
+
+/** Resolve an artisan's personal booking code (404 = no such code). */
+export async function getArtisanByCode(code: string): Promise<ArtisanByCode> {
+  const clean = code.trim().split('/').pop()?.replace(/[^a-z0-9]/gi, '').toUpperCase() ?? '';
+  const { data } = await apiClient.get<ArtisanByCode>(`/api/v1/artisans/by-code/${encodeURIComponent(clean)}`);
   return data;
 }
 

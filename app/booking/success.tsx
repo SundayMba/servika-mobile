@@ -195,7 +195,7 @@ export default function BookingSuccess() {
               ? 'Servika is offering your job to a checked artisan nearby right now. You will be told the moment one accepts.'
               : isFixed
                 ? `${params.artisanName || 'The artisan'} will confirm your booking${amount != null ? `, then you pay ${formatNaira(amount)}${feeNote}` : ''}, held securely until the job is done.`
-                : `${params.artisanName || 'The artisan'} will review your request and send you a quote. You only pay after you accept it.`}
+                : `${params.artisanName || 'The artisan'} gets your request first. If they cannot take it, Servika offers it to another checked artisan. You only pay after you accept a price.`}
           </AppText>
         </View>
 

@@ -102,3 +102,18 @@ export interface FeaturedService {
   includes?: string[] | null;
   description?: string | null;
 }
+
+/** What a booking code reveals (GET /artisans/by-code/{code}): enough to book, nothing to browse. */
+export interface ArtisanByCode {
+  id: string;
+  firstName: string;
+  fullName: string;
+  specialty: string;
+  photoUrl: string | null;
+  location: string;
+  isAvailable: boolean;
+  isAway: boolean;
+  completedJobs: number;
+  categorySlugs: string[];
+  bookingCode: string;
+}

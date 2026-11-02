@@ -65,6 +65,10 @@ export interface CreateBookingRequest {
    * listed price (server reads the price; never trusted from the client).
    * Requires `artisanId`. */
   artisanServiceId?: string | null;
+  /** An artisan's personal booking code or link; the server resolves the artisan from it. */
+  bookingCode?: string | null;
+  /** Rebooking an artisan who already did a job for you (verified server-side). */
+  rebook?: boolean;
 }
 
 /** A row in the customer's "My Bookings" history (GET /api/v1/bookings). */
@@ -88,6 +92,10 @@ export interface BookingSummary {
   mediaUrls: string[];
   /** API path of the customer's short job video, or null. */
   videoUrl: string | null;
+  /** The assigned artisan profile id (for Book again), or null. */
+  artisanId?: string | null;
+  /** Rotation | Direct | Code | Rebook. */
+  source?: string;
 }
 
 /** The full booking record (GET /api/v1/bookings/{id} and the create response). */
@@ -177,4 +185,19 @@ export interface Bid {
   createdAtUtc: string;
   /** Km from the job to the artisan's base, when both are known. */
   distanceKm: number | null;
+}
+
+/** An artisan you have completed jobs with (GET /bookings/past-artisans). */
+export interface PastArtisan {
+  artisanId: string;
+  fullName: string;
+  specialty: string;
+  imageKey: string;
+  photoUrl: string | null;
+  categorySlugs: string[];
+  jobsWithYou: number;
+  lastBookedAtUtc: string;
+  isAvailable: boolean;
+  isAway: boolean;
+  canBook: boolean;
 }

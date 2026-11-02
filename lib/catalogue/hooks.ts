@@ -6,6 +6,7 @@ import {
   getFeaturedServices,
   getNearbyServices,
   getService,
+  getArtisanByCode,
 } from '@/lib/api/catalogue';
 import { useSelectedCoords } from '@/lib/location/areaStore';
 import type { LatLng } from '@/lib/tracking/geo';
@@ -72,6 +73,17 @@ export function useCategoryArtisans(categorySlug: string | undefined) {
     enabled: !!categorySlug,
     staleTime: 60_000,
     refetchInterval: 60_000,
+  });
+}
+
+/** An artisan by their booking code; a 404 is "no such code" (retry off). */
+export function useArtisanByCode(code: string | undefined) {
+  return useQuery({
+    queryKey: ['artisan-by-code', code],
+    queryFn: () => getArtisanByCode(code as string),
+    enabled: !!code && code.replace(/[^a-z0-9]/gi, '').length >= 3,
+    retry: false,
+    staleTime: 60_000,
   });
 }
 
