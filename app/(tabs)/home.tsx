@@ -401,7 +401,7 @@ const styles = StyleSheet.create({
   // Takes the row's width so Android does not clip the last glyph of a shrink-wrapped Text.
   sectionTitle: { flexGrow: 1, flexShrink: 1, flexBasis: 0, letterSpacing: -0.4, color: colors.ink },
   sectionAction: { fontSize: 13, color: colors.accentDeep },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: TILE_GAP, paddingHorizontal: GUTTER },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', columnGap: TILE_GAP, rowGap: 20, paddingHorizontal: GUTTER },
   note: { fontSize: 12.5, lineHeight: 18, color: colors.inkSubtle },
 
   areaCard: { borderRadius: 24, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.hairline, padding: 18, gap: 8 },
