@@ -262,7 +262,7 @@ export default function Bookings() {
 const Separator = () => <View style={styles.separator} />;
 
 const styles = StyleSheet.create({
-  codeRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 12, paddingHorizontal: 14, marginBottom: 12, borderRadius: 14, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.hairline },
+  codeRow: { marginTop: 14, flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 12, paddingHorizontal: 14, marginBottom: 12, borderRadius: 14, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.hairline },
   codeText: { flex: 1, fontSize: 13.5, color: colors.textPrimary },
   root: {
     flex: 1,
