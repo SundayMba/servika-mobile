@@ -40,6 +40,8 @@ export interface FeeSchedule {
   maxCounterRounds?: number;
   /** Whether a customer may choose cash after service. Off = every job is paid in the app. */
   allowCashPayments?: boolean;
+  /** Minutes an artisan has to accept a job Servika offers them. */
+  offerWindowMinutes?: number;
 }
 
 /** GET /fees/quote?amount=: the exact fees for an amount, computed server-side. */

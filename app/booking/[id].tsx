@@ -31,6 +31,7 @@ import {
 } from '@/lib/booking/display';
 import { FieldError } from '@/components/FieldError';
 import { BottomSheet } from '@/components/BottomSheet';
+import { FindingArtisanCard, WHOS_COMING_STATUSES, WhosComingCard } from '@/components/booking/WhosComingCard';
 import {
   useAcceptBid,
   useBooking,
@@ -248,9 +249,8 @@ export default function BookingDetailScreen() {
     booking.paymentState !== 'Paid' &&
     booking.initialQuoteAmountNaira == null &&
     ['Pending', 'Accepted', 'OnMyWay', 'Arrived'].includes(booking.status);
-  const acceptingBids =
-    (booking?.status === 'Open' && booking.assessmentMode === 'RemoteQuote') ||
-    isDirectAwaitingQuote;
+  // Servika assigns every open request, so quotes only ever come from the assigned artisan.
+  const acceptingBids = isDirectAwaitingQuote;
   const { data: allBids } = useBookingBids(id, { enabled: !!acceptingBids });
   const [offerSort, setOfferSort] = useState<OfferSort>('best');
   const activeBids = allBids?.filter((b) => b.status === 'Active');
@@ -491,6 +491,11 @@ export default function BookingDetailScreen() {
             <AppText className="mt-1 text-[13px] text-gray-500">
               with {booking.artisanName}
             </AppText>
+          ) : null}
+
+          {booking.status === 'Open' ? <FindingArtisanCard booking={booking} /> : null}
+          {booking.artisanId && WHOS_COMING_STATUSES.includes(booking.status) ? (
+            <WhosComingCard artisanId={booking.artisanId} />
           ) : null}
 
           {acceptingBids ? (

@@ -132,6 +132,10 @@ export interface BookingDetail {
   workStartedAtUtc: string | null;
   /** When an AwaitingConfirmation job confirms itself; null/missing = unknown. */
   autoConfirmAtUtc?: string | null;
+  /** How many artisans Servika has offered this job to (Open requests). */
+  offerRound?: number;
+  /** Set while rotation has nobody left to ask; Servika keeps retrying. */
+  offersExhaustedAtUtc?: string | null;
   assessmentMode: 'Inspection' | 'RemoteQuote';
   mediaUrls: string[];
   videoUrl: string | null;

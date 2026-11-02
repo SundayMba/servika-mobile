@@ -81,10 +81,12 @@ export default function BookingPhotos() {
 
   const [mediaErr, setMediaErr] = useState<string | undefined>();
   const [video, setVideo] = useState<{ uri: string } | null>(null);
-  const [assessment, setAssessment] = useState<AssessmentChoice>('Inspection');
+  // Servika assigns every request and nobody bids, so the only mode is the artisan seeing the job.
+  const assessment: AssessmentChoice = 'Inspection';
   const [working, setWorking] = useState(false);
 
-  const bidding = isOpen && assessment === 'RemoteQuote';
+  // No open bidding any more: Servika offers the request to one artisan at a time.
+  const bidding = false;
 
   const pickPhotos = async () => {
     const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -186,62 +188,6 @@ export default function BookingPhotos() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ padding: 20, paddingBottom: 24 }}
       >
-        {/* Pricing mode — open requests only */}
-        {isOpen ? (
-          <View className="mb-5">
-            <AppText weight="semibold" className="mb-2.5 text-[15px] text-gray-900">
-              How should pricing work?
-            </AppText>
-            {(
-              [
-                {
-                  key: 'Inspection' as const,
-                  icon: 'walk-outline' as const,
-                  title: 'Artisan inspects first',
-                  sub: 'An artisan comes over, checks the job and discusses the price with you.',
-                },
-                {
-                  key: 'RemoteQuote' as const,
-                  icon: 'pricetags-outline' as const,
-                  title: 'Get price offers now',
-                  sub: 'Artisans price the job from your photos/video and send offers. You pick one.',
-                },
-              ]
-            ).map((opt) => {
-              const on = assessment === opt.key;
-              return (
-                <Pressable
-                  key={opt.key}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: on }}
-                  onPress={() => setAssessment(opt.key)}
-                  className={`mb-2.5 flex-row items-center gap-3 rounded-2xl border-2 bg-white p-4 ${on ? 'border-primary' : 'border-gray-100'}`}
-                >
-                  <View
-                    className={`h-11 w-11 items-center justify-center rounded-xl ${on ? 'bg-primary' : 'bg-background'}`}
-                  >
-                    <Ionicons
-                      name={opt.icon}
-                      size={20}
-                      color={on ? colors.white : colors.textMuted}
-                    />
-                  </View>
-                  <View className="flex-1">
-                    <AppText weight="semibold" className="text-[14px] text-gray-900">{opt.title}</AppText>
-                    <AppText className="mt-0.5 text-[12px] leading-4 text-gray-500">{opt.sub}</AppText>
-                  </View>
-                  <View
-                    className={
-                      on
-                        ? 'h-5 w-5 items-center justify-center rounded-full border-[6px] border-primary'
-                        : 'h-5 w-5 rounded-full border-2 border-gray-300'
-                    }
-                  />
-                </Pressable>
-              );
-            })}
-          </View>
-        ) : null}
 
         {/* Upload dropzone */}
         <Pressable
