@@ -129,8 +129,6 @@ export default function ServiceReview() {
             <ArtisanRow
               name={name}
               specialty={params.serviceName ? `${params.serviceName} • ${specialty}` : specialty}
-              rating={artisan?.rating}
-              reviewCount={artisan?.reviewCount}
               completedJobs={artisan?.completedJobs}
               imageKey={imageKey}
               photoUrl={artisan?.photoUrl}

@@ -18,24 +18,6 @@ export async function getCategories(): Promise<Category[]> {
   return data;
 }
 
-/**
- * List artisans, optionally filtered to a category. When the customer's
- * coordinates are passed, the server returns real distances and sorts by
- * proximity (available artisans first).
- */
-export async function getArtisans(
-  categorySlug?: string,
-  coords?: LatLng | null,
-): Promise<ArtisanSummary[]> {
-  const { data } = await apiClient.get<ArtisanSummary[]>('/api/v1/artisans', {
-    params: {
-      ...(categorySlug ? { category: categorySlug } : {}),
-      ...(coords ? { lat: coords.latitude, lng: coords.longitude } : {}),
-    },
-  });
-  return data;
-}
-
 /** Resolve an artisan's personal booking code (404 = no such code). */
 export async function getArtisanByCode(code: string): Promise<ArtisanByCode> {
   const clean = code.trim().split('/').pop()?.replace(/[^a-z0-9]/gi, '').toUpperCase() ?? '';
@@ -50,29 +32,3 @@ export async function getArtisan(id: string, coords?: LatLng | null): Promise<Ar
   return data;
 }
 
-/** Fixed-price services across verified artisans, for the Home rail. */
-export async function getFeaturedServices(coords?: {
-  latitude: number;
-  longitude: number;
-}): Promise<FeaturedService[]> {
-  const { data } = await apiClient.get<FeaturedService[]>('/api/v1/services/featured', {
-    params: coords ? { lat: coords.latitude, lng: coords.longitude } : undefined,
-  });
-  return data;
-}
-
-/** Every bookable fixed-price service, same ranking as the rail but uncapped. */
-export async function getNearbyServices(coords?: LatLng): Promise<FeaturedService[]> {
-  const { data } = await apiClient.get<FeaturedService[]>('/api/v1/services/nearby', {
-    params: coords ? { lat: coords.latitude, lng: coords.longitude } : undefined,
-  });
-  return data;
-}
-
-/** One fixed-price service with its provider summary (404 → the service profile's not-found state). */
-export async function getService(id: string, coords?: LatLng): Promise<FeaturedService> {
-  const { data } = await apiClient.get<FeaturedService>(`/api/v1/services/${id}`, {
-    params: coords ? { lat: coords.latitude, lng: coords.longitude } : undefined,
-  });
-  return data;
-}

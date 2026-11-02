@@ -145,8 +145,6 @@ export function StatusTimeline({
 export function ArtisanRow({
   name,
   specialty,
-  rating,
-  reviewCount,
   completedJobs,
   imageKey,
   photoUrl,
@@ -155,25 +153,19 @@ export function ArtisanRow({
   name: string;
   specialty: string;
   /** Undefined while the artisan is loading. */
-  rating?: number;
-  reviewCount?: number;
   completedJobs?: number;
   imageKey: string;
   photoUrl?: string | null;
   right?: React.ReactNode;
 }) {
   const avatar = artisanPhotoSource(photoUrl, imageKey);
+  // Ratings are collected, not shown (Business Model v1.4): Servika history instead.
   const meta =
-    rating === undefined
+    completedJobs === undefined
       ? null
-      : [
-          reviewCount ? rating.toFixed(1) : 'New',
-          completedJobs && completedJobs > 0
-            ? `${completedJobs} job${completedJobs === 1 ? '' : 's'} done`
-            : null,
-        ]
-          .filter(Boolean)
-          .join(' · ');
+      : completedJobs > 0
+        ? `ID checked · ${completedJobs} job${completedJobs === 1 ? '' : 's'} done on Servika`
+        : 'ID checked · new on Servika';
   return (
     <View className="flex-row items-center">
       {avatar ? (
@@ -192,7 +184,7 @@ export function ArtisanRow({
         <AppText className="text-[12px] text-primary">{specialty}</AppText>
         {meta ? (
           <View className="mt-0.5 flex-row items-center gap-1">
-            <Ionicons name="star" size={12} color={colors.primary} />
+            <Ionicons name="shield-checkmark" size={12} color={colors.onlineInk} />
             <AppText className="text-[12px] text-gray-500">{meta}</AppText>
           </View>
         ) : null}

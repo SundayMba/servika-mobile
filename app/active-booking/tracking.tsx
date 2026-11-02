@@ -230,8 +230,6 @@ export default function LiveTracking() {
         <ArtisanRow
           name={name}
           specialty={specialty}
-          rating={artisan?.rating}
-          reviewCount={artisan?.reviewCount}
           completedJobs={artisan?.completedJobs}
           imageKey={imageKey}
           photoUrl={artisan?.photoUrl}
@@ -266,8 +264,6 @@ export default function LiveTracking() {
           <ArtisanRow
             name={name}
             specialty={specialty}
-            rating={artisan?.rating}
-            reviewCount={artisan?.reviewCount}
             completedJobs={artisan?.completedJobs}
             imageKey={imageKey}
             photoUrl={artisan?.photoUrl}

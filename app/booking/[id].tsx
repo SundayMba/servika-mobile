@@ -136,24 +136,21 @@ function Row({ label, value }: { label: string; value: string }) {
 // "Best match" mirrors the catalogue's RankScore (rating + certificate bonus),
 // tie-broken by price then proximity — so a certified 4.8★ artisan outranks an
 // uncertified 4.9★ one, and among equals the cheaper/closer offer wins.
-type OfferSort = 'best' | 'price' | 'rating' | 'nearest';
+type OfferSort = 'best' | 'price' | 'nearest';
 
 const OFFER_SORTS: { key: OfferSort; label: string }[] = [
   { key: 'best', label: 'Best match' },
   { key: 'price', label: 'Lowest price' },
-  { key: 'rating', label: 'Top rated' },
   { key: 'nearest', label: 'Nearest' },
 ];
 
 function sortOffers(bids: Bid[], sort: OfferSort): Bid[] {
-  const score = (b: Bid) => b.rating + (b.hasCertificate ? 0.5 : 0);
+  const score = (b: Bid) => (b.hasCertificate ? 0.5 : 0);
   const far = Number.POSITIVE_INFINITY;
   return [...bids].sort((a, b) => {
     switch (sort) {
       case 'price':
         return a.amountNaira - b.amountNaira || score(b) - score(a);
-      case 'rating':
-        return b.rating - a.rating || a.amountNaira - b.amountNaira;
       case 'nearest':
         return (a.distanceKm ?? far) - (b.distanceKm ?? far) || a.amountNaira - b.amountNaira;
       default:
@@ -260,10 +257,7 @@ export default function BookingDetailScreen() {
     activeBids && activeBids.length > 1
       ? [...activeBids].sort((a, b) => a.amountNaira - b.amountNaira)[0].id
       : null;
-  const topRatedId =
-    activeBids && activeBids.length > 1
-      ? [...activeBids].sort((a, b) => b.rating - a.rating)[0].id
-      : null;
+  const topRatedId: string | null = null;
   const acceptBidMutation = useAcceptBid();
   const choosePayment = useChoosePaymentMethod();
   const decideAdvance = useDecideMaterialsAdvance();
@@ -622,9 +616,9 @@ export default function BookingDetailScreen() {
                           ) : null}
                         </View>
                         <View className="mt-0.5 flex-row items-center gap-1">
-                          <Ionicons name="star" size={12} color="#FBBF24" />
+                          <Ionicons name="shield-checkmark" size={12} color={colors.onlineInk} />
                           <AppText className="text-[12px] text-gray-500">
-                            {bid.reviewCount ? `${bid.rating.toFixed(1)} (${bid.reviewCount} reviews)` : 'New'}
+                            ID checked
                             {distanceLabel(bid.distanceKm) ? ` · ${distanceLabel(bid.distanceKm)} away` : ''}
                           </AppText>
                         </View>

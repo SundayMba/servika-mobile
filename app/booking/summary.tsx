@@ -238,9 +238,9 @@ export default function BookingSummary() {
                 {artisan.fullName}
               </AppText>
               <View className="flex-row items-center gap-1">
-                <Ionicons name="star" size={13} color={colors.primary} />
+                <Ionicons name="shield-checkmark" size={13} color={colors.onlineInk} />
                 <AppText className="text-[12px] text-gray-600">
-                  {artisan.reviewCount ? `${artisan.rating.toFixed(1)} (${artisan.reviewCount} reviews)` : 'New on Servika'}
+                  {(artisan.completedJobs ?? 0) > 0 ? `ID checked · ${artisan.completedJobs} jobs on Servika` : 'ID checked · new on Servika'}
                 </AppText>
               </View>
             </View>
