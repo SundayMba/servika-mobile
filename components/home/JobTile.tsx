@@ -6,30 +6,34 @@ import { Pressable, StyleSheet, View, type ImageSourcePropType } from 'react-nat
 import { AppText } from '@/components/ui/AppText';
 import { colors } from '@/constants/colors';
 
+/** Space between the card edge and the artwork wash. */
+const INSET = 6;
+
 /**
- * A job tile on Home, in the original Popular Services style: the artwork on a white rounded
- * square with a hairline, and the name underneath. Labels may wrap to two lines so
- * "Plumbing & Borehole" is never cut.
+ * A job tile on Home: a white card whose artwork fills its width (a soft wash of the trade's
+ * tint behind it, small padding all round) and a two-line label so "Plumbing & Borehole" is
+ * never cut. Three to a row.
  */
 function JobTileBase({
   label,
   image,
+  tint,
   icon,
   width,
   onPress,
 }: {
   label: string;
   image?: ImageSourcePropType;
+  /** Category tint ("#3B82F6"); the art sits on a 12% wash of it. */
+  tint?: string;
   /** Used instead of artwork (the "Something else" tile). */
   icon?: keyof typeof Ionicons.glyphMap;
-  /** Column width; the square scales with it. */
   width: number;
-  /** Kept for callers; the original tiles are plain white. */
-  tint?: string;
   onPress?: () => void;
 }) {
   const [pressed, setPressed] = useState(false);
-  const pad = Math.min(84, Math.round(width * 0.78));
+  const wash = width - INSET * 2 - 2; // minus the 1px border each side
+  const art = Math.round(wash * 0.86);
   return (
     <Pressable
       accessibilityRole="button"
@@ -37,16 +41,21 @@ function JobTileBase({
       onPress={onPress}
       onPressIn={() => setPressed(true)}
       onPressOut={() => setPressed(false)}
-      style={[styles.root, { width }]}
+      style={[styles.card, { width }, pressed && styles.pressed]}
     >
-      <View style={[styles.pad, { width: pad, height: pad, borderRadius: Math.round(pad * 0.3) }, pressed && styles.pressed]}>
+      <View
+        style={[
+          styles.wash,
+          { width: wash, height: wash, backgroundColor: tint ? `${tint}1F` : colors.sand },
+        ]}
+      >
         {icon ? (
-          <Ionicons name={icon} size={Math.round(pad * 0.36)} color={colors.inkMuted} />
+          <Ionicons name={icon} size={Math.round(wash * 0.36)} color={colors.ink} />
         ) : (
-          <Image source={image} contentFit="contain" style={{ width: Math.round(pad * 0.66), height: Math.round(pad * 0.66) }} transition={0} />
+          <Image source={image} contentFit="contain" style={{ width: art, height: art }} transition={0} />
         )}
       </View>
-      <AppText weight="medium" numberOfLines={2} style={styles.label}>
+      <AppText weight="semibold" numberOfLines={2} style={styles.label}>
         {label}
       </AppText>
     </Pressable>
@@ -56,15 +65,19 @@ function JobTileBase({
 export const JobTile = memo(JobTileBase);
 
 const styles = StyleSheet.create({
-  root: { alignItems: 'center', gap: 10 },
-  pad: {
+  card: {
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 8,
+    paddingTop: INSET,
+    paddingBottom: 10,
+    paddingHorizontal: INSET,
+    borderRadius: 22,
     backgroundColor: colors.white,
     borderWidth: 1,
     borderColor: colors.hairline,
   },
-  pressed: { transform: [{ scale: 0.96 }], backgroundColor: '#FBFAF8' },
+  pressed: { transform: [{ scale: 0.97 }], backgroundColor: '#FBFAF8' },
+  wash: { borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
   // Stretched so the measured box matches what paints (Android clips shrink-wrapped Text).
-  label: { alignSelf: 'stretch', fontSize: 13, lineHeight: 17, letterSpacing: -0.13, textAlign: 'center', color: colors.inkMuted },
+  label: { alignSelf: 'stretch', minHeight: 32, fontSize: 12.5, lineHeight: 16, letterSpacing: -0.12, textAlign: 'center', color: colors.ink },
 });
