@@ -18,7 +18,9 @@ import type { CreateBookingRequest, Urgency } from '@/lib/booking/types';
 import { artisanPhotoSource, formatNaira } from '@/lib/catalogue/assets';
 import { useFeeSchedule } from '@/lib/payments/fees';
 import { useArtisan } from '@/lib/catalogue/hooks';
+import { startBookingPayment } from '@/lib/payments/checkout';
 import { usePhoneGate } from '@/lib/phone/PhoneGate';
+import { appAlert } from '@/components/ui/AppAlert';
 
 function Section({
   title,
@@ -68,6 +70,8 @@ export default function BookingSummary() {
     photos?: string;
     bookingCode?: string;
     rebook?: string;
+    /** A job from Servika's price book: booked at Servika's price and paid here, upfront. */
+    priceBookItemId?: string;
   }>();
 
   // Open request: no artisan chosen — any matching artisan can claim/bid.
@@ -77,6 +81,8 @@ export default function BookingSummary() {
   const isOpen = params.open === '1';
   const fixedPrice = params.fixedPrice ? Number(params.fixedPrice) : null;
   const isFixed = !!params.artisanServiceId && fixedPrice != null;
+  // A Servika price-book job is paid now; the job is offered to an artisan once the money lands.
+  const isPriceBook = !!params.priceBookItemId && fixedPrice != null;
 
   const { data: artisan, isLoading: artisanLoading } = useArtisan(
     isOpen ? undefined : params.artisanId,
@@ -137,6 +143,7 @@ export default function BookingSummary() {
         // A personal booking code or a Book-again request; the server records the source.
         bookingCode: params.bookingCode || null,
         rebook: params.rebook === '1',
+        priceBookItemId: params.priceBookItemId ?? null,
         // Job media + pricing mode from the photos step (module store — the
         // base64 blobs are too big for route params).
         assessmentMode: bookingMedia.get().assessment,
@@ -145,6 +152,43 @@ export default function BookingSummary() {
       };
       const booking = await createBooking(body);
       bookingMedia.reset();
+
+      if (isPriceBook) {
+        // Leave the form steps behind: the booking is the place to come back to whatever happens at
+        // the gateway (paid, cancelled, or still confirming).
+        router.dismissAll();
+        router.push({ pathname: '/booking/[id]', params: { id: booking.id } });
+        let started: Awaited<ReturnType<typeof startBookingPayment>>;
+        try {
+          started = await startBookingPayment(booking.id);
+        } catch (payErr) {
+          // The booking exists and waits on its own screen with a Pay button.
+          appAlert('Payment did not open', authErrorMessage(payErr, 'Your booking is saved. Tap Pay on it to try again.'));
+          return;
+        }
+        const { init, hosted } = started;
+        if (hosted) {
+          router.push({
+            pathname: '/payment/checkout',
+            params: {
+              url: init.authorizationUrl as string,
+              reference: init.reference,
+              bookingId: booking.id,
+              amount: String(init.amountNaira),
+              fee: String(init.serviceFeeNaira ?? 0),
+            },
+          });
+        } else {
+          appAlert(
+            'Payment started',
+            __DEV__
+              ? 'This test build has no gateway page. The payment settles when the test webhook fires.'
+              : 'We will update your booking once the payment is confirmed.',
+          );
+        }
+        return;
+      }
+
       router.replace({
         pathname: '/booking/success',
         params: {
@@ -162,7 +206,7 @@ export default function BookingSummary() {
     } catch (err) {
       // Server may require a verified phone first — prompt, then retry the post.
       if (phoneGate.handle(err, handleProceed)) return;
-      setErrorMsg(authErrorMessage(err, 'Could not post your request.'));
+      setErrorMsg(authErrorMessage(err, isPriceBook ? 'Could not book this job.' : 'Could not post your request.'));
     } finally {
       setSubmitting(false);
     }
@@ -202,8 +246,20 @@ export default function BookingSummary() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 24 }}
       >
-        {/* Open request banner (no artisan chosen) */}
-        {isOpen ? (
+        {/* A Servika job: one price, paid now. */}
+        {isPriceBook ? (
+          <View className="flex-row items-center rounded-2xl border border-primary/20 bg-primary/5 p-4">
+            <View className="h-11 w-11 items-center justify-center rounded-full bg-primary/10">
+              <Ionicons name="shield-checkmark-outline" size={22} color={colors.primary} />
+            </View>
+            <View className="ml-3 flex-1">
+              <AppText weight="semibold" className="text-[15px] text-gray-900">Servika sends the artisan</AppText>
+              <AppText className="text-[12px] leading-4 text-gray-500">
+                Once you pay, Servika offers the job to a checked artisan near you. You see who is coming before they arrive.
+              </AppText>
+            </View>
+          </View>
+        ) : isOpen ? (
           <View className="flex-row items-center rounded-2xl border border-primary/20 bg-primary/5 p-4">
             <View className="h-11 w-11 items-center justify-center rounded-full bg-primary/10">
               <Ionicons name="megaphone-outline" size={22} color={colors.primary} />
@@ -293,7 +349,16 @@ export default function BookingSummary() {
 
         {/* Pricing — a fixed service shows its price; quote-based shows free */}
         <Section title="Pricing">
-          {isFixed ? (
+          {isPriceBook ? (
+            <>
+              <Row label="Servika price" value={formatNaira(fixedPrice!)} />
+              <AppText className="mt-1 text-[12px] leading-4 text-gray-500">
+                You pay {formatNaira(fixedPrice!)}
+                {usersBearFees ? ' plus a small payment fee' : ''} now. Servika holds it and pays the artisan only
+                after you confirm the job is done. Cancel before they arrive and you get it all back.
+              </AppText>
+            </>
+          ) : isFixed ? (
             <>
               <Row label="Fixed price" value={formatNaira(fixedPrice!)} />
               <AppText className="mt-1 text-[12px] leading-4 text-gray-500">
@@ -331,7 +396,7 @@ export default function BookingSummary() {
         {/* Proceed */}
         <View className="mt-6">
           <Button
-            label={isOpen ? 'Post Request' : 'Send Request'}
+            label={isPriceBook ? `Pay ${formatNaira(fixedPrice!)}` : isOpen ? 'Post Request' : 'Send Request'}
             loading={submitting || (!isOpen && artisanLoading)}
             disabled={!canProceed}
             onPress={handleProceed}

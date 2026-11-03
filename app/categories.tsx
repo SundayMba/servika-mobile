@@ -73,7 +73,7 @@ export default function Categories() {
   const router = useRouter();
 
   const [interest, setInterest] = useState<{ slug: string; name: string } | null>(null);
-  const { guard, promptVisible, hidePrompt, onSignedIn } = useAuthGate();
+  const { promptVisible, hidePrompt, onSignedIn } = useAuthGate();
 
   const { data: categories, isLoading, isError } = useCategories();
 
@@ -116,11 +116,7 @@ export default function Categories() {
                 <CategoryCard
                   key={category.id}
                   category={category}
-                  onPress={() =>
-                    guard(() =>
-                      router.push({ pathname: '/booking/request', params: { categorySlug: category.slug, open: '1', service: category.name } }),
-                    )
-                  }
+                  onPress={() => router.push({ pathname: '/category/[slug]', params: { slug: category.slug, name: category.name } })}
                 />
               ))}
             </View>

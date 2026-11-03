@@ -22,6 +22,7 @@ import { HeroCarousel } from '@/components/home/HeroCarousel';
 import { InterestSheet } from '@/components/home/InterestSheet';
 import { JobTile } from '@/components/home/JobTile';
 import { LocationSheet } from '@/components/home/LocationSheet';
+import { FixedPricesRail, FixedPricesRailSkeleton } from '@/components/pricebook/FixedPricesRail';
 import { ActiveBookingSkeleton, ServiceGridSkeleton } from '@/components/home/Skeletons';
 import { AppText } from '@/components/ui/AppText';
 import { colors } from '@/constants/colors';
@@ -42,6 +43,7 @@ import {
   useSelectedCoords,
 } from '@/lib/location/areaStore';
 import { useUnreadCount } from '@/lib/notifications/hooks';
+import { usePopularPriceBook } from '@/lib/pricebook/hooks';
 
 /**
  * Home, built around the job (Business Model v1.4, section 15): the banner, then "what needs
@@ -62,10 +64,13 @@ const TRUST_POINTS: { icon: ComponentProps<typeof Ionicons>['name']; color: stri
   { icon: 'lock-closed-outline', color: colors.onlineInk, tint: '#E6F5EE', label: 'Paid in the app', sub: 'held until done' },
 ];
 
-function SectionHead({ title, action, onAction, scale }: { title: string; action?: string; onAction?: () => void; scale: number }) {
+function SectionHead({ title, subtitle, action, onAction, scale }: { title: string; subtitle?: string; action?: string; onAction?: () => void; scale: number }) {
   return (
     <View style={styles.sectionHead}>
-      <AppText weight="semibold" style={[styles.sectionTitle, { fontSize: Math.round(19 * scale) }]}>{title}</AppText>
+      <View style={styles.sectionTitleBlock}>
+        <AppText weight="semibold" style={[styles.sectionTitle, { fontSize: Math.round(19 * scale) }]}>{title}</AppText>
+        {subtitle ? <AppText style={styles.sectionSub}>{subtitle}</AppText> : null}
+      </View>
       {action ? (
         <Pressable accessibilityRole="button" hitSlop={8} onPress={onAction}>
           <AppText weight="medium" style={styles.sectionAction}>{action}</AppText>
@@ -96,6 +101,7 @@ export default function Home() {
   const firstName = user?.fullName.trim().split(/\s+/)[0] || 'there';
 
   const categoriesQuery = useCategories();
+  const priceBookQuery = usePopularPriceBook();
   const availabilityQuery = useAvailability(areaCoords);
   const bookingsQuery = useBookings(undefined, { enabled: isAuthenticated });
   const unreadQuery = useUnreadCount({ enabled: isAuthenticated });
@@ -119,6 +125,7 @@ export default function Home() {
     try {
       await Promise.all([
         categoriesQuery.refetch(),
+        priceBookQuery.refetch(),
         availabilityQuery.refetch(),
         isAuthenticated ? bookingsQuery.refetch() : Promise.resolve(),
         isAuthenticated ? unreadQuery.refetch() : Promise.resolve(),
@@ -126,10 +133,10 @@ export default function Home() {
     } finally {
       setRefreshing(false);
     }
-  }, [categoriesQuery, availabilityQuery, bookingsQuery, unreadQuery, isAuthenticated]);
+  }, [categoriesQuery, priceBookQuery, availabilityQuery, bookingsQuery, unreadQuery, isAuthenticated]);
 
-  const startJob = (c: Category) =>
-    guard(() => router.push({ pathname: '/booking/request', params: { categorySlug: c.slug, open: '1', service: c.name } }));
+  // A trade opens its own screen: Servika's fixed prices first, then "not sure" and "something else".
+  const openTrade = (c: Category) => router.push({ pathname: '/category/[slug]', params: { slug: c.slug, name: c.name } });
 
   const tilesPending = refreshing || categoriesQuery.isLoading;
   const bookingsPending = refreshing || bookingsQuery.isLoading;
@@ -244,13 +251,29 @@ export default function Home() {
           ) : (
             <View style={styles.grid}>
               {tiles.map((c) => (
-                <JobTile key={c.id} label={c.name} image={categoryImage(c.slug)} tint={c.tint} width={tileWidth} onPress={() => startJob(c)} />
+                <JobTile key={c.id} label={c.name} image={categoryImage(c.slug)} tint={c.tint} width={tileWidth} onPress={() => openTrade(c)} />
               ))}
               <JobTile label="Something else" icon="grid-outline" width={tileWidth} onPress={() => router.push('/categories')} />
             </View>
           )}
           <AppText style={[styles.gutter, styles.note]}>Pick the job. Servika sends a checked artisan and the price is agreed before any work starts.</AppText>
         </View>
+
+        {/* ── Servika's fixed prices: the job, the price, booked in a tap ── */}
+        {priceBookQuery.isLoading || (priceBookQuery.data?.length ?? 0) > 0 ? (
+          <View style={{ gap: 14 }}>
+            <SectionHead title="Fixed prices" subtitle="Set by Servika. Paid in the app, held until it's done." scale={scale} />
+            {priceBookQuery.isLoading ? (
+              <FixedPricesRailSkeleton gutter={GUTTER} />
+            ) : (
+              <FixedPricesRail
+                items={priceBookQuery.data ?? []}
+                gutter={GUTTER}
+                onOpen={(item) => router.push({ pathname: '/job/[id]', params: { id: item.id } })}
+              />
+            )}
+          </View>
+        ) : null}
 
         {/* ── Book again ── */}
         {isAuthenticated ? (
@@ -399,7 +422,9 @@ const styles = StyleSheet.create({
 
   sectionHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: GUTTER },
   // Takes the row's width so Android does not clip the last glyph of a shrink-wrapped Text.
-  sectionTitle: { flexGrow: 1, flexShrink: 1, flexBasis: 0, letterSpacing: -0.4, color: colors.ink },
+  sectionTitleBlock: { flexGrow: 1, flexShrink: 1, flexBasis: 0, gap: 2 },
+  sectionTitle: { alignSelf: 'stretch', letterSpacing: -0.4, color: colors.ink },
+  sectionSub: { alignSelf: 'stretch', fontSize: 12.5, color: colors.inkSubtle },
   sectionAction: { fontSize: 13, color: colors.accentDeep },
   grid: { flexDirection: 'row', flexWrap: 'wrap', columnGap: TILE_GAP, rowGap: 20, paddingHorizontal: GUTTER },
   note: { fontSize: 12.5, lineHeight: 18, color: colors.inkSubtle },

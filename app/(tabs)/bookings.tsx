@@ -46,7 +46,7 @@ function BookingCard({
   booking: BookingSummary;
   onPress: () => void;
 }) {
-  const tone = statusTone(booking.status);
+  const tone = statusTone(booking.status, booking.awaitingUpfrontPayment);
   return (
     <Pressable
       accessibilityRole="button"

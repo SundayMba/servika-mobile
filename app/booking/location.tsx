@@ -55,6 +55,8 @@ export default function BookingLocation() {
     photos?: string;
   }>();
 
+  // Everything earlier steps chose (booking code, Book again, the price-book job, the mode) rides along.
+  const carried = useLocalSearchParams<Record<string, string>>();
   const [instructions, setInstructions] = useState('');
   const [addressText, setAddressText] = useState('');
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(
@@ -155,6 +157,7 @@ export default function BookingLocation() {
     router.push({
       pathname: '/booking/summary',
       params: {
+        ...carried,
         service,
         artisanId,
         categorySlug,

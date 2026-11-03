@@ -69,6 +69,8 @@ export interface CreateBookingRequest {
   bookingCode?: string | null;
   /** Rebooking an artisan who already did a job for you (verified server-side). */
   rebook?: boolean;
+  /** A job from Servika's price book: booked at Servika's price and paid upfront. */
+  priceBookItemId?: string | null;
 }
 
 /** A row in the customer's "My Bookings" history (GET /api/v1/bookings). */
@@ -96,6 +98,10 @@ export interface BookingSummary {
   artisanId?: string | null;
   /** Rotation | Direct | Code | Rebook. */
   source?: string;
+  /** The Servika price-book job this booking is for (paid upfront at Servika's price), if any. */
+  priceBookItemId?: string | null;
+  /** True while a price-book job waits for its upfront payment; no artisan is offered it yet. */
+  awaitingUpfrontPayment?: boolean;
 }
 
 /** The full booking record (GET /api/v1/bookings/{id} and the create response). */
@@ -149,6 +155,10 @@ export interface BookingDetail {
   videoUrl: string | null;
   /** Active bids while the request is open for offers; 0 otherwise. */
   bidCount: number;
+  /** The Servika price-book job this booking is for (paid upfront at Servika's price), if any. */
+  priceBookItemId?: string | null;
+  /** True while a price-book job waits for its upfront payment; no artisan is offered it yet. */
+  awaitingUpfrontPayment?: boolean;
 }
 
 /** An artisan's price offer on an open RemoteQuote request. */

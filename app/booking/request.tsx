@@ -17,6 +17,7 @@ import { BookingSteps } from '@/components/booking/BookingSteps';
 import { BottomSheet } from '@/components/BottomSheet';
 import { Button } from '@/components/ui/Button';
 import { colors } from '@/constants/colors';
+import { bookingMedia } from '@/lib/booking/mediaStore';
 import { formatNaira } from '@/lib/catalogue/assets';
 import { useArtisan, useCategories } from '@/lib/catalogue/hooks';
 import { formatDate } from '@/lib/booking/display';
@@ -114,7 +115,7 @@ function UrgencyOption({
 
 export default function BookingRequest() {
   const router = useRouter();
-  const { service, artisanId, categorySlug, open, artisanServiceId, fixedPrice } =
+  const { service, artisanId, categorySlug, open, artisanServiceId, fixedPrice, priceBookItemId, mode, bookingCode, rebook } =
     useLocalSearchParams<{
       service?: string;
       artisanId?: string;
@@ -122,7 +123,14 @@ export default function BookingRequest() {
       open?: string;
       artisanServiceId?: string;
       fixedPrice?: string;
+      /** A job from Servika's price book (Servika's price, paid upfront). */
+      priceBookItemId?: string;
+      /** From a category screen: "diagnosis" (not sure what's wrong) or "custom" (something else). */
+      mode?: string;
+      bookingCode?: string;
+      rebook?: string;
     }>();
+  const isPriceBookJob = !!priceBookItemId;
 
   const [description, setDescription] = useState('');
   // `date` holds an ISO datetime; the field shows it formatted.
@@ -136,7 +144,7 @@ export default function BookingRequest() {
   // A fixed-price booking is for ONE published service at ONE price — the
   // service field locks, and the category dropdown never opens (its options are
   // the artisan's quote-based services, not this listing).
-  const isFixedService = !!artisanServiceId;
+  const isFixedService = !!artisanServiceId || isPriceBookJob;
   const [serviceSheetOpen, setServiceSheetOpen] = useState(false);
   const [serviceChoice, setServiceChoice] = useState<{
     label: string;
@@ -177,7 +185,8 @@ export default function BookingRequest() {
   const serviceName = serviceChoice?.label ?? service ?? 'Service Request';
   // An open request re-files under the newly chosen category's slug.
   const effectiveCategorySlug = serviceChoice?.slug ?? categorySlug;
-  const canContinue = description.trim().length > 0 && !!date && !!time;
+  // A Servika job's scope already says what is wanted, so the customer's note is optional there.
+  const canContinue = (isPriceBookJob || description.trim().length > 0) && !!date && !!time;
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -216,8 +225,10 @@ export default function BookingRequest() {
   };
 
   const handleContinue = () => {
+    // A Servika job has a defined scope and a set price: no photos needed to price it.
+    if (isPriceBookJob) bookingMedia.reset();
     router.push({
-      pathname: '/booking/photos',
+      pathname: isPriceBookJob ? '/booking/location' : '/booking/photos',
       params: {
         service: serviceName,
         artisanId,
@@ -225,6 +236,10 @@ export default function BookingRequest() {
         open,
         artisanServiceId,
         fixedPrice,
+        priceBookItemId,
+        mode,
+        bookingCode,
+        rebook,
         description: description.trim(),
         date,
         time,
@@ -290,19 +305,26 @@ export default function BookingRequest() {
             <View className="mt-2 flex-row items-center gap-1.5">
               <Ionicons name="pricetag" size={13} color="#15803D" />
               <AppText weight="medium" className="text-[12px] text-green-700">
-                Fixed price · {formatNaira(Number(fixedPrice))}. Set by the artisan, no
-                quote needed
+                {isPriceBookJob
+                  ? `Servika price · ${formatNaira(Number(fixedPrice))}. Paid now, held until the job is done`
+                  : `Fixed price · ${formatNaira(Number(fixedPrice))}. Set by the artisan, no quote needed`}
               </AppText>
             </View>
           ) : null}
 
           {/* Describe the job */}
           <View className="mt-4">
-            <FieldLabel>Describe the job</FieldLabel>
+            <FieldLabel>{isPriceBookJob ? 'Anything the artisan should know? (optional)' : mode === 'diagnosis' ? 'What is happening?' : 'Describe the job'}</FieldLabel>
             <AppTextInput
               value={description}
               onChangeText={setDescription}
-              placeholder="Tell the artisan what you need done..."
+              placeholder={
+                isPriceBookJob
+                  ? 'e.g. The unit is in the bedroom, the gate code is 1234'
+                  : mode === 'diagnosis'
+                    ? 'e.g. The AC runs but blows warm air since Monday'
+                    : 'Tell the artisan what you need done...'
+              }
               placeholderTextColor={colors.textMuted}
               multiline
               textAlignVertical="top"

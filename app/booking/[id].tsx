@@ -50,8 +50,8 @@ import { useBookingDispute } from '@/lib/disputes/hooks';
 import type { Dispute } from '@/lib/disputes/types';
 import { timeAgo, useBookingReview } from '@/lib/reviews/hooks';
 
-function StatusChip({ status }: { status: BookingStatus }) {
-  const s = statusStyle(status);
+function StatusChip({ status, awaitingPayment }: { status: BookingStatus; awaitingPayment?: boolean }) {
+  const s = statusStyle(status, awaitingPayment);
   return (
     <View className={`self-start rounded-full px-3 py-1 ${s.bg}`}>
       <AppText weight="semibold" className={`text-[12px] ${s.text}`}>{s.label}</AppText>
@@ -479,7 +479,7 @@ export default function BookingDetailScreen() {
             <AppText weight="semibold" className="text-[20px] text-gray-900">
               {booking.serviceName}
             </AppText>
-            <StatusChip status={booking.status} />
+            <StatusChip status={booking.status} awaitingPayment={booking.awaitingUpfrontPayment} />
           </View>
           {booking.artisanName ? (
             <AppText className="mt-1 text-[13px] text-gray-500">
@@ -487,7 +487,24 @@ export default function BookingDetailScreen() {
             </AppText>
           ) : null}
 
-          {booking.status === 'Open' ? <FindingArtisanCard booking={booking} /> : null}
+          {booking.awaitingUpfrontPayment && (booking.status === 'Open' || booking.status === 'Pending') ? (
+            // A Servika price-book job waits for its money before anyone is sent.
+            <View className="mt-4 rounded-2xl border border-primary/20 bg-primary/5 p-4">
+              <View className="flex-row items-center gap-2">
+                <Ionicons name="lock-closed-outline" size={18} color={colors.primary} />
+                <AppText weight="semibold" className="flex-1 text-[15px] text-gray-900">
+                  {booking.paymentState === 'Pending' ? 'Confirming your payment' : 'Pay to confirm this job'}
+                </AppText>
+              </View>
+              <AppText className="mt-1 text-[12.5px] leading-[18px] text-gray-600">
+                {booking.paymentState === 'Pending'
+                  ? 'A bank transfer can take a few minutes. Servika sends a checked artisan the moment it lands.'
+                  : `Servika sends a checked artisan once ${formatNaira(booking.initialQuoteAmountNaira ?? 0)} is paid. Unpaid bookings close after two hours.`}
+              </AppText>
+            </View>
+          ) : booking.status === 'Open' ? (
+            <FindingArtisanCard booking={booking} />
+          ) : null}
           {booking.artisanId && WHOS_COMING_STATUSES.includes(booking.status) ? (
             <WhosComingCard artisanId={booking.artisanId} />
           ) : null}
@@ -861,9 +878,9 @@ export default function BookingDetailScreen() {
                 ) : null}
               </>
             ) : booking.initialQuoteAmountNaira != null &&
-              ['Accepted', 'OnMyWay', 'Arrived', 'InProgress', 'AwaitingConfirmation', 'Completed'].includes(
+              (['Accepted', 'OnMyWay', 'Arrived', 'InProgress', 'AwaitingConfirmation', 'Completed'].includes(
                 booking.status,
-              ) ? (
+              ) || (booking.awaitingUpfrontPayment && ['Open', 'Pending'].includes(booking.status))) ? (
               // Unpaid with an agreed price → pay into escrow (cash only while allowed).
               <>
                 <Pressable
