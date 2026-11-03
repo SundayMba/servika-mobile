@@ -72,7 +72,9 @@ function RepairRow({
  * until they approve. Declining everything after a diagnosis ends the visit there.
  */
 export function RepairsCard({ booking, onPay }: { booking: BookingDetail; onPay: () => void }) {
-  const relevant = !!booking.diagnosisFeeNaira || !!booking.priceBookItemId;
+  // A custom job shows its quote first (CustomQuoteCard); repairs only come after the quote is accepted.
+  const relevant =
+    (!!booking.diagnosisFeeNaira || !!booking.priceBookItemId) && !(booking.isCustomQuote && booking.agreedWorkmanshipNaira == null);
   const live = ['Arrived', 'InProgress', 'AwaitingConfirmation', 'Completed'].includes(booking.status);
   const { data, isLoading } = useBookingRepairs(booking.id, relevant && live);
   const decide = useDecideRepairs(booking.id);

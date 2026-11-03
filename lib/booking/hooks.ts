@@ -16,6 +16,7 @@ import {
   getPastArtisans,
   getBookingRepairs,
   decideRepairs,
+  declineCustomQuote,
 } from '@/lib/api/bookings';
 
 /**
@@ -200,6 +201,19 @@ export function useDecideRepairs(bookingId: string) {
       qc.setQueryData(['booking-repairs', bookingId], data);
       qc.invalidateQueries({ queryKey: ['booking', bookingId] });
       qc.invalidateQueries({ queryKey: ['bookings'] });
+    },
+  });
+}
+
+/** Decline a custom quote: the visit is the job. */
+export function useDeclineCustomQuote(bookingId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => declineCustomQuote(bookingId),
+    onSuccess: (booking) => {
+      qc.setQueryData(['booking', booking.id], booking);
+      qc.invalidateQueries({ queryKey: ['bookings'] });
+      qc.invalidateQueries({ queryKey: ['booking-bids', booking.id] });
     },
   });
 }

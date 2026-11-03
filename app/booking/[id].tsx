@@ -33,6 +33,7 @@ import { FieldError } from '@/components/FieldError';
 import { BottomSheet } from '@/components/BottomSheet';
 import { FindingArtisanCard, WHOS_COMING_STATUSES, WhosComingCard } from '@/components/booking/WhosComingCard';
 import { RepairsCard } from '@/components/booking/RepairsCard';
+import { CustomQuoteCard } from '@/components/booking/CustomQuoteCard';
 import {
   useAcceptBid,
   useBooking,
@@ -54,7 +55,7 @@ import { timeAgo, useBookingReview } from '@/lib/reviews/hooks';
 function StatusChip({ status, awaitingPayment }: { status: BookingStatus; awaitingPayment?: boolean }) {
   const s = statusStyle(status, awaitingPayment);
   return (
-    <View className={`self-start rounded-full px-3 py-1 ${s.bg}`}>
+    <View className={`mt-1 shrink-0 self-start rounded-full px-3 py-1 ${s.bg}`}>
       <AppText weight="semibold" className={`text-[12px] ${s.text}`}>{s.label}</AppText>
     </View>
   );
@@ -476,8 +477,8 @@ export default function BookingDetailScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 32 }}
         >
-          <View className="flex-row items-center justify-between">
-            <AppText weight="semibold" className="text-[20px] text-gray-900">
+          <View className="flex-row items-start justify-between gap-3">
+            <AppText weight="semibold" className="flex-1 text-[20px] text-gray-900">
               {booking.serviceName}
             </AppText>
             <StatusChip status={booking.status} awaitingPayment={booking.awaitingUpfrontPayment} />
@@ -509,6 +510,7 @@ export default function BookingDetailScreen() {
           {booking.artisanId && WHOS_COMING_STATUSES.includes(booking.status) ? (
             <WhosComingCard artisanId={booking.artisanId} />
           ) : null}
+          <CustomQuoteCard booking={booking} onPay={payNow} />
           <RepairsCard booking={booking} onPay={payNow} />
 
           {acceptingBids ? (
@@ -774,7 +776,13 @@ export default function BookingDetailScreen() {
               <>
                 {booking.diagnosisFeeNaira ? (
                   <>
-                    <Row label="Diagnosis visit" value={formatNaira(booking.diagnosisFeeNaira)} />
+                    <Row label={booking.isCustomQuote ? 'Visit' : 'Diagnosis visit'} value={formatNaira(booking.diagnosisFeeNaira)} />
+                    {booking.isCustomQuote && booking.agreedWorkmanshipNaira != null ? (
+                      <>
+                        <Row label="Accepted quote" value={formatNaira((booking.agreedWorkmanshipNaira ?? 0) + (booking.agreedMaterialsNaira ?? 0))} />
+                        <Row label="Job total, visit credited" value={formatNaira(booking.initialQuoteAmountNaira)} />
+                      </>
+                    ) : null}
                     {(booking.approvedRepairsNaira ?? 0) > 0 ? (
                       <>
                         <Row label="Approved repairs" value={formatNaira(booking.approvedRepairsNaira ?? 0)} />

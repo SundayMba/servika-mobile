@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { getCategoryPriceBook, getPopularPriceBook, getPriceBookItem } from '@/lib/api/priceBook';
+import { getCategoryCustomJobs, getCategoryPriceBook, getPopularPriceBook, getPriceBookItem } from '@/lib/api/priceBook';
 
 /** Prices change only when ops change them, so a few minutes of cache is plenty. */
 const STALE = 5 * 60_000;
@@ -13,6 +13,15 @@ export function useCategoryPriceBook(slug: string | undefined) {
   return useQuery({
     queryKey: ['price-book', 'category', slug],
     queryFn: () => getCategoryPriceBook(slug as string),
+    enabled: !!slug,
+    staleTime: STALE,
+  });
+}
+
+export function useCategoryCustomJobs(slug: string | undefined) {
+  return useQuery({
+    queryKey: ['price-book', 'custom', slug],
+    queryFn: () => getCategoryCustomJobs(slug as string),
     enabled: !!slug,
     staleTime: STALE,
   });

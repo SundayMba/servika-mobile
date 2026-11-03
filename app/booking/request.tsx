@@ -115,7 +115,7 @@ function UrgencyOption({
 
 export default function BookingRequest() {
   const router = useRouter();
-  const { service, artisanId, categorySlug, open, artisanServiceId, fixedPrice, priceBookItemId, mode, bookingCode, rebook } =
+  const { service, artisanId, categorySlug, open, artisanServiceId, fixedPrice, priceBookItemId, mode, customItemId, bookingCode, rebook } =
     useLocalSearchParams<{
       service?: string;
       artisanId?: string;
@@ -127,6 +127,8 @@ export default function BookingRequest() {
       priceBookItemId?: string;
       /** From a category screen: "diagnosis" (not sure what's wrong) or "custom" (something else). */
       mode?: string;
+      /** A listed kind of bigger work (its typical range is used to check the quote). */
+      customItemId?: string;
       bookingCode?: string;
       rebook?: string;
     }>();
@@ -238,6 +240,7 @@ export default function BookingRequest() {
         fixedPrice,
         priceBookItemId,
         mode,
+        customItemId,
         bookingCode,
         rebook,
         description: description.trim(),
@@ -323,7 +326,9 @@ export default function BookingRequest() {
                   ? 'e.g. The unit is in the bedroom, the gate code is 1234'
                   : mode === 'diagnosis'
                     ? 'e.g. The AC runs but blows warm air since Monday'
-                    : 'Tell the artisan what you need done...'
+                    : mode === 'custom'
+                      ? 'e.g. Fit a new 1.5HP split unit in the main bedroom, about 3 m from the outdoor spot'
+                      : 'Tell the artisan what you need done...'
               }
               placeholderTextColor={colors.textMuted}
               multiline

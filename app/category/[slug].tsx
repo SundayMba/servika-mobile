@@ -11,7 +11,7 @@ import { AppText } from '@/components/ui/AppText';
 import { colors } from '@/constants/colors';
 import { useAuthGate } from '@/lib/auth/useAuthGate';
 import { formatNaira } from '@/lib/catalogue/assets';
-import { durationLabel, useCategoryPriceBook } from '@/lib/pricebook/hooks';
+import { durationLabel, useCategoryCustomJobs, useCategoryPriceBook } from '@/lib/pricebook/hooks';
 import type { PriceBookItem } from '@/lib/pricebook/types';
 
 const GUTTER = 20;
@@ -53,14 +53,21 @@ export default function CategoryScreen() {
   const insets = useSafeAreaInsets();
   const { slug, name } = useLocalSearchParams<{ slug: string; name?: string }>();
   const { data, isLoading, isError, refetch, isRefetching } = useCategoryPriceBook(slug);
+  const customJobs = useCategoryCustomJobs(slug).data ?? [];
   const { guard, promptVisible, hidePrompt, onSignedIn } = useAuthGate();
 
   const title = data?.categoryName ?? name ?? 'Service';
-  const describe = (mode: 'diagnosis' | 'custom') =>
+  const describe = (mode: 'diagnosis' | 'custom', custom?: PriceBookItem) =>
     guard(() =>
       router.push({
         pathname: '/booking/request',
-        params: { categorySlug: slug, open: '1', service: title, mode },
+        params: {
+          categorySlug: slug,
+          open: '1',
+          service: custom?.name ?? title,
+          mode,
+          ...(custom ? { customItemId: custom.id } : {}),
+        },
       }),
     );
 
@@ -133,6 +140,40 @@ export default function CategoryScreen() {
                 </View>
                 <Ionicons name="chevron-forward" size={18} color={colors.inkFaint} />
               </Pressable>
+            </View>
+
+            {customJobs.length > 0 ? (
+              <View style={{ gap: 10 }}>
+                <AppText weight="semibold" style={[styles.gutter, styles.section]}>Bigger jobs</AppText>
+                <AppText style={[styles.gutter, styles.sectionNote]}>
+                  {data.diagnosisFeeNaira > 0 ? `A ${formatNaira(data.diagnosisFeeNaira)} visit, then a quote you accept or not. ` : ''}
+                  The range is what the work usually costs in labour; Servika checks quotes far above it.
+                </AppText>
+                <View style={[styles.gutter, styles.card]}>
+                  {customJobs.map((c, i) => (
+                    <Pressable
+                      key={c.id}
+                      accessibilityRole="button"
+                      onPress={() => describe('custom', c)}
+                      style={[styles.row, i > 0 && styles.rowDivider]}
+                    >
+                      <View style={styles.rowBody}>
+                        <AppText weight="semibold" style={styles.rowName}>{c.name}</AppText>
+                        {c.scope ? <AppText numberOfLines={2} style={styles.rowScope}>{c.scope}</AppText> : null}
+                      </View>
+                      <View style={styles.rowPrice}>
+                        <AppText weight="semibold" style={styles.range}>
+                          {formatNaira(c.rangeMinNaira ?? 0)}–{formatNaira(c.rangeMaxNaira ?? 0)}
+                        </AppText>
+                        <AppText style={styles.rowMeta}>labour</AppText>
+                      </View>
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
+            ) : null}
+
+            <View style={{ gap: 10 }}>
               <Pressable accessibilityRole="button" onPress={() => describe('custom')} style={[styles.gutter, styles.card, styles.option]}>
                 <View style={[styles.optionIcon, { backgroundColor: colors.sandSunk }]}>
                   <Ionicons name="create-outline" size={20} color={colors.ink} />
@@ -140,7 +181,7 @@ export default function CategoryScreen() {
                 <View style={styles.optionBody}>
                   <AppText weight="semibold" style={styles.optionTitle}>Something else? Describe it</AppText>
                   <AppText style={styles.optionSub}>
-                    Installations and bigger work. You get an itemised quote, checked against what similar jobs cost.
+                    Tell us in your own words. After a visit you get an itemised quote to accept or not.
                   </AppText>
                 </View>
                 <Ionicons name="chevron-forward" size={18} color={colors.inkFaint} />
@@ -183,6 +224,8 @@ const styles = StyleSheet.create({
   rowMeta: { fontSize: 11.5, color: colors.inkSubtle },
   rowPrice: { alignItems: 'flex-end', gap: 6 },
   price: { fontSize: 15, color: colors.ink },
+  range: { fontSize: 13, color: colors.ink },
+  sectionNote: { fontSize: 12.5, lineHeight: 17, color: colors.inkSubtle, marginTop: -4 },
 
   option: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14 },
   optionIcon: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },

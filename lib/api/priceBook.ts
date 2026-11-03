@@ -18,3 +18,9 @@ export async function getPriceBookItem(id: string): Promise<PriceBookItem> {
   const { data } = await apiClient.get<PriceBookItem>(`/api/v1/price-book/${id}`);
   return data;
 }
+
+/** Kinds of bigger work in a trade, each with the typical labour range a quote is checked against. */
+export async function getCategoryCustomJobs(slug: string): Promise<PriceBookItem[]> {
+  const { data } = await apiClient.get<PriceBookItem[]>('/api/v1/price-book', { params: { category: slug, kind: 'Custom' } });
+  return data;
+}

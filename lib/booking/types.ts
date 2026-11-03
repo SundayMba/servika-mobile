@@ -73,6 +73,9 @@ export interface CreateBookingRequest {
   priceBookItemId?: string | null;
   /** "Not sure what's wrong?": a diagnosis visit at Servika's fee, paid upfront and credited. */
   diagnosis?: boolean;
+  /** "Something else": a paid visit, then an itemised quote; optionally the listed kind of custom work. */
+  customQuote?: boolean;
+  customPriceBookItemId?: string | null;
 }
 
 /** A row in the customer's "My Bookings" history (GET /api/v1/bookings). */
@@ -168,6 +171,10 @@ export interface BookingDetail {
   /** Held in escrow so far, and what is still owed against the agreed price. */
   paidNaira?: number;
   amountDueNaira?: number;
+  /** A custom job: a paid visit, then an itemised quote checked against the typical range. */
+  isCustomQuote?: boolean;
+  typicalRangeMinNaira?: number | null;
+  typicalRangeMaxNaira?: number | null;
 }
 
 /** One repair the artisan picked from Servika's add-on list, with a photo of the fault. */
@@ -230,6 +237,8 @@ export interface Bid {
   createdAtUtc: string;
   /** Km from the job to the artisan's base, when both are known. */
   distanceKm: number | null;
+  /** Custom quotes: Approved = Servika checked it before you saw it. */
+  review?: 'NotNeeded' | 'Pending' | 'Approved' | 'SentBack';
 }
 
 /** An artisan you have completed jobs with (GET /bookings/past-artisans). */

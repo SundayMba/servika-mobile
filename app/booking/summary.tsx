@@ -74,6 +74,7 @@ export default function BookingSummary() {
     priceBookItemId?: string;
     /** From a category screen: "diagnosis" (not sure what's wrong) or "custom". */
     mode?: string;
+    customItemId?: string;
   }>();
 
   // Open request: no artisan chosen — any matching artisan can claim/bid.
@@ -89,7 +90,9 @@ export default function BookingSummary() {
   // "Not sure what's wrong?": a diagnosis visit at Servika's fee, paid now and credited against the repairs.
   const diagnosisFee = feeSchedule.data?.diagnosisFeeNaira ?? 0;
   const isDiagnosis = params.mode === 'diagnosis' && !isPriceBook && diagnosisFee > 0;
-  const paysUpfront = isPriceBook || isDiagnosis;
+  // "Something else": a paid visit, then an itemised quote the customer accepts or not.
+  const isCustom = params.mode === 'custom' && !isPriceBook && diagnosisFee > 0;
+  const paysUpfront = isPriceBook || isDiagnosis || isCustom;
   const upfrontAmount = isPriceBook ? fixedPrice! : diagnosisFee;
 
   const { data: artisan, isLoading: artisanLoading } = useArtisan(
@@ -153,6 +156,8 @@ export default function BookingSummary() {
         rebook: params.rebook === '1',
         priceBookItemId: params.priceBookItemId ?? null,
         diagnosis: isDiagnosis,
+        customQuote: isCustom,
+        customPriceBookItemId: isCustom ? (params.customItemId ?? null) : null,
         // Job media + pricing mode from the photos step (module store — the
         // base64 blobs are too big for route params).
         assessmentMode: bookingMedia.get().assessment,
@@ -263,10 +268,12 @@ export default function BookingSummary() {
             </View>
             <View className="ml-3 flex-1">
               <AppText weight="semibold" className="text-[15px] text-gray-900">
-                {isDiagnosis ? 'An artisan finds the fault' : 'Servika sends the artisan'}
+                {isDiagnosis ? 'An artisan finds the fault' : isCustom ? 'An artisan comes to see the job' : 'Servika sends the artisan'}
               </AppText>
               <AppText className="text-[12px] leading-4 text-gray-500">
-                {isDiagnosis
+                {isCustom
+                  ? 'Once you pay the visit, Servika sends a checked artisan. They send an itemised quote, Servika checks large ones, and nothing is done until you accept.'
+                  : isDiagnosis
                   ? 'Once you pay the visit, Servika sends a checked artisan. They price the repairs from Servika\'s list, with a photo of each fault, and nothing is done until you approve.'
                   : 'Once you pay, Servika offers the job to a checked artisan near you. You see who is coming before they arrive.'}
               </AppText>
@@ -362,7 +369,16 @@ export default function BookingSummary() {
 
         {/* Pricing — a fixed service shows its price; quote-based shows free */}
         <Section title="Pricing">
-          {isDiagnosis ? (
+          {isCustom ? (
+            <>
+              <Row label="Visit" value={formatNaira(diagnosisFee)} />
+              <AppText className="mt-1 text-[12px] leading-4 text-gray-500">
+                You pay {formatNaira(diagnosisFee)}
+                {usersBearFees ? ' plus a small payment fee' : ''} now for the visit. If you accept the quote it comes off the
+                total. If you don&apos;t, the visit is all you pay.
+              </AppText>
+            </>
+          ) : isDiagnosis ? (
             <>
               <Row label="Diagnosis visit" value={formatNaira(diagnosisFee)} />
               <AppText className="mt-1 text-[12px] leading-4 text-gray-500">

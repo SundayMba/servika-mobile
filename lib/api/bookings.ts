@@ -137,3 +137,9 @@ export async function decideRepairs(bookingId: string, approvedRepairIds: string
   const { data } = await apiClient.post<BookingRepairs>(`/api/v1/bookings/${bookingId}/repairs/decision`, { approvedRepairIds });
   return data;
 }
+
+/** Don't go ahead with a custom quote: pay only the visit; the job closes. */
+export async function declineCustomQuote(bookingId: string): Promise<BookingDetail> {
+  const { data } = await apiClient.post<BookingDetail>(`/api/v1/bookings/${bookingId}/quote/decline`);
+  return data;
+}
