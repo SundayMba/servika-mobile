@@ -126,7 +126,9 @@ export default function CategoryScreen() {
                 <View style={styles.optionBody}>
                   <AppText weight="semibold" style={styles.optionTitle}>Not sure what&apos;s wrong?</AppText>
                   <AppText style={styles.optionSub}>
-                    An artisan finds the fault and prices the repair from Servika&apos;s list. You approve before any work starts.
+                    {data.diagnosisFeeNaira > 0
+                      ? `A ${formatNaira(data.diagnosisFeeNaira)} visit to find the fault, taken off the repair. Repairs come from Servika's list and you approve them first.`
+                      : "An artisan finds the fault and prices the repair from Servika's list. You approve before any work starts."}
                   </AppText>
                 </View>
                 <Ionicons name="chevron-forward" size={18} color={colors.inkFaint} />

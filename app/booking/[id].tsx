@@ -32,6 +32,7 @@ import {
 import { FieldError } from '@/components/FieldError';
 import { BottomSheet } from '@/components/BottomSheet';
 import { FindingArtisanCard, WHOS_COMING_STATUSES, WhosComingCard } from '@/components/booking/WhosComingCard';
+import { RepairsCard } from '@/components/booking/RepairsCard';
 import {
   useAcceptBid,
   useBooking,
@@ -508,6 +509,7 @@ export default function BookingDetailScreen() {
           {booking.artisanId && WHOS_COMING_STATUSES.includes(booking.status) ? (
             <WhosComingCard artisanId={booking.artisanId} />
           ) : null}
+          <RepairsCard booking={booking} onPay={payNow} />
 
           {acceptingBids ? (
             <View className="mt-6">
@@ -770,10 +772,25 @@ export default function BookingDetailScreen() {
           <Section title="Pricing">
             {booking.initialQuoteAmountNaira != null ? (
               <>
-                <Row
-                  label={booking.pricingModel === 'Fixed' ? 'Fixed price' : 'Agreed price'}
-                  value={formatNaira(booking.initialQuoteAmountNaira)}
-                />
+                {booking.diagnosisFeeNaira ? (
+                  <>
+                    <Row label="Diagnosis visit" value={formatNaira(booking.diagnosisFeeNaira)} />
+                    {(booking.approvedRepairsNaira ?? 0) > 0 ? (
+                      <>
+                        <Row label="Approved repairs" value={formatNaira(booking.approvedRepairsNaira ?? 0)} />
+                        <Row label="Job total, fee credited" value={formatNaira(booking.initialQuoteAmountNaira)} />
+                      </>
+                    ) : null}
+                  </>
+                ) : (
+                  <Row
+                    label={booking.pricingModel === 'Fixed' ? 'Fixed price' : 'Agreed price'}
+                    value={formatNaira(booking.initialQuoteAmountNaira)}
+                  />
+                )}
+                {!booking.diagnosisFeeNaira && (booking.approvedRepairsNaira ?? 0) > 0 ? (
+                  <Row label="Includes approved extras" value={formatNaira(booking.approvedRepairsNaira ?? 0)} />
+                ) : null}
                 {booking.agreedMaterialsNaira != null && booking.agreedMaterialsNaira > 0 ? (
                   <>
                     <Row label="Labour" value={formatNaira(booking.agreedWorkmanshipNaira ?? 0)} />
@@ -894,7 +911,7 @@ export default function BookingDetailScreen() {
                   <AppText weight="semibold" className="text-[14px] text-white">
                     {paying
                       ? 'Opening secure payment…'
-                      : `Pay ${formatNaira(booking.initialQuoteAmountNaira)} into escrow`}
+                      : `Pay ${formatNaira(booking.amountDueNaira || booking.initialQuoteAmountNaira)} into escrow`}
                   </AppText>
                 </Pressable>
                 <AppText className="mt-2 text-center text-[11.5px] leading-4 text-gray-400">

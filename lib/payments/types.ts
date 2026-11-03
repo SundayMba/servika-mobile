@@ -42,6 +42,8 @@ export interface FeeSchedule {
   allowCashPayments?: boolean;
   /** Minutes an artisan has to accept a job Servika offers them. */
   offerWindowMinutes?: number;
+  /** The diagnosis visit fee ("not sure what's wrong?"), credited against the repairs. */
+  diagnosisFeeNaira?: number;
 }
 
 /** GET /fees/quote?amount=: the exact fees for an amount, computed server-side. */

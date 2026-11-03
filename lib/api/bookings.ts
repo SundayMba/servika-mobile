@@ -1,5 +1,6 @@
 import { apiClient } from '@/lib/api/client';
 import type {
+  BookingRepairs,
   Bid,
   BookingDetail,
   BookingSummary,
@@ -122,5 +123,17 @@ export async function choosePaymentMethod(
     `${BASE}/${bookingId}/payment-method`,
     { method },
   );
+  return data;
+}
+
+/** The repairs the artisan proposed on a job, and what is paid and owed. */
+export async function getBookingRepairs(bookingId: string): Promise<BookingRepairs> {
+  const { data } = await apiClient.get<BookingRepairs>(`/api/v1/bookings/${bookingId}/repairs`);
+  return data;
+}
+
+/** Approve the listed repairs; every other proposed repair is declined. */
+export async function decideRepairs(bookingId: string, approvedRepairIds: string[]): Promise<BookingRepairs> {
+  const { data } = await apiClient.post<BookingRepairs>(`/api/v1/bookings/${bookingId}/repairs/decision`, { approvedRepairIds });
   return data;
 }

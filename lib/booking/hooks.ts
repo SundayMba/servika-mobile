@@ -14,6 +14,8 @@ import {
   decideMaterialsAdvance,
   counterBid,
   getPastArtisans,
+  getBookingRepairs,
+  decideRepairs,
 } from '@/lib/api/bookings';
 
 /**
@@ -176,6 +178,28 @@ export function useChoosePaymentMethod() {
     onSuccess: (booking) => {
       queryClient.setQueryData(['booking', booking.id], booking);
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
+    },
+  });
+}
+
+/** The repairs on a job. Polls while the artisan is at the door, so a new list shows without a pull. */
+export function useBookingRepairs(bookingId: string | undefined, enabled: boolean) {
+  return useQuery({
+    queryKey: ['booking-repairs', bookingId],
+    queryFn: () => getBookingRepairs(bookingId as string),
+    enabled: !!bookingId && enabled,
+    refetchInterval: 20_000,
+  });
+}
+
+export function useDecideRepairs(bookingId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (approvedRepairIds: string[]) => decideRepairs(bookingId, approvedRepairIds),
+    onSuccess: (data) => {
+      qc.setQueryData(['booking-repairs', bookingId], data);
+      qc.invalidateQueries({ queryKey: ['booking', bookingId] });
+      qc.invalidateQueries({ queryKey: ['bookings'] });
     },
   });
 }

@@ -42,6 +42,7 @@ export function useNotificationsRealtime() {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
       queryClient.invalidateQueries({ queryKey: ['booking'] });
+      queryClient.invalidateQueries({ queryKey: ['booking-repairs'] });
     });
 
     conn.start().catch(() => {

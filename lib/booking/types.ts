@@ -71,6 +71,8 @@ export interface CreateBookingRequest {
   rebook?: boolean;
   /** A job from Servika's price book: booked at Servika's price and paid upfront. */
   priceBookItemId?: string | null;
+  /** "Not sure what's wrong?": a diagnosis visit at Servika's fee, paid upfront and credited. */
+  diagnosis?: boolean;
 }
 
 /** A row in the customer's "My Bookings" history (GET /api/v1/bookings). */
@@ -159,6 +161,39 @@ export interface BookingDetail {
   priceBookItemId?: string | null;
   /** True while a price-book job waits for its upfront payment; no artisan is offered it yet. */
   awaitingUpfrontPayment?: boolean;
+  /** Diagnosis visit: the fee paid at booking, credited against the repairs. Null otherwise. */
+  diagnosisFeeNaira?: number | null;
+  /** Repairs from Servika's list the customer approved on this job. */
+  approvedRepairsNaira?: number;
+  /** Held in escrow so far, and what is still owed against the agreed price. */
+  paidNaira?: number;
+  amountDueNaira?: number;
+}
+
+/** One repair the artisan picked from Servika's add-on list, with a photo of the fault. */
+export interface BookingRepair {
+  id: string;
+  priceBookItemId: string;
+  round: number;
+  name: string;
+  labourNaira: number;
+  partsNaira: number;
+  partsNote: string | null;
+  totalNaira: number;
+  /** API path of the fault photo (needs the auth header). */
+  photoUrl: string;
+  status: 'Proposed' | 'Approved' | 'Declined';
+  proposedAtUtc: string;
+}
+
+/** The repairs on a job and the money picture now. */
+export interface BookingRepairs {
+  repairs: BookingRepair[];
+  diagnosisFeeNaira: number | null;
+  approvedRepairsNaira: number;
+  agreedTotalNaira: number;
+  paidNaira: number;
+  amountDueNaira: number;
 }
 
 /** An artisan's price offer on an open RemoteQuote request. */

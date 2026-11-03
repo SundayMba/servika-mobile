@@ -72,6 +72,8 @@ export default function BookingSummary() {
     rebook?: string;
     /** A job from Servika's price book: booked at Servika's price and paid here, upfront. */
     priceBookItemId?: string;
+    /** From a category screen: "diagnosis" (not sure what's wrong) or "custom". */
+    mode?: string;
   }>();
 
   // Open request: no artisan chosen — any matching artisan can claim/bid.
@@ -83,6 +85,12 @@ export default function BookingSummary() {
   const isFixed = !!params.artisanServiceId && fixedPrice != null;
   // A Servika price-book job is paid now; the job is offered to an artisan once the money lands.
   const isPriceBook = !!params.priceBookItemId && fixedPrice != null;
+  const feeSchedule = useFeeSchedule();
+  // "Not sure what's wrong?": a diagnosis visit at Servika's fee, paid now and credited against the repairs.
+  const diagnosisFee = feeSchedule.data?.diagnosisFeeNaira ?? 0;
+  const isDiagnosis = params.mode === 'diagnosis' && !isPriceBook && diagnosisFee > 0;
+  const paysUpfront = isPriceBook || isDiagnosis;
+  const upfrontAmount = isPriceBook ? fixedPrice! : diagnosisFee;
 
   const { data: artisan, isLoading: artisanLoading } = useArtisan(
     isOpen ? undefined : params.artisanId,
@@ -105,7 +113,7 @@ export default function BookingSummary() {
     }
   })();
 
-  const usersBearFees = useFeeSchedule().data?.usersBearFees === true;
+  const usersBearFees = feeSchedule.data?.usersBearFees === true;
 
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -144,6 +152,7 @@ export default function BookingSummary() {
         bookingCode: params.bookingCode || null,
         rebook: params.rebook === '1',
         priceBookItemId: params.priceBookItemId ?? null,
+        diagnosis: isDiagnosis,
         // Job media + pricing mode from the photos step (module store — the
         // base64 blobs are too big for route params).
         assessmentMode: bookingMedia.get().assessment,
@@ -153,7 +162,7 @@ export default function BookingSummary() {
       const booking = await createBooking(body);
       bookingMedia.reset();
 
-      if (isPriceBook) {
+      if (paysUpfront) {
         // Leave the form steps behind: the booking is the place to come back to whatever happens at
         // the gateway (paid, cancelled, or still confirming).
         router.dismissAll();
@@ -206,7 +215,7 @@ export default function BookingSummary() {
     } catch (err) {
       // Server may require a verified phone first — prompt, then retry the post.
       if (phoneGate.handle(err, handleProceed)) return;
-      setErrorMsg(authErrorMessage(err, isPriceBook ? 'Could not book this job.' : 'Could not post your request.'));
+      setErrorMsg(authErrorMessage(err, paysUpfront ? 'Could not book this job.' : 'Could not post your request.'));
     } finally {
       setSubmitting(false);
     }
@@ -246,16 +255,20 @@ export default function BookingSummary() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 24 }}
       >
-        {/* A Servika job: one price, paid now. */}
-        {isPriceBook ? (
+        {/* A Servika job or a diagnosis visit: one price, paid now. */}
+        {paysUpfront ? (
           <View className="flex-row items-center rounded-2xl border border-primary/20 bg-primary/5 p-4">
             <View className="h-11 w-11 items-center justify-center rounded-full bg-primary/10">
               <Ionicons name="shield-checkmark-outline" size={22} color={colors.primary} />
             </View>
             <View className="ml-3 flex-1">
-              <AppText weight="semibold" className="text-[15px] text-gray-900">Servika sends the artisan</AppText>
+              <AppText weight="semibold" className="text-[15px] text-gray-900">
+                {isDiagnosis ? 'An artisan finds the fault' : 'Servika sends the artisan'}
+              </AppText>
               <AppText className="text-[12px] leading-4 text-gray-500">
-                Once you pay, Servika offers the job to a checked artisan near you. You see who is coming before they arrive.
+                {isDiagnosis
+                  ? 'Once you pay the visit, Servika sends a checked artisan. They price the repairs from Servika\'s list, with a photo of each fault, and nothing is done until you approve.'
+                  : 'Once you pay, Servika offers the job to a checked artisan near you. You see who is coming before they arrive.'}
               </AppText>
             </View>
           </View>
@@ -349,7 +362,16 @@ export default function BookingSummary() {
 
         {/* Pricing — a fixed service shows its price; quote-based shows free */}
         <Section title="Pricing">
-          {isPriceBook ? (
+          {isDiagnosis ? (
+            <>
+              <Row label="Diagnosis visit" value={formatNaira(diagnosisFee)} />
+              <AppText className="mt-1 text-[12px] leading-4 text-gray-500">
+                You pay {formatNaira(diagnosisFee)}
+                {usersBearFees ? ' plus a small payment fee' : ''} now. If you go ahead with the repairs it comes off
+                their price. If you don&apos;t, it pays for the visit and that is all you pay.
+              </AppText>
+            </>
+          ) : isPriceBook ? (
             <>
               <Row label="Servika price" value={formatNaira(fixedPrice!)} />
               <AppText className="mt-1 text-[12px] leading-4 text-gray-500">
@@ -396,7 +418,7 @@ export default function BookingSummary() {
         {/* Proceed */}
         <View className="mt-6">
           <Button
-            label={isPriceBook ? `Pay ${formatNaira(fixedPrice!)}` : isOpen ? 'Post Request' : 'Send Request'}
+            label={paysUpfront ? `Pay ${formatNaira(upfrontAmount)}` : isOpen ? 'Post Request' : 'Send Request'}
             loading={submitting || (!isOpen && artisanLoading)}
             disabled={!canProceed}
             onPress={handleProceed}
