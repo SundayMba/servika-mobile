@@ -6,25 +6,23 @@ import { Pressable, StyleSheet, View, type ImageSourcePropType } from 'react-nat
 import { AppText } from '@/components/ui/AppText';
 import { colors } from '@/constants/colors';
 
-/** Space between the card edge and the artwork wash. */
+/** Space between the card edge and the artwork. */
 const INSET = 6;
 
 /**
- * A job tile on Home: a white card whose artwork fills its width (a soft wash of the trade's
- * tint behind it, small padding all round) and a two-line label so "Plumbing & Borehole" is
- * never cut. Three to a row.
+ * A job tile on Home: a white card whose artwork fills its width (small padding all round)
+ * and a two-line label so "Plumbing & Borehole" is never cut. Three to a row.
  */
 function JobTileBase({
   label,
   image,
-  tint,
   icon,
   width,
   onPress,
 }: {
   label: string;
   image?: ImageSourcePropType;
-  /** Category tint ("#3B82F6"); the art sits on a 12% wash of it. */
+  /** Kept for callers; the tiles are plain white. */
   tint?: string;
   /** Used instead of artwork (the "Something else" tile). */
   icon?: keyof typeof Ionicons.glyphMap;
@@ -32,8 +30,8 @@ function JobTileBase({
   onPress?: () => void;
 }) {
   const [pressed, setPressed] = useState(false);
-  const wash = width - INSET * 2 - 2; // minus the 1px border each side
-  const art = Math.round(wash * 0.86);
+  const box = width - INSET * 2 - 2; // minus the 1px border each side
+  const art = Math.round(box * 0.86);
   return (
     <Pressable
       accessibilityRole="button"
@@ -43,14 +41,9 @@ function JobTileBase({
       onPressOut={() => setPressed(false)}
       style={[styles.card, { width }, pressed && styles.pressed]}
     >
-      <View
-        style={[
-          styles.wash,
-          { width: wash, height: wash, backgroundColor: tint ? `${tint}1F` : colors.sand },
-        ]}
-      >
+      <View style={[styles.box, { width: box, height: box }]}>
         {icon ? (
-          <Ionicons name={icon} size={Math.round(wash * 0.36)} color={colors.ink} />
+          <Ionicons name={icon} size={Math.round(box * 0.36)} color={colors.ink} />
         ) : (
           <Image source={image} contentFit="contain" style={{ width: art, height: art }} transition={0} />
         )}
@@ -77,7 +70,7 @@ const styles = StyleSheet.create({
     borderColor: colors.hairline,
   },
   pressed: { transform: [{ scale: 0.97 }], backgroundColor: '#FBFAF8' },
-  wash: { borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
+  box: { borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
   // Stretched so the measured box matches what paints (Android clips shrink-wrapped Text).
   label: { alignSelf: 'stretch', minHeight: 32, fontSize: 12.5, lineHeight: 16, letterSpacing: -0.12, textAlign: 'center', color: colors.ink },
 });
