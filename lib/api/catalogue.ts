@@ -5,6 +5,7 @@ import type {
   ArtisanSummary,
   Category,
   ArtisanByCode,
+  ServiceSection,
 } from '@/lib/catalogue/types';
 import type { LatLng } from '@/lib/tracking/geo';
 
@@ -32,3 +33,19 @@ export async function getArtisan(id: string, coords?: LatLng | null): Promise<Ar
   return data;
 }
 
+
+const coordParams = (coords?: LatLng | null) => (coords ? { lat: coords.latitude, lng: coords.longitude } : {});
+
+/** Home: one section per trade with the approved service posts under it (nearest first when coords are known). */
+export async function getServiceSections(coords?: LatLng | null, category?: string): Promise<ServiceSection[]> {
+  const { data } = await apiClient.get<ServiceSection[]>('/api/v1/services/sections', {
+    params: { ...coordParams(coords), ...(category ? { category } : {}) },
+  });
+  return data;
+}
+
+/** One approved service post (404 once it is paused, removed or not yet approved). */
+export async function getService(id: string, coords?: LatLng | null): Promise<FeaturedService> {
+  const { data } = await apiClient.get<FeaturedService>(`/api/v1/services/${id}`, { params: coordParams(coords) });
+  return data;
+}

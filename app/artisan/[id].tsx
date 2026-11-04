@@ -22,6 +22,7 @@ import { useIsFavorite, useToggleFavorite } from '@/lib/favorites/hooks';
 import {
   artisanCoverSource,
   artisanPhotoSource,
+  formatNaira,
   galleryImages,
 } from '@/lib/catalogue/assets';
 import { distanceLabel } from '@/lib/catalogue/display';
@@ -311,12 +312,40 @@ export default function ArtisanProfile() {
             </View>
           </View>
 
-          {/* Work gallery — hidden until there's something to show */}
+          {/* Their standard services, each checked by Servika before it shows */}
+          {artisan.pricedServices.length > 0 ? (
+            <View className="mt-7 px-5">
+              <SectionTitle title="Services" />
+              <View className="overflow-hidden rounded-2xl border border-gray-100 bg-white">
+                {artisan.pricedServices.map((s, i) => (
+                  <Pressable
+                    key={s.id}
+                    accessibilityRole="button"
+                    onPress={() => router.push({ pathname: '/service/[id]', params: { id: s.id } })}
+                    className={`flex-row items-center gap-3 p-3 ${i > 0 ? 'border-t border-gray-100' : ''}`}
+                  >
+                    <View className="h-12 w-12 items-center justify-center overflow-hidden rounded-xl bg-primary/10">
+                      {s.photoUrl ? (
+                        <Image source={{ uri: `${config.apiBaseUrl}${s.photoUrl}` }} contentFit="cover" style={{ width: 48, height: 48 }} />
+                      ) : (
+                        <Ionicons name="construct-outline" size={20} color={colors.primary} />
+                      )}
+                    </View>
+                    <AppText weight="semibold" numberOfLines={2} className="flex-1 text-[14px] text-gray-900">{s.name}</AppText>
+                    <AppText weight="semibold" className="text-[14px] text-gray-900">{formatNaira(s.priceNaira)}</AppText>
+                    <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+          ) : null}
+
+          {/* Recent work — hidden until there's something to show */}
           {gallery.length === 0 ? null : (
           <View className="mt-7">
             <View className="mb-3 px-5">
               <AppText weight="semibold" className="text-[16px] text-gray-900">
-                Work Gallery
+                Recent work
               </AppText>
             </View>
             <ScrollView

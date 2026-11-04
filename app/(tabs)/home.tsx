@@ -22,18 +22,18 @@ import { HeroCarousel } from '@/components/home/HeroCarousel';
 import { InterestSheet } from '@/components/home/InterestSheet';
 import { JobTile } from '@/components/home/JobTile';
 import { LocationSheet } from '@/components/home/LocationSheet';
-import { FixedPricesRail, FixedPricesRailSkeleton } from '@/components/pricebook/FixedPricesRail';
+import { ServiceSectionRow, ServiceSectionSkeleton } from '@/components/home/ServiceSections';
 import { ActiveBookingSkeleton, ServiceGridSkeleton } from '@/components/home/Skeletons';
 import { AppText } from '@/components/ui/AppText';
 import { colors } from '@/constants/colors';
 import { FALLBACK_CATEGORIES } from '@/constants/fallback-categories';
-import { SERVIKA_PRO_STORE_URL, SITE_URL, SUPPORT_EMAIL } from '@/constants/links';
+import { SERVIKA_PRO_STORE_URL, SITE_URL } from '@/constants/links';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useAuthGate } from '@/lib/auth/useAuthGate';
 import { isActiveBooking, isTrackable } from '@/lib/booking/display';
 import { useBookings } from '@/lib/booking/hooks';
 import { categoryImage } from '@/lib/catalogue/assets';
-import { useCategories } from '@/lib/catalogue/hooks';
+import { useCategories, useServiceSections } from '@/lib/catalogue/hooks';
 import type { Category } from '@/lib/catalogue/types';
 import { AVAILABILITY_THRESHOLD, useAvailability } from '@/lib/home/hooks';
 import {
@@ -43,13 +43,12 @@ import {
   useSelectedCoords,
 } from '@/lib/location/areaStore';
 import { useUnreadCount } from '@/lib/notifications/hooks';
-import { usePopularPriceBook } from '@/lib/pricebook/hooks';
 
 /**
- * Home, built around the job (Business Model v1.4, section 15): the banner, then "what needs
- * fixing?" as six cards. The customer says what is broken; Servika handles who, when and how
- * much. Nobody is browsed here: an artisan appears once assigned, or by name through Book again
- * or a personal code.
+ * Home, built around the job: the banner, then "what needs fixing?" as six cards. A trade opens
+ * its screen, where the customer describes the job and checked artisans send prices to choose
+ * from. Below, each trade's standard services: posts artisans publish at their own price and
+ * Servika checks before they appear. Artisans themselves are never listed or rated in public.
  */
 
 const TAB_BAR_HEIGHT = 60;
@@ -101,7 +100,7 @@ export default function Home() {
   const firstName = user?.fullName.trim().split(/\s+/)[0] || 'there';
 
   const categoriesQuery = useCategories();
-  const priceBookQuery = usePopularPriceBook();
+  const sectionsQuery = useServiceSections();
   const availabilityQuery = useAvailability(areaCoords);
   const bookingsQuery = useBookings(undefined, { enabled: isAuthenticated });
   const unreadQuery = useUnreadCount({ enabled: isAuthenticated });
@@ -125,7 +124,7 @@ export default function Home() {
     try {
       await Promise.all([
         categoriesQuery.refetch(),
-        priceBookQuery.refetch(),
+        sectionsQuery.refetch(),
         availabilityQuery.refetch(),
         isAuthenticated ? bookingsQuery.refetch() : Promise.resolve(),
         isAuthenticated ? unreadQuery.refetch() : Promise.resolve(),
@@ -133,9 +132,9 @@ export default function Home() {
     } finally {
       setRefreshing(false);
     }
-  }, [categoriesQuery, priceBookQuery, availabilityQuery, bookingsQuery, unreadQuery, isAuthenticated]);
+  }, [categoriesQuery, sectionsQuery, availabilityQuery, bookingsQuery, unreadQuery, isAuthenticated]);
 
-  // A trade opens its own screen: Servika's fixed prices first, then "not sure" and "something else".
+  // A trade opens its own screen: describe the job for prices, or book one of its standard services.
   const openTrade = (c: Category) => router.push({ pathname: '/category/[slug]', params: { slug: c.slug, name: c.name } });
 
   const tilesPending = refreshing || categoriesQuery.isLoading;
@@ -256,24 +255,23 @@ export default function Home() {
               <JobTile label="Something else" icon="grid-outline" width={tileWidth} onPress={() => router.push('/categories')} />
             </View>
           )}
-          <AppText style={[styles.gutter, styles.note]}>Pick the job. Servika sends a checked artisan and the price is agreed before any work starts.</AppText>
+          <AppText style={[styles.gutter, styles.note]}>Pick the job and describe it. Checked artisans send their prices, and you choose who comes.</AppText>
         </View>
 
-        {/* ── Servika's fixed prices: the job, the price, booked in a tap ── */}
-        {priceBookQuery.isLoading || (priceBookQuery.data?.length ?? 0) > 0 ? (
-          <View style={{ gap: 14 }}>
-            <SectionHead title="Fixed prices" subtitle="Set by Servika. Paid in the app, held until it's done." scale={scale} />
-            {priceBookQuery.isLoading ? (
-              <FixedPricesRailSkeleton gutter={GUTTER} />
-            ) : (
-              <FixedPricesRail
-                items={priceBookQuery.data ?? []}
-                gutter={GUTTER}
-                onOpen={(item) => router.push({ pathname: '/job/[id]', params: { id: item.id } })}
-              />
-            )}
-          </View>
-        ) : null}
+        {/* ── Standard services, one row per trade: posts artisans price themselves, checked by Servika ── */}
+        {sectionsQuery.isLoading ? (
+          <ServiceSectionSkeleton gutter={GUTTER} />
+        ) : (
+          (sectionsQuery.data ?? []).map((section) => (
+            <ServiceSectionRow
+              key={section.categorySlug}
+              section={section}
+              gutter={GUTTER}
+              onOpen={(item) => router.push({ pathname: '/service/[id]', params: { id: item.serviceId } })}
+              onSeeAll={() => router.push({ pathname: '/category/[slug]', params: { slug: section.categorySlug, name: section.categoryName } })}
+            />
+          ))
+        )}
 
         {/* ── Book again ── */}
         {isAuthenticated ? (
@@ -327,11 +325,7 @@ export default function Home() {
         {/* ── Estates and facility managers ── */}
         <Pressable
           accessibilityRole="button"
-          onPress={() =>
-            Linking.openURL(`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent('Estate or facility maintenance with Servika')}`).catch(() =>
-              appAlert('Talk to us', `Write to ${SUPPORT_EMAIL}.`),
-            )
-          }
+          onPress={() => router.push('/estate')}
           style={[styles.gutter, styles.inkCard]}
         >
           <View style={styles.inkIcon}>
@@ -339,7 +333,7 @@ export default function Home() {
           </View>
           <View style={{ flex: 1, gap: 3 }}>
             <AppText weight="semibold" style={styles.inkTitle}>Manage an estate or office?</AppText>
-            <AppText style={styles.inkSub}>Scheduled maintenance at set prices, with a record of every visit.</AppText>
+            <AppText style={styles.inkSub}>Tell us what your estate needs. Our team plans the visits and sends the right artisans.</AppText>
           </View>
           <Ionicons name="arrow-forward" size={18} color="rgba(255,255,255,0.75)" />
         </Pressable>

@@ -192,10 +192,10 @@ export default function BookingSuccess() {
           </AppText>
           <AppText className="mt-1.5 px-4 text-center text-[14px] leading-5 text-gray-500">
             {isOpen
-              ? 'Servika is offering your job to a checked artisan nearby right now. You will be told the moment one accepts.'
+              ? 'Checked artisans nearby can see your job now. Their prices come into your booking as they send them.'
               : isFixed
                 ? `${params.artisanName || 'The artisan'} will confirm your booking${amount != null ? `, then you pay ${formatNaira(amount)}${feeNote}` : ''}, held securely until the job is done.`
-                : `${params.artisanName || 'The artisan'} gets your request first. If they cannot take it, Servika offers it to another checked artisan. You only pay after you accept a price.`}
+                : `${params.artisanName || 'The artisan'} gets your request first. If they cannot take it, your job opens to other artisans to price. You only pay after you accept a price.`}
           </AppText>
         </View>
 

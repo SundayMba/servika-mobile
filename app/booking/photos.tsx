@@ -57,11 +57,9 @@ async function fileSize(uri: string, reported?: number | null): Promise<number |
 }
 
 /**
- * Job media + pricing-mode step. Photos give any artisan context; on an OPEN
- * request the customer also chooses how pricing works — "artisan inspects
- * first" (first-come claims) or "price it from my photos/video" (artisans bid
- * and the customer picks an offer). Media is held in the draft store (too big
- * for route params) and uploaded with the booking on the confirm step.
+ * Job media step. On an open request, artisans price the job from these photos (or offer to
+ * visit first), so good photos mean better prices. Media is held in the draft store (too big for
+ * route params) and uploaded with the booking on the confirm step.
  */
 export default function BookingPhotos() {
   const router = useRouter();
@@ -79,14 +77,14 @@ export default function BookingPhotos() {
 
   const [photos, setPhotos] = useState<{ uri: string; base64: string }[]>([]);
 
-  const [mediaErr, setMediaErr] = useState<string | undefined>();
+  const [mediaErr] = useState<string | undefined>();
   const [video, setVideo] = useState<{ uri: string } | null>(null);
-  // Servika assigns every request and nobody bids, so the only mode is the artisan seeing the job.
-  const assessment: AssessmentChoice = 'Inspection';
+  // An open request is priced by bids; a request to one artisan is seen and priced by them.
+  const assessment: AssessmentChoice = isOpen ? 'RemoteQuote' : 'Inspection';
   const [working, setWorking] = useState(false);
 
-  // No open bidding any more: Servika offers the request to one artisan at a time.
-  const bidding = false;
+  // Photos are optional even when artisans bid: some will offer to visit first instead.
+  const bidding = isOpen;
 
   const pickPhotos = async () => {
     const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -148,10 +146,6 @@ export default function BookingPhotos() {
   };
 
   const handleContinue = () => {
-    if (bidding && photos.length === 0 && !video) {
-      setMediaErr('For price offers, add at least one photo or a short clip of the job.');
-      return;
-    }
     bookingMedia.setPhotos(photos.map((p) => p.base64), photos.map((p) => p.uri));
     bookingMedia.setVideo(video?.uri ?? null);
     bookingMedia.setAssessment(isOpen ? assessment : 'Inspection');
@@ -204,7 +198,7 @@ export default function BookingPhotos() {
             )}
           </View>
           <AppText weight="semibold" className="mt-3 text-[15px] text-gray-900">
-            {bidding ? 'Add job photos (required)' : 'Upload photos'}
+            {bidding ? 'Add photos of the job' : 'Upload photos'}
           </AppText>
           <AppText className="mt-1 text-[13px] text-gray-500">
             Tap to choose from your library · up to {MAX_PHOTOS}
@@ -275,7 +269,7 @@ export default function BookingPhotos() {
             <AppText weight="semibold" className="text-[13px] text-gray-900">Tips</AppText>
             <AppText className="mt-0.5 text-[12px] leading-4 text-gray-600">
               {bidding
-                ? 'Clear photos and a short clip get you more (and more accurate) price offers.'
+                ? 'Artisans price from these. Clear photos and a short clip get you more prices, and fewer "visit first" offers.'
                 : 'Clear photos help artisans understand the problem better and give more accurate quotes.'}
             </AppText>
           </View>

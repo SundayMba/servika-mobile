@@ -9,7 +9,6 @@ import type { BookingDetail, BookingStatus } from '@/lib/booking/types';
 import { artisanPhotoSource } from '@/lib/catalogue/assets';
 import { useArtisan } from '@/lib/catalogue/hooks';
 import { config } from '@/lib/config';
-import { useFeeSchedule } from '@/lib/payments/fees';
 
 /** Statuses where an artisan is assigned and on the way to, at, or finishing the job. */
 export const WHOS_COMING_STATUSES: BookingStatus[] = ['Accepted', 'OnMyWay', 'Arrived', 'InProgress', 'AwaitingConfirmation'];
@@ -68,25 +67,30 @@ export function WhosComingCard({ artisanId }: { artisanId: string }) {
 }
 
 /** The Open state: Servika is offering the job to one artisan at a time. */
-export function FindingArtisanCard({ booking }: { booking: BookingDetail }) {
-  const { data: fees } = useFeeSchedule();
-  const minutes = fees?.offerWindowMinutes;
-  const round = booking.offerRound ?? 0;
-  const stuck = !!booking.offersExhaustedAtUtc;
+export function FindingArtisanCard({ booking, offers = 0 }: { booking: BookingDetail; offers?: number }) {
+  const stuck = !!booking.offersExhaustedAtUtc && offers === 0;
   return (
     <View className="mt-4 rounded-2xl border border-gray-100 bg-white p-4">
       <View className="flex-row items-center gap-3">
         <View className="h-10 w-10 items-center justify-center rounded-full" style={{ backgroundColor: stuck ? '#FFF6E0' : '#FFF1E4' }}>
-          {stuck ? <Ionicons name="time-outline" size={20} color="#D9950B" /> : <ActivityIndicator color={colors.accentDeep} />}
+          {stuck ? (
+            <Ionicons name="time-outline" size={20} color="#D9950B" />
+          ) : offers > 0 ? (
+            <Ionicons name="pricetags-outline" size={19} color={colors.accentDeep} />
+          ) : (
+            <ActivityIndicator color={colors.accentDeep} />
+          )}
         </View>
         <View className="flex-1">
           <AppText weight="semibold" className="text-[15px] text-gray-900">
-            {stuck ? 'Still looking for an artisan' : 'Finding your artisan'}
+            {stuck ? 'No artisan free yet' : offers > 0 ? `${offers} ${offers === 1 ? 'artisan has' : 'artisans have'} sent a price` : 'Getting prices'}
           </AppText>
           <AppText className="mt-0.5 text-[13px] leading-[18px] text-gray-500">
             {stuck
-              ? 'Nobody is free for this right now. We keep trying as artisans come online, and you can also pick another time.'
-              : `Servika offers your job to one checked artisan at a time${minutes ? `, ${minutes} minutes each` : ''}. ${round > 1 ? `Asking artisan ${round} now.` : 'You will be told the moment one accepts.'}`}
+              ? 'Nobody near you is online for this right now. Your job stays open and artisans see it as they come online.'
+              : offers > 0
+                ? 'Open the offers below to compare. More may still come in.'
+                : 'Checked artisans nearby can see your job. Their prices, or offers to visit first, come in here.'}
           </AppText>
         </View>
       </View>

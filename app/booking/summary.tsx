@@ -107,7 +107,6 @@ export default function BookingSummary() {
     : params.categorySlug && artisan?.categorySlugs?.includes(params.categorySlug)
       ? params.categorySlug
       : artisan?.categorySlugs?.[0];
-  const isBidding = bookingMedia.get().assessment === 'RemoteQuote';
   const photoCount = (() => {
     try {
       return params.photos ? (JSON.parse(params.photos) as string[]).length : 0;
@@ -287,9 +286,7 @@ export default function BookingSummary() {
             <View className="ml-3 flex-1">
               <AppText weight="semibold" className="text-[15px] text-gray-900">Open request</AppText>
               <AppText className="text-[12px] leading-4 text-gray-500">
-                {isBidding
-                  ? `Verified ${serviceName.toLowerCase()} pros nearby send their prices. You pick from the offers.`
-                  : `We'll match you with a verified ${serviceName.toLowerCase()} pro nearby. The first to accept takes the job.`}
+                {`Checked ${serviceName.toLowerCase()} artisans nearby send their prices, or offer to visit first. You pick one.`}
               </AppText>
             </View>
           </View>
@@ -415,10 +412,8 @@ export default function BookingSummary() {
                 </AppText>
               </View>
               <AppText className="mt-1 text-[12px] leading-4 text-gray-500">
-                {isOpen && isBidding
-                  ? 'Artisans review your request and send their prices. You only pay after you accept an offer, and your payment is held securely until the job is done.'
-                  : isOpen
-                    ? 'A pro takes the job, then sends you a price (after a free look if needed). You only pay after you accept it, and your payment is held securely until the job is done.'
+                {isOpen
+                  ? 'Nothing to pay now. You pay only after you pick an offer, and the money is held until the job is done.'
                   : `${artisan?.fullName ?? 'The artisan'} will review your request and send you a quote (or come inspect for free). You only pay after you accept, and your payment is held securely until the job is done.`}
               </AppText>
             </>

@@ -22,3 +22,21 @@ export async function getAvailability(coords?: { latitude: number; longitude: nu
 export async function recordServiceInterest(body: ServiceInterestBody): Promise<void> {
   await apiClient.post('/api/v1/service-interest', body);
 }
+
+export type EstateEnquiryBody = {
+  organisationName: string;
+  contactName: string;
+  contactRole: string | null;
+  phone: string;
+  email: string | null;
+  location: string;
+  unitCount: number | null;
+  servicesWanted: string[];
+  frequency: string;
+  notes: string | null;
+};
+
+/** An estate or facility manager says what they need; Servika ops follow up by phone. Guests may send it. */
+export async function submitEstateEnquiry(body: EstateEnquiryBody): Promise<void> {
+  await apiClient.post('/api/v1/estate-enquiries', body);
+}

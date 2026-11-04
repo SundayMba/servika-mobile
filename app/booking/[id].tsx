@@ -32,8 +32,8 @@ import {
 import { FieldError } from '@/components/FieldError';
 import { BottomSheet } from '@/components/BottomSheet';
 import { FindingArtisanCard, WHOS_COMING_STATUSES, WhosComingCard } from '@/components/booking/WhosComingCard';
-import { RepairsCard } from '@/components/booking/RepairsCard';
 import { CustomQuoteCard } from '@/components/booking/CustomQuoteCard';
+import { OffersSheet } from '@/components/booking/OffersSheet';
 import {
   useAcceptBid,
   useBooking,
@@ -250,7 +250,9 @@ export default function BookingDetailScreen() {
     ['Pending', 'Accepted', 'OnMyWay', 'Arrived'].includes(booking.status);
   // Servika assigns every open request, so quotes only ever come from the assigned artisan.
   const acceptingBids = isDirectAwaitingQuote;
-  const { data: allBids } = useBookingBids(id, { enabled: !!acceptingBids });
+  // An open job is priced by bids: every artisan who answered shows in the offers sheet.
+  const openBidding = booking?.status === 'Open' && booking.assessmentMode === 'RemoteQuote' && !booking.awaitingUpfrontPayment;
+  const { data: allBids } = useBookingBids(id, { enabled: !!acceptingBids || !!openBidding });
   const [offerSort, setOfferSort] = useState<OfferSort>('best');
   const activeBids = allBids?.filter((b) => b.status === 'Active');
   const bids = activeBids ? sortOffers(activeBids, offerSort) : undefined;
@@ -356,19 +358,28 @@ export default function BookingDetailScreen() {
   };
 
   const confirmAcceptBid = (bid: Bid) => {
+    const visit = bid.kind === 'VisitFirst';
+    const first = bid.artisanName.split(' ')[0];
     appAlert(
-      'Accept this offer?',
-      `${bid.artisanName} will do the job for ${formatNaira(bid.amountNaira)}.`,
+      visit ? `Pick ${first} to visit?` : 'Accept this offer?',
+      visit
+        ? bid.visitFeeNaira > 0
+          ? `You pay ${formatNaira(bid.visitFeeNaira)} now for the visit. ${first} comes, sees the job and sends a price, and the visit comes off it. If you don't go ahead, you pay only the visit. The other offers close.`
+          : `${first} visits for free, sees the job and sends a price here. You pay only if you accept it. The other offers close.`
+        : `${bid.artisanName} will do the job for ${formatNaira(bid.amountNaira)}. The other offers close.`,
       [
         { text: 'Not yet', style: 'cancel' },
         {
-          text: 'Accept offer',
+          text: visit ? `Pick ${first}` : 'Accept offer',
           onPress: () =>
             acceptBidMutation.mutate(
               { bookingId: id, bidId: bid.id },
               {
-                // Price agreed → straight to the payment moment.
-                onSuccess: () => setPaySheetOpen(true),
+                // A paid visit goes straight to checkout; an agreed price to the payment moment.
+                onSuccess: (b) => {
+                  if (!visit) setPaySheetOpen(true);
+                  else if (b.awaitingUpfrontPayment) payNow();
+                },
                 onError: (err) =>
                   appAlert(
                     'Could not accept',
@@ -475,7 +486,7 @@ export default function BookingDetailScreen() {
       ) : (
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 32 }}
+          contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: openBidding && bids?.length ? 170 : 32 }}
         >
           <View className="flex-row items-start justify-between gap-3">
             <AppText weight="semibold" className="flex-1 text-[20px] text-gray-900">
@@ -505,13 +516,25 @@ export default function BookingDetailScreen() {
               </AppText>
             </View>
           ) : booking.status === 'Open' ? (
-            <FindingArtisanCard booking={booking} />
+            <FindingArtisanCard booking={booking} offers={openBidding ? (activeBids?.length ?? 0) : 0} />
+          ) : booking.status === 'Accepted' && booking.awaitingUpfrontPayment ? (
+            // A picked visit-first artisan waits for the visit fee before heading out.
+            <View className="mt-4 rounded-2xl border border-primary/20 bg-primary/5 p-4">
+              <View className="flex-row items-center gap-2">
+                <Ionicons name="lock-closed-outline" size={18} color={colors.primary} />
+                <AppText weight="semibold" className="flex-1 text-[15px] text-gray-900">
+                  {booking.paymentState === 'Pending' ? 'Confirming your payment' : `Pay the visit so ${booking.artisanName?.split(' ')[0] ?? 'they'} can come`}
+                </AppText>
+              </View>
+              <AppText className="mt-1 text-[12.5px] leading-[18px] text-gray-600">
+                {`${formatNaira(booking.diagnosisFeeNaira ?? booking.initialQuoteAmountNaira ?? 0)} is held by Servika and comes off the price once you accept it.`}
+              </AppText>
+            </View>
           ) : null}
           {booking.artisanId && WHOS_COMING_STATUSES.includes(booking.status) ? (
             <WhosComingCard artisanId={booking.artisanId} />
           ) : null}
           <CustomQuoteCard booking={booking} onPay={payNow} />
-          <RepairsCard booking={booking} onPay={payNow} />
 
           {acceptingBids ? (
             <View className="mt-6">
@@ -1084,6 +1107,16 @@ export default function BookingDetailScreen() {
       )}
 
       {/* ── Payment moment: how to settle the agreed price ── */}
+      {openBidding && bids && bids.length > 0 ? (
+        <OffersSheet
+          bids={bids}
+          busy={acceptBidMutation.isPending || paying}
+          onAccept={confirmAcceptBid}
+          onCounter={openCounter}
+          onProfile={(b) => router.push({ pathname: '/artisan/[id]', params: { id: b.artisanId } })}
+        />
+      ) : null}
+
       {/* ── Counter-offer: bargain on workmanship only; materials are per item ── */}
       <BottomSheet visible={!!counterFor} onClose={() => setCounterFor(null)}>
         <View className="px-5 pb-6 pt-1">
@@ -1145,8 +1178,8 @@ export default function BookingDetailScreen() {
           </Pressable>
           {counterFor ? (
             <AppText className="mt-3 text-center text-[11.5px] leading-4 text-gray-400">
-              Offer {counterFor.counterRounds + 1} of {counterFor.maxCounterRounds}. If they accept,
-              the price is agreed and you pay securely in the app.
+              You get one offer on the labour. If they accept, the price is agreed and you pay
+              securely in the app. If not, their price stands.
             </AppText>
           ) : null}
         </View>

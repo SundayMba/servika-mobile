@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 
-import { getAvailability, recordServiceInterest } from '@/lib/api/home';
+import { getAvailability, recordServiceInterest, submitEstateEnquiry } from '@/lib/api/home';
 
 /** Show "N artisans available near you" only from this many; fewer reads worse than nothing. */
 export const AVAILABILITY_THRESHOLD = 3;
@@ -17,4 +17,8 @@ export function useAvailability(coords: { latitude: number; longitude: number } 
 
 export function useRecordInterest() {
   return useMutation({ mutationFn: recordServiceInterest });
+}
+
+export function useSubmitEstateEnquiry() {
+  return useMutation({ mutationFn: submitEstateEnquiry });
 }

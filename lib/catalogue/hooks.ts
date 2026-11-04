@@ -3,6 +3,8 @@ import {
   getArtisan,
   getCategories,
   getArtisanByCode,
+  getService,
+  getServiceSections,
 } from '@/lib/api/catalogue';
 import { useSelectedCoords } from '@/lib/location/areaStore';
 import type { LatLng } from '@/lib/tracking/geo';
@@ -40,6 +42,26 @@ export function useArtisan(id: string | undefined) {
   });
 }
 
+/** Home's trade sections of approved service posts (or one trade's, for its screen). */
+export function useServiceSections(category?: string) {
+  const coords = useSelectedCoords();
+  return useQuery({
+    queryKey: ['service-sections', category ?? null, coordsKey(coords)],
+    queryFn: () => getServiceSections(coords, category),
+    staleTime: 60_000,
+  });
+}
+
+export function useService(id: string | undefined) {
+  const coords = useSelectedCoords();
+  return useQuery({
+    queryKey: ['service', id, coordsKey(coords)],
+    queryFn: () => getService(id as string, coords),
+    enabled: !!id,
+    retry: false,
+  });
+}
+
 /** Coords rounded to ~100 m so a wobbling GPS fix doesn't refetch every tick. */
 function coordsKey(coords?: LatLng | null) {
   return coords
@@ -57,5 +79,6 @@ export function invalidateCatalogueLists(queryClient: QueryClient) {
     queryClient.invalidateQueries({ queryKey: ['artisans'] }),
     queryClient.invalidateQueries({ queryKey: ['featured-services'] }),
     queryClient.invalidateQueries({ queryKey: ['nearby-services'] }),
+    queryClient.invalidateQueries({ queryKey: ['service-sections'] }),
   ]);
 }

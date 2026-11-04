@@ -215,9 +215,13 @@ export interface Bid {
   bookingId: string;
   artisanId: string;
   artisanName: string;
-  rating: number;
-  reviewCount: number;
+  /** Jobs this artisan has finished on Servika. Ratings are private to Servika. */
+  completedJobs: number;
   hasCertificate: boolean;
+  /** Price = a full price for the job. VisitFirst = the artisan wants to see it before pricing. */
+  kind: 'Price' | 'VisitFirst';
+  /** VisitFirst only: what the visit costs (0 = free). Credited against the price. */
+  visitFeeNaira: number;
   photoUrl: string | null;
   /** Total the customer pays: workmanshipNaira + materialsNaira. */
   amountNaira: number;

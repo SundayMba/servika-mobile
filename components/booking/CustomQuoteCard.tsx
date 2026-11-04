@@ -39,9 +39,9 @@ function RangeBar({ min, max, labour }: { min: number; max: number; labour: numb
 }
 
 /**
- * A custom job's quote (Business Model v1.4, section 10): the artisan's itemised price after the paid visit,
- * shown beside what similar jobs cost. Large quotes are checked by Servika before they appear here. The
- * customer accepts and pays the rest (the visit is credited), or declines and pays only the visit.
+ * The price after a paid visit: the artisan the customer picked to "visit first" saw the job and sent an
+ * itemised price. The customer accepts and pays the rest (the visit is credited), or declines and pays only
+ * the visit, which the artisan keeps for coming out.
  */
 export function CustomQuoteCard({ booking, onPay }: { booking: BookingDetail; onPay: () => void }) {
   const atTheDoor = booking.isCustomQuote && booking.status === 'Arrived' && !booking.agreedWorkmanshipNaira;
@@ -84,8 +84,8 @@ export function CustomQuoteCard({ booking, onPay }: { booking: BookingDetail; on
           <AppText weight="semibold" className="text-[15px] text-gray-900">Waiting for the quote</AppText>
         </View>
         <AppText className="mt-1 text-[12.5px] leading-[18px] text-gray-500">
-          {who} is looking at the job and will send an itemised quote here. Servika checks large quotes before you see them.
-          Nothing is done until you accept.
+          {who} is looking at the job and will send a price here, labour and materials listed. Nothing is done until you
+          accept it.
         </AppText>
         <Pressable accessibilityRole="button" onPress={declineVisit} className="mt-2 items-center py-1.5">
           <AppText weight="semibold" className="text-[13px] text-gray-500">Not going ahead? Pay only the visit</AppText>
