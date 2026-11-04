@@ -43,16 +43,15 @@ type TabBarProps = BottomTabBarProps & {
 /**
  * The v2 tab bar, from the Servika design canvas.
  *
- * What changed from v1: a flat translucent-white slab with a hairline top edge
+ * What changed from v1: a flat white slab with a hairline top edge
  * instead of a 28pt rounded card on a drop shadow; outline glyphs throughout,
  * with the active tab picked out in ink rather than orange; and a plain solid
  * raised button in place of the gradient one. The whole bar is quieter, which
  * is the point — it sits under every screen and was the loudest thing on most
  * of them.
  *
- * The design shows the slab blurred. expo-blur is not a dependency and adding
- * it means a native rebuild, so the fill stands in for it — see the note on
- * `bar` below for why it is 96% rather than the canvas's 92%.
+ * The design shows the slab blurred; the bar is solid white instead, so nothing
+ * scrolling underneath shows through the labels.
  */
 export function TabBar({
   state,
@@ -136,12 +135,9 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     paddingHorizontal: 8,
     paddingTop: 14,
-    // The canvas specifies 92% white over a 12px backdrop blur. expo-blur is
-    // not a dependency and adding it needs a native rebuild, so there is no
-    // blur — and at 92% the content scrolling underneath stays sharp and
-    // legible through the bar, which reads as a bug rather than as glass. 96%
-    // keeps the faint warmth of the sand showing through without the noise.
-    backgroundColor: 'rgba(255,255,255,0.96)',
+    // Solid white (owner decision 2026-11-04): with no blur, any see-through fill let the page text
+    // scrolling underneath show behind the tab labels.
+    backgroundColor: colors.white,
     borderTopWidth: 1,
     borderTopColor: colors.hairline,
   },
