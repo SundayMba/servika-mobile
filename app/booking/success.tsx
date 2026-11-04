@@ -192,10 +192,10 @@ export default function BookingSuccess() {
           </AppText>
           <AppText className="mt-1.5 px-4 text-center text-[14px] leading-5 text-gray-500">
             {isOpen
-              ? 'Checked artisans nearby can see your job now. Their prices come into your booking as they send them.'
+              ? 'Checked artisans nearby can see your job. Their prices land in your booking.'
               : isFixed
                 ? `${params.artisanName || 'The artisan'} will confirm your booking${amount != null ? `, then you pay ${formatNaira(amount)}${feeNote}` : ''}, held securely until the job is done.`
-                : `${params.artisanName || 'The artisan'} gets your request first. If they cannot take it, your job opens to other artisans to price. You only pay after you accept a price.`}
+                : `${params.artisanName || 'The artisan'} sees it first. If they can't take it, others can price it. Pay only after you accept a price.`}
           </AppText>
         </View>
 

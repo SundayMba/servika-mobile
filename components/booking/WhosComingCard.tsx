@@ -87,10 +87,10 @@ export function FindingArtisanCard({ booking, offers = 0 }: { booking: BookingDe
           </AppText>
           <AppText className="mt-0.5 text-[13px] leading-[18px] text-gray-500">
             {stuck
-              ? 'Nobody near you is online for this right now. Your job stays open and artisans see it as they come online.'
+              ? 'Nobody nearby is online for this yet. Your job stays open for artisans as they come online.'
               : offers > 0
                 ? 'Compare their prices and visit offers below. More may still come in.'
-                : 'Checked artisans nearby can see your job. Their prices, or offers to visit first, come in here.'}
+                : 'Checked artisans nearby can see your job. Their prices or visit offers come in here.'}
           </AppText>
         </View>
       </View>

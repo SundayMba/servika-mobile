@@ -157,8 +157,7 @@ export default function ReportIssue() {
           >
             <Ionicons name="shield-checkmark-outline" size={18} color={DANGER} />
             <AppText className="ml-2 flex-1 text-[12px] text-gray-600">
-              We take your concerns seriously. Your report is confidential and we’ll
-              review it and take appropriate action.
+              Your report is confidential. We review every one.
             </AppText>
           </View>
 

@@ -98,7 +98,7 @@ export default function Settings() {
   const handleDeleteAccount = () => {
     appAlert(
       'Delete account?',
-      `Your account closes now and is erased for good after 30 days. To restore it, email ${SUPPORT_EMAIL} within those 30 days. Any referral balance you have not withdrawn is lost.`,
+      `Your account closes now and is erased after 30 days. Email ${SUPPORT_EMAIL} within 30 days to restore it. Unwithdrawn referral cash is lost.`,
       [
         { text: 'Cancel', style: 'cancel' },
         {

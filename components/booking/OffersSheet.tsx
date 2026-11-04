@@ -256,7 +256,7 @@ export function OffersSheet({
             />
           ))}
           <AppText style={styles.footer}>
-            Pay only after you pick. The money is held by Servika until the job is done. Never pay an artisan outside the app.
+            Pay only after you pick. We hold it until the job is done. Never pay outside the app.
           </AppText>
         </ScrollView>
         </Animated.View>

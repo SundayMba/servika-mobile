@@ -115,7 +115,7 @@ export default function EstateScreen() {
         <View style={styles.intro}>
           <Ionicons name="business-outline" size={22} color={colors.orangeOnDark} />
           <AppText style={styles.introText}>
-            Tell us what the property needs. Our team calls you back, plans the visits, and sends checked artisans. Nothing to pay now.
+            Tell us what the property needs. We call you back and send checked artisans. Nothing to pay now.
           </AppText>
         </View>
 

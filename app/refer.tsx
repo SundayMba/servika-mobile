@@ -41,7 +41,7 @@ export default function Refer() {
 
   const shareMessage = useMemo(
     () =>
-      `Join Servika as an artisan and get more paid jobs near you! Use my code ${data.code} when you sign up. I'll help you set up. 🧰`,
+      `Get more paid jobs near you on Servika. Sign up as an artisan with my code ${data.code}. 🧰`,
     [data.code],
   );
 
@@ -100,8 +100,7 @@ export default function Refer() {
             {reward ? `Earn ${formatNaira(reward)} per artisan` : 'Earn cash for every artisan'}
           </AppText>
           <AppText className="mt-1.5 text-center text-[13px] leading-5 text-white/60">
-            Bring skilled artisans onto Servika and help them get started. You
-            get paid when they complete their first job.
+            Bring artisans to Servika. You get paid when they finish their first job.
           </AppText>
         </View>
       </View>

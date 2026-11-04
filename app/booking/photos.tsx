@@ -269,8 +269,8 @@ export default function BookingPhotos() {
             <AppText weight="semibold" className="text-[13px] text-gray-900">Tips</AppText>
             <AppText className="mt-0.5 text-[12px] leading-4 text-gray-600">
               {bidding
-                ? 'Artisans price from these. Clear photos and a short clip get you more prices, and fewer "visit first" offers.'
-                : 'Clear photos help artisans understand the problem better and give more accurate quotes.'}
+                ? 'Clear photos and a short clip get you more prices and fewer "visit first" offers.'
+                : 'Clear photos help artisans price the job right.'}
             </AppText>
           </View>
         </View>

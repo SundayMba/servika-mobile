@@ -226,7 +226,7 @@ export function PaystackCheckout({ url, reference, returnScheme, title = 'Secure
           icon="close-circle"
           tint="#B3261E"
           title="The payment did not go through"
-          body="Your bank or wallet declined it, or the payment was abandoned. Nothing was charged. You can try again or pay another way."
+          body="Your bank declined it or the payment was stopped. Nothing was charged. Try again or pay another way."
           primary={{ label: retrying ? 'Starting again' : 'Try again', onPress: retry, disabled: retrying }}
           secondary={{ label: 'Back', onPress: () => finish({ status: 'failed', info: null }) }}
           bottom={insets.bottom}
@@ -236,7 +236,7 @@ export function PaystackCheckout({ url, reference, returnScheme, title = 'Secure
           icon="time"
           tint="#C2560B"
           title="Still waiting for the bank"
-          body="Transfers sometimes take a few minutes to confirm. Your money is safe: the moment the bank confirms, the payment completes on its own and you get a notification."
+          body="Transfers can take a few minutes. Your money is safe, and we'll notify you once the bank confirms."
           primary={{ label: 'Check again', onPress: () => void check('manual').then((r) => r === 'pending' && startPolling()) }}
           secondary={{ label: 'I will wait for the notification', onPress: () => finish({ status: 'pending', info: null }) }}
           bottom={insets.bottom}

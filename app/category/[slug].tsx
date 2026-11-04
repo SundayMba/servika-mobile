@@ -58,7 +58,7 @@ export default function CategoryScreen() {
           <PriceCover photoUrl={null} categorySlug={slug} side="right" style={StyleSheet.absoluteFill} />
           <View style={styles.bannerText}>
             <AppText weight="semibold" style={styles.bannerTitle}>Describe it.{'\n'}Get prices.</AppText>
-            <AppText style={styles.bannerSub}>Artisans near you compete for the job. You choose.</AppText>
+            <AppText style={styles.bannerSub}>Checked artisans near you send prices. You pick one.</AppText>
           </View>
         </View>
 

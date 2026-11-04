@@ -230,7 +230,7 @@ export default function Home() {
               <Ionicons name="navigate-outline" size={20} color={colors.accentDeep} />
             </View>
             <AppText weight="semibold" style={styles.areaTitle}>We&apos;re not in {areaShort || 'your area'} yet</AppText>
-            <AppText style={styles.areaBody}>Servika starts in Lekki Phase 1, Ikate, Chevron and Agungi. Join the waitlist and we will tell you the day we reach you.</AppText>
+            <AppText style={styles.areaBody}>We start in Lekki Phase 1, Ikate, Chevron and Agungi. Join the waitlist and we&apos;ll tell you when we reach you.</AppText>
             <View style={styles.areaActions}>
               <Pressable accessibilityRole="button" onPress={() => Linking.openURL(SITE_URL).catch(() => undefined)} style={styles.areaPrimary}>
                 <AppText weight="semibold" style={styles.areaPrimaryLabel}>Join the waitlist</AppText>
@@ -255,7 +255,7 @@ export default function Home() {
               <JobTile label="Something else" icon="grid-outline" width={tileWidth} onPress={() => router.navigate('/services')} />
             </View>
           )}
-          <AppText style={[styles.gutter, styles.note]}>Pick the job and describe it. Checked artisans send their prices, and you choose who comes.</AppText>
+          <AppText style={[styles.gutter, styles.note]}>Describe the job. Checked artisans send prices, and you choose who comes.</AppText>
         </View>
 
         {/* ── Standard services, one row per trade: posts artisans price themselves, checked by Servika ── */}

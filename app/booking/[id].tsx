@@ -364,8 +364,8 @@ export default function BookingDetailScreen() {
       visit ? `Pick ${first} to visit?` : 'Accept this offer?',
       visit
         ? bid.visitFeeNaira > 0
-          ? `You pay ${formatNaira(bid.visitFeeNaira)} now for the visit. ${first} comes, sees the job and sends a price, and the visit comes off it. If you don't go ahead, you pay only the visit. The other offers close.`
-          : `${first} visits for free, sees the job and sends a price here. You pay only if you accept it. The other offers close.`
+          ? `You pay ${formatNaira(bid.visitFeeNaira)} now. ${first} visits and sends a price, minus the visit fee. Say no and you pay only the visit. Other offers close.`
+          : `${first} visits free and sends a price. You pay only if you accept it. Other offers close.`
         : `${bid.artisanName} will do the job for ${formatNaira(bid.amountNaira)}. The other offers close.`,
       [
         { text: 'Not yet', style: 'cancel' },
@@ -553,20 +553,19 @@ export default function BookingDetailScreen() {
                   </AppText>
                   <AppText className="mt-0.5 text-center text-[12px] leading-4 text-gray-400">
                     {isDirectPending
-                      ? `${booking.artisanName ?? 'The artisan'} is reviewing your request. They'll send a price or come inspect for free first. We'll notify you.`
+                      ? `${booking.artisanName ?? 'The artisan'} will send a price or visit free first. We'll notify you.`
                       : isDirectAwaitingQuote
-                        ? `${booking.artisanName ?? 'The artisan'} is inspecting the job (free) and will send their price here. You only pay after you accept it.`
-                        : 'Artisans are reviewing your photos. Offers usually arrive within a few hours, and we will notify you.'}
+                        ? `${booking.artisanName ?? 'The artisan'} is checking the job for free. Pay only after you accept their price.`
+                        : "Artisans are pricing from your photos. We'll notify you when offers come in."}
                   </AppText>
                   {/* The decisive anti-leakage moment: the artisan may be standing
                       in the customer's home. Protection only exists in-app, so say
                       it exactly here, where a side deal would happen. */}
                   <View className="mt-3 rounded-xl bg-amber-50 px-3 py-2.5">
                     <AppText className="text-[12px] leading-4 text-amber-800">
-                      Keep the price inside Servika. Money you pay in the app is
-                      held safely until the job is done, and you can get it back
-                      if something goes wrong. We cannot protect any payment made
-                      outside the app.
+                      Pay only in the app. We hold it until the job is done and
+                      refund it if things go wrong. We can&apos;t protect any
+                      payment made outside the app.
                     </AppText>
                   </View>
                   {isDirectPending ? (
@@ -974,8 +973,8 @@ export default function BookingDetailScreen() {
               </AppText>
             ) : (
               <AppText className="mt-1 text-[12px] leading-4 text-gray-500">
-                Nothing to pay yet. You&apos;ll get a price to review first, and
-                your payment is held securely until the job is done.
+                Nothing to pay yet. You review a price first, and we hold your
+                payment until the job is done.
               </AppText>
             )}
           </Section>
@@ -1178,8 +1177,7 @@ export default function BookingDetailScreen() {
           </Pressable>
           {counterFor ? (
             <AppText className="mt-3 text-center text-[11.5px] leading-4 text-gray-400">
-              You get one offer on the labour. If they accept, the price is agreed and you pay
-              securely in the app. If not, their price stands.
+              One offer on the labour. If they accept, you pay that in the app. If not, their price stands.
             </AppText>
           ) : null}
         </View>
@@ -1263,8 +1261,8 @@ export default function BookingDetailScreen() {
           ) : null}
           <AppText className="mt-2.5 text-center text-[11.5px] leading-4 text-gray-400">
             {cashAllowed
-              ? 'Online payment is protected by escrow and released to the artisan only when you confirm the job. Cash jobs have limited dispute protection.'
-              : 'Servika holds your payment and releases it to the artisan only when you confirm the job. Card, bank transfer, USSD and OPay all work.'}
+              ? 'Paid online, held until you confirm the job. Cash has limited protection.'
+              : 'Held by Servika until you confirm the job. Card, transfer, USSD or OPay.'}
           </AppText>
         </View>
       </BottomSheet>
