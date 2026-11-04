@@ -282,16 +282,20 @@ export default function Home() {
         ) : null}
 
         {/* ── Book someone you know ── */}
-        <Pressable accessibilityRole="button" onPress={() => router.push('/book-by-code')} style={[styles.gutter, styles.codeCard]}>
-          <View style={styles.codeIcon}>
-            <Ionicons name="key-outline" size={19} color={colors.white} />
-          </View>
-          <View style={{ flex: 1, gap: 2 }}>
-            <AppText weight="semibold" style={styles.codeTitle}>Have an artisan&apos;s code?</AppText>
-            <AppText style={styles.codeSub}>Book someone you already know, through Servika</AppText>
-          </View>
-          <Ionicons name="arrow-forward" size={18} color={colors.ink} />
-        </Pressable>
+        <View style={[styles.gutter, styles.codeCard]}>
+          <Pressable accessibilityRole="button" onPress={() => router.push('/book-by-code')} style={styles.codeMain}>
+            <View style={styles.codeIcon}>
+              <Ionicons name="key-outline" size={19} color={colors.white} />
+            </View>
+            <View style={{ flex: 1, gap: 2 }}>
+              <AppText weight="semibold" style={styles.codeTitle}>Have an artisan&apos;s code?</AppText>
+              <AppText style={styles.codeSub}>Book someone you already know, through Servika</AppText>
+            </View>
+          </Pressable>
+          <Pressable accessibilityRole="button" accessibilityLabel="Scan an artisan's QR code" onPress={() => router.push('/scan-code')} style={styles.scanBtn}>
+            <Ionicons name="qr-code-outline" size={20} color={colors.ink} />
+          </Pressable>
+        </View>
 
         {/* ── What Servika does, nothing more ── */}
         <View style={[styles.gutter, styles.trustCard]}>
@@ -433,7 +437,9 @@ const styles = StyleSheet.create({
   areaSecondary: { flex: 1, height: 44, borderRadius: 13, alignItems: 'stretch', justifyContent: 'center', borderWidth: 1, borderColor: colors.hairlineStrong },
   areaSecondaryLabel: { fontSize: 13.5, textAlign: 'center', color: colors.ink },
 
-  codeCard: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 20, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.hairline },
+  codeCard: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14, borderRadius: 20, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.hairline },
+  codeMain: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  scanBtn: { width: 46, height: 46, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.sand, borderWidth: 1, borderColor: colors.hairline },
   codeIcon: { width: 42, height: 42, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.accentDeep },
   codeTitle: { fontSize: 14.5, color: colors.ink },
   codeSub: { fontSize: 12.5, color: colors.inkMuted },

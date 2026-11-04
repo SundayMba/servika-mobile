@@ -17,7 +17,7 @@ import { useArtisanByCode } from '@/lib/catalogue/hooks';
 
 /**
  * Book an artisan by their personal code or link (Business Model v1.4, section 15). The code
- * reveals one artisan and nothing to browse; the request goes to them first, then into rotation.
+ * reveals one artisan and nothing to browse; the request goes to them first, then opens for bids.
  */
 export default function BookByCode() {
   const router = useRouter();
@@ -56,7 +56,7 @@ export default function BookByCode() {
 
         <View className="px-5 pt-6">
           <AppText className="text-[14px] leading-5 text-gray-500">
-            An artisan you know gave you a code or a link. Type it here and the job goes to them first.
+            An artisan you know gave you a code, a link or a QR. Type the code or scan the QR, and the job goes to them first.
           </AppText>
           <View className="mt-4 flex-row items-center gap-2">
             <TextInput
@@ -74,6 +74,14 @@ export default function BookByCode() {
               <AppText weight="semibold" className="text-[14px] text-white">Find</AppText>
             </Pressable>
           </View>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => router.push('/scan-code')}
+            className="mt-3 h-12 flex-row items-center justify-center gap-2 rounded-2xl border border-gray-200 bg-white"
+          >
+            <Ionicons name="qr-code-outline" size={18} color={colors.textPrimary} />
+            <AppText weight="semibold" className="text-[14px] text-gray-900">Scan their QR instead</AppText>
+          </Pressable>
 
           {isFetching ? (
             <View className="mt-8 items-center"><ActivityIndicator color={colors.accentDeep} /></View>
@@ -99,7 +107,7 @@ export default function BookByCode() {
               </View>
               {artisan.isAway ? (
                 <View className="mt-3 rounded-xl bg-amber-50 px-3 py-2.5">
-                  <AppText className="text-[12.5px] leading-4 text-amber-800">{artisan.firstName} is away right now. You can still send the request; if they cannot take it, Servika offers it to another checked artisan.</AppText>
+                  <AppText className="text-[12.5px] leading-4 text-amber-800">{artisan.firstName} is away right now. You can still send the request; if they cannot take it, your job opens to other artisans to price.</AppText>
                 </View>
               ) : null}
               <View className="mt-4">

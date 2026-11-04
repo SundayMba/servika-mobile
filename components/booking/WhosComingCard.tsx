@@ -83,13 +83,13 @@ export function FindingArtisanCard({ booking, offers = 0 }: { booking: BookingDe
         </View>
         <View className="flex-1">
           <AppText weight="semibold" className="text-[15px] text-gray-900">
-            {stuck ? 'No artisan free yet' : offers > 0 ? `${offers} ${offers === 1 ? 'artisan has' : 'artisans have'} sent a price` : 'Getting prices'}
+            {stuck ? 'No artisan free yet' : offers > 0 ? `${offers} ${offers === 1 ? 'artisan has' : 'artisans have'} answered` : 'Getting prices'}
           </AppText>
           <AppText className="mt-0.5 text-[13px] leading-[18px] text-gray-500">
             {stuck
               ? 'Nobody near you is online for this right now. Your job stays open and artisans see it as they come online.'
               : offers > 0
-                ? 'Open the offers below to compare. More may still come in.'
+                ? 'Compare their prices and visit offers below. More may still come in.'
                 : 'Checked artisans nearby can see your job. Their prices, or offers to visit first, come in here.'}
           </AppText>
         </View>

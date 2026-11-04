@@ -20,7 +20,8 @@ const SORTS: { key: Sort; label: string }[] = [
   { key: 'jobs', label: 'Most jobs' },
 ];
 
-const PEEK = 112;
+// Collapsed, only the handle and the summary row show.
+const PEEK = 80;
 const EASE = Easing.out(Easing.cubic);
 
 /** A price bid is compared on its total; a visit bid on its visit fee, after every price bid of the same cost. */
@@ -71,7 +72,7 @@ function OfferCard({
             {bid.hasCertificate ? <Ionicons name="ribbon" size={13} color={colors.accentDeep} /> : null}
           </View>
           <AppText numberOfLines={1} style={styles.meta}>
-            ID checked · {bid.completedJobs > 0 ? `${bid.completedJobs} ${bid.completedJobs === 1 ? 'job' : 'jobs'} on Servika` : 'New on Servika'}
+            ID checked · {bid.completedJobs > 0 ? `${bid.completedJobs} ${bid.completedJobs === 1 ? 'job' : 'jobs'} done` : 'New'}
             {distance ? ` · ${distance}` : ''}
           </AppText>
         </Pressable>
@@ -189,10 +190,12 @@ export function OffersSheet({
 
   const sheetStyle = useAnimatedStyle(() => ({ transform: [{ translateY: y.value }] }));
   const backdropStyle = useAnimatedStyle(() => ({ opacity: (1 - y.value / closedY) * 0.35 }));
+  // The list only shows as the sheet comes up, so the collapsed sheet is just the summary row.
+  const bodyStyle = useAnimatedStyle(() => ({ opacity: Math.min(1, Math.max(0, 1.4 - (y.value / closedY) * 1.6)) }));
 
   const summary =
     priced.length > 0
-      ? `From ${formatNaira(Math.min(...priced.map((b) => b.amountNaira)))}${visits > 0 ? ` · ${visits} want to visit first` : ''}`
+      ? `From ${formatNaira(Math.min(...priced.map((b) => b.amountNaira)))}${visits > 0 ? ` · ${visits} visit first` : ''}`
       : `${visits} ${visits === 1 ? 'artisan wants' : 'artisans want'} to see it first`;
 
   return (
@@ -219,6 +222,7 @@ export function OffersSheet({
           </Pressable>
         </GestureDetector>
 
+        <Animated.View style={[{ flex: 1 }, bodyStyle]}>
         {bids.length > 1 ? (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={styles.sorts}>
             {SORTS.filter((s) => s.key !== 'nearest' || bids.some((b) => b.distanceKm != null)).map((s) => (
@@ -245,6 +249,7 @@ export function OffersSheet({
             Pay only after you pick. The money is held by Servika until the job is done. Never pay an artisan outside the app.
           </AppText>
         </ScrollView>
+        </Animated.View>
       </Animated.View>
     </>
   );

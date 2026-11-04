@@ -2,7 +2,7 @@
   "expo": {
     "name": "Servika",
     "slug": "servika",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/images/general-sizes/servika-orange-clean-icon-1024x1024.png",
     "scheme": "servika",
@@ -88,6 +88,13 @@
           "organization": "servika",
           "project": "servika-customer",
           "url": "https://de.sentry.io/"
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Servika uses the camera to scan an artisan's QR code so you can book them.",
+          "recordAudioAndroid": false
         }
       ]
     ],
