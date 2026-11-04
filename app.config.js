@@ -34,10 +34,25 @@ function withArm64Only(config) {
   });
 }
 
+// Google Sign-In on iPhones needs Google's iOS client: its reversed id goes in as the URL scheme, and the
+// plugin refuses to build iOS without it. Until GOOGLE_IOS_URL_SCHEME is set, iOS builds leave the plugin out
+// (the app hides Google on iPhones and offers Sign in with Apple); Android keeps it unchanged.
+const GOOGLE_SIGNIN = '@react-native-google-signin/google-signin';
+function withGoogleSignInConfig(config) {
+  const scheme = process.env.GOOGLE_IOS_URL_SCHEME;
+  const plugins = (config.plugins ?? []).flatMap((p) => {
+    const name = Array.isArray(p) ? p[0] : p;
+    if (name !== GOOGLE_SIGNIN) return [p];
+    if (scheme) return [[GOOGLE_SIGNIN, { iosUrlScheme: scheme }]];
+    return process.env.EAS_BUILD_PLATFORM === 'ios' ? [] : [p];
+  });
+  return { ...config, plugins };
+}
+
 module.exports = ({ config }) =>
   withWindowsNinja(
     withArm64Only({
-      ...config,
+      ...withGoogleSignInConfig(config),
       android: {
         ...config.android,
         config: {

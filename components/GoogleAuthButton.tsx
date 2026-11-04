@@ -1,7 +1,8 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, StyleSheet, View } from 'react-native';
 
+import { AppleAuthButton } from '@/components/AppleAuthButton';
 import { GoogleG } from '@/components/auth/GoogleG';
 import { AppText } from '@/components/ui/AppText';
 import { appAlert } from '@/components/ui/AppAlert';
@@ -12,6 +13,9 @@ import { useAuth } from '@/lib/auth/AuthContext';
 // token the backend verifies. Unset ⇒ the button doesn't render at all, so we
 // never ship a dead button.
 const WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_OAUTH_WEB_CLIENT_ID;
+// iPhones also need Google's iOS client id; until it is set, Google is hidden on iOS and Apple stands alone.
+const IOS_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_OAUTH_IOS_CLIENT_ID;
+const GOOGLE_ON = !!WEB_CLIENT_ID && (Platform.OS !== 'ios' || !!IOS_CLIENT_ID);
 
 
 /**
@@ -34,7 +38,8 @@ export function GoogleAuthButton({ variant = 'light', onBusyChange, onSignedIn }
     onBusyChange?.(b);
   };
 
-  if (!WEB_CLIENT_ID) return null;
+  // Android with no Google client: nothing to show. iPhones always have Apple.
+  if (!GOOGLE_ON && Platform.OS !== 'ios') return null;
 
   const handlePress = async () => {
     if (busy) return;
@@ -47,7 +52,7 @@ export function GoogleAuthButton({ variant = 'light', onBusyChange, onSignedIn }
         GoogleSignin,
       } = require('@react-native-google-signin/google-signin');
       /* eslint-enable @typescript-eslint/no-require-imports */
-      GoogleSignin.configure({ webClientId: WEB_CLIENT_ID });
+      GoogleSignin.configure({ webClientId: WEB_CLIENT_ID, iosClientId: IOS_CLIENT_ID });
       await GoogleSignin.hasPlayServices({
         showPlayServicesUpdateDialog: true,
       });
@@ -89,16 +94,21 @@ export function GoogleAuthButton({ variant = 'light', onBusyChange, onSignedIn }
 
   if (variant === 'dark') {
     return (
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Continue with Google"
-        disabled={busy}
-        onPress={handlePress}
-        style={[darkStyles.outline, busy ? { opacity: 0.6 } : null]}
-      >
-        {busy ? <ActivityIndicator size="small" color="#14171B" /> : <GoogleG size={18} />}
-        <AppText weight="semibold" style={darkStyles.label}>Continue with Google</AppText>
-      </Pressable>
+      <View style={{ gap: 10 }}>
+        <AppleAuthButton variant="dark" onBusyChange={onBusyChange} onSignedIn={onSignedIn} />
+        {GOOGLE_ON ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Continue with Google"
+            disabled={busy}
+            onPress={handlePress}
+            style={[darkStyles.outline, busy ? { opacity: 0.6 } : null]}
+          >
+            {busy ? <ActivityIndicator size="small" color="#14171B" /> : <GoogleG size={18} />}
+            <AppText weight="semibold" style={darkStyles.label}>Continue with Google</AppText>
+          </Pressable>
+        ) : null}
+      </View>
     );
   }
 
@@ -111,27 +121,32 @@ export function GoogleAuthButton({ variant = 'light', onBusyChange, onSignedIn }
         <View className="h-px flex-1 bg-gray-200" />
       </View>
 
-      {/* Full-width Google button (Google's recommended light style) */}
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Continue with Google"
-        onPress={handlePress}
-        className="mt-4 h-14 flex-row items-center justify-center gap-3 rounded-2xl border border-gray-200 bg-white active:bg-gray-50"
-        style={{
-          shadowColor: '#0F172A',
-          shadowOpacity: 0.06,
-          shadowRadius: 8,
-          shadowOffset: { width: 0, height: 3 },
-          elevation: 2,
-        }}
-      >
-        {busy ? (
-          <ActivityIndicator size="small" color="#4285F4" />
-        ) : (
-          <GoogleG size={20} />
-        )}
-        <AppText weight="semibold" className="text-[15px] text-gray-800">Google</AppText>
-      </Pressable>
+      {/* Apple first on iPhones (Apple's own button style), then Google */}
+      <View className="mt-4 gap-3">
+        <AppleAuthButton onBusyChange={onBusyChange} onSignedIn={onSignedIn} />
+        {GOOGLE_ON ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Continue with Google"
+            onPress={handlePress}
+            className="h-14 flex-row items-center justify-center gap-3 rounded-2xl border border-gray-200 bg-white active:bg-gray-50"
+            style={{
+              shadowColor: '#0F172A',
+              shadowOpacity: 0.06,
+              shadowRadius: 8,
+              shadowOffset: { width: 0, height: 3 },
+              elevation: 2,
+            }}
+          >
+            {busy ? (
+              <ActivityIndicator size="small" color="#4285F4" />
+            ) : (
+              <GoogleG size={20} />
+            )}
+            <AppText weight="semibold" className="text-[15px] text-gray-800">Google</AppText>
+          </Pressable>
+        ) : null}
+      </View>
     </View>
   );
 }

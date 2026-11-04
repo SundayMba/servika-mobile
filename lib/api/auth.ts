@@ -49,6 +49,12 @@ export async function googleLogin(idToken: string): Promise<AuthResponse> {
   return data;
 }
 
+/** Sign in with Apple (iPhone): Apple's identity token, plus the name Apple shares only the first time. */
+export async function appleLogin(identityToken: string, fullName: string | null): Promise<AuthResponse> {
+  const { data } = await apiClient.post<AuthResponse>(`${BASE}/apple`, { identityToken, fullName });
+  return data;
+}
+
 /** Revokes the refresh token server-side. Idempotent — safe to call anytime. */
 export async function updateProfile(body: {
   fullName: string;
