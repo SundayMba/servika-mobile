@@ -44,9 +44,8 @@ export function AppErrorBoundary({ error, retry }: ErrorBoundaryProps) {
           Something broke on this screen
         </AppText>
         <AppText style={styles.body}>
-          Sorry — that is on us, not on you. Nothing you have booked or paid for is
-          affected. Try the screen again, and if it keeps happening go back and come
-          at it from the home tab.
+          Sorry, that is on us. Your bookings and payments are safe. Try again,
+          or go back to the home tab.
         </AppText>
 
         <Pressable

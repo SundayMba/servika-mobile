@@ -192,8 +192,6 @@ export default function ActiveBookingDashboard() {
           <ArtisanRow
             name={artisanName}
             specialty={artisan?.specialty ?? ''}
-            rating={artisan?.rating}
-            reviewCount={artisan?.reviewCount}
             completedJobs={artisan?.completedJobs}
             imageKey={artisan?.imageKey ?? ''}
             photoUrl={artisan?.photoUrl}

@@ -120,8 +120,7 @@ export default function ChatScreen() {
         <View className="mx-4 mt-2 flex-row items-start gap-2 rounded-2xl bg-primary/5 px-3 py-2.5">
           <Ionicons name="shield-checkmark" size={16} color={colors.primary} />
           <AppText className="flex-1 text-[11px] leading-4 text-gray-600">
-            Keep payments and coordination on Servika. You&apos;re covered by escrow,
-            reviews and dispute support. Phone numbers and emails are hidden in chat.
+            Pay in the app to stay covered. Phone numbers and emails are hidden in chat.
           </AppText>
           <Pressable hitSlop={8} onPress={() => setShowSafety(false)}>
             <Ionicons name="close" size={15} color={colors.textMuted} />

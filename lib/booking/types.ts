@@ -65,6 +65,17 @@ export interface CreateBookingRequest {
    * listed price (server reads the price; never trusted from the client).
    * Requires `artisanId`. */
   artisanServiceId?: string | null;
+  /** An artisan's personal booking code or link; the server resolves the artisan from it. */
+  bookingCode?: string | null;
+  /** Rebooking an artisan who already did a job for you (verified server-side). */
+  rebook?: boolean;
+  /** A job from Servika's price book: booked at Servika's price and paid upfront. */
+  priceBookItemId?: string | null;
+  /** "Not sure what's wrong?": a diagnosis visit at Servika's fee, paid upfront and credited. */
+  diagnosis?: boolean;
+  /** "Something else": a paid visit, then an itemised quote; optionally the listed kind of custom work. */
+  customQuote?: boolean;
+  customPriceBookItemId?: string | null;
 }
 
 /** A row in the customer's "My Bookings" history (GET /api/v1/bookings). */
@@ -88,6 +99,14 @@ export interface BookingSummary {
   mediaUrls: string[];
   /** API path of the customer's short job video, or null. */
   videoUrl: string | null;
+  /** The assigned artisan profile id (for Book again), or null. */
+  artisanId?: string | null;
+  /** Rotation | Direct | Code | Rebook. */
+  source?: string;
+  /** The Servika price-book job this booking is for (paid upfront at Servika's price), if any. */
+  priceBookItemId?: string | null;
+  /** True while a price-book job waits for its upfront payment; no artisan is offered it yet. */
+  awaitingUpfrontPayment?: boolean;
 }
 
 /** The full booking record (GET /api/v1/bookings/{id} and the create response). */
@@ -132,11 +151,56 @@ export interface BookingDetail {
   workStartedAtUtc: string | null;
   /** When an AwaitingConfirmation job confirms itself; null/missing = unknown. */
   autoConfirmAtUtc?: string | null;
+  /** How many artisans Servika has offered this job to (Open requests). */
+  offerRound?: number;
+  /** Set while rotation has nobody left to ask; Servika keeps retrying. */
+  offersExhaustedAtUtc?: string | null;
   assessmentMode: 'Inspection' | 'RemoteQuote';
   mediaUrls: string[];
   videoUrl: string | null;
   /** Active bids while the request is open for offers; 0 otherwise. */
   bidCount: number;
+  /** The Servika price-book job this booking is for (paid upfront at Servika's price), if any. */
+  priceBookItemId?: string | null;
+  /** True while a price-book job waits for its upfront payment; no artisan is offered it yet. */
+  awaitingUpfrontPayment?: boolean;
+  /** Diagnosis visit: the fee paid at booking, credited against the repairs. Null otherwise. */
+  diagnosisFeeNaira?: number | null;
+  /** Repairs from Servika's list the customer approved on this job. */
+  approvedRepairsNaira?: number;
+  /** Held in escrow so far, and what is still owed against the agreed price. */
+  paidNaira?: number;
+  amountDueNaira?: number;
+  /** A custom job: a paid visit, then an itemised quote checked against the typical range. */
+  isCustomQuote?: boolean;
+  typicalRangeMinNaira?: number | null;
+  typicalRangeMaxNaira?: number | null;
+}
+
+/** One repair the artisan picked from Servika's add-on list, with a photo of the fault. */
+export interface BookingRepair {
+  id: string;
+  priceBookItemId: string;
+  round: number;
+  name: string;
+  labourNaira: number;
+  partsNaira: number;
+  partsNote: string | null;
+  totalNaira: number;
+  /** API path of the fault photo (needs the auth header). */
+  photoUrl: string;
+  status: 'Proposed' | 'Approved' | 'Declined';
+  proposedAtUtc: string;
+}
+
+/** The repairs on a job and the money picture now. */
+export interface BookingRepairs {
+  repairs: BookingRepair[];
+  diagnosisFeeNaira: number | null;
+  approvedRepairsNaira: number;
+  agreedTotalNaira: number;
+  paidNaira: number;
+  amountDueNaira: number;
 }
 
 /** An artisan's price offer on an open RemoteQuote request. */
@@ -151,9 +215,13 @@ export interface Bid {
   bookingId: string;
   artisanId: string;
   artisanName: string;
-  rating: number;
-  reviewCount: number;
+  /** Jobs this artisan has finished on Servika. Ratings are private to Servika. */
+  completedJobs: number;
   hasCertificate: boolean;
+  /** Price = a full price for the job. VisitFirst = the artisan wants to see it before pricing. */
+  kind: 'Price' | 'VisitFirst';
+  /** VisitFirst only: what the visit costs (0 = free). Credited against the price. */
+  visitFeeNaira: number;
   photoUrl: string | null;
   /** Total the customer pays: workmanshipNaira + materialsNaira. */
   amountNaira: number;
@@ -173,4 +241,21 @@ export interface Bid {
   createdAtUtc: string;
   /** Km from the job to the artisan's base, when both are known. */
   distanceKm: number | null;
+  /** Custom quotes: Approved = Servika checked it before you saw it. */
+  review?: 'NotNeeded' | 'Pending' | 'Approved' | 'SentBack';
+}
+
+/** An artisan you have completed jobs with (GET /bookings/past-artisans). */
+export interface PastArtisan {
+  artisanId: string;
+  fullName: string;
+  specialty: string;
+  imageKey: string;
+  photoUrl: string | null;
+  categorySlugs: string[];
+  jobsWithYou: number;
+  lastBookedAtUtc: string;
+  isAvailable: boolean;
+  isAway: boolean;
+  canBook: boolean;
 }

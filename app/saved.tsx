@@ -11,7 +11,7 @@ import { useAuth } from '@/lib/auth/AuthContext';
 import { artisanPhotoSource } from '@/lib/catalogue/assets';
 import type { ArtisanSummary } from '@/lib/catalogue/types';
 import { useFavorites } from '@/lib/favorites/hooks';
-import { distanceLabel, ratingLabel } from '@/lib/catalogue/display';
+import { distanceLabel } from '@/lib/catalogue/display';
 
 function SavedRow({ artisan, onPress }: { artisan: ArtisanSummary; onPress: () => void }) {
   const avatar = artisanPhotoSource(artisan.photoUrl, artisan.imageKey);
@@ -30,13 +30,10 @@ function SavedRow({ artisan, onPress }: { artisan: ArtisanSummary; onPress: () =
           {artisan.specialty}
         </AppText>
         <View className="mt-1 flex-row items-center gap-1">
-          <Ionicons name="star" size={12} color="#FBBF24" />
-          <AppText weight="semibold" className="text-[12px] text-gray-700">
-            {ratingLabel(artisan.rating, artisan.reviewCount)}
+          <Ionicons name="shield-checkmark" size={12} color={colors.onlineInk} />
+          <AppText className="text-[12px] text-gray-500">
+            {[(artisan.completedJobs ?? 0) > 0 ? `${artisan.completedJobs} jobs on Servika` : 'ID checked', distanceLabel(artisan.distanceKm)].filter(Boolean).join(' · ')}
           </AppText>
-          {distanceLabel(artisan.distanceKm) ? (
-            <AppText className="text-[12px] text-gray-400">· {distanceLabel(artisan.distanceKm)}</AppText>
-          ) : null}
         </View>
       </View>
       <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
@@ -83,7 +80,7 @@ export default function SavedArtisans() {
           </AppText>
           <Pressable
             accessibilityRole="button"
-            onPress={() => router.push('/artisans')}
+            onPress={() => router.push('/home')}
             className="mt-5 h-12 items-center justify-center rounded-2xl bg-primary px-6"
           >
             <AppText weight="semibold" className="text-[15px] text-white">Browse artisans</AppText>

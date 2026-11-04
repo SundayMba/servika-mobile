@@ -184,8 +184,7 @@ function EmptyState() {
         You&apos;re all caught up
       </AppText>
       <AppText className="mt-1.5 text-center text-[13px] leading-5 text-gray-500">
-        Updates about your bookings will show up here, like when an artisan
-        accepts, is on the way, or finishes a job.
+        Booking updates show up here: accepted, on the way, job done.
       </AppText>
     </View>
   );

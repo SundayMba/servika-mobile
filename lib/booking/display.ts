@@ -11,7 +11,7 @@ type ChipStyle = { label: string; bg: string; text: string };
 
 const STATUS_STYLES: Record<BookingStatus, ChipStyle> = {
   Draft: { label: 'Draft', bg: 'bg-gray-100', text: 'text-gray-600' },
-  Open: { label: 'Finding an artisan', bg: 'bg-amber-100', text: 'text-amber-700' },
+  Open: { label: 'Getting prices', bg: 'bg-amber-100', text: 'text-amber-700' },
   Pending: { label: 'Pending', bg: 'bg-amber-100', text: 'text-amber-700' },
   Accepted: { label: 'Accepted', bg: 'bg-blue-100', text: 'text-blue-700' },
   Rejected: { label: 'Rejected', bg: 'bg-gray-100', text: 'text-gray-600' },
@@ -25,7 +25,12 @@ const STATUS_STYLES: Record<BookingStatus, ChipStyle> = {
   Expired: { label: 'Expired', bg: 'bg-gray-100', text: 'text-gray-500' },
 };
 
-export function statusStyle(status: BookingStatus): ChipStyle {
+/** A price-book job not yet paid is waiting on the customer, not on an artisan. */
+const isUnpaidUpfront = (status: BookingStatus, awaitingPayment?: boolean) =>
+  !!awaitingPayment && (status === 'Open' || status === 'Pending');
+
+export function statusStyle(status: BookingStatus, awaitingPayment?: boolean): ChipStyle {
+  if (isUnpaidUpfront(status, awaitingPayment)) return { label: 'Awaiting payment', bg: 'bg-orange-100', text: 'text-orange-700' };
   return STATUS_STYLES[status] ?? STATUS_STYLES.Pending;
 }
 
@@ -53,7 +58,7 @@ const RED = { bg: '#FBE7E7', fg: '#C42B1C' };
 
 const STATUS_TONES: Record<BookingStatus, StatusTone> = {
   Draft: { label: 'Draft', ...NEUTRAL },
-  Open: { label: 'Finding an artisan', ...AMBER },
+  Open: { label: 'Getting prices', ...AMBER },
   Pending: { label: 'Pending', ...AMBER },
   Accepted: { label: 'Accepted', ...BLUE },
   Rejected: { label: 'Rejected', ...NEUTRAL },
@@ -67,7 +72,8 @@ const STATUS_TONES: Record<BookingStatus, StatusTone> = {
   Expired: { label: 'Expired', ...NEUTRAL },
 };
 
-export function statusTone(status: BookingStatus): StatusTone {
+export function statusTone(status: BookingStatus, awaitingPayment?: boolean): StatusTone {
+  if (isUnpaidUpfront(status, awaitingPayment)) return { label: 'Awaiting payment', ...WARM };
   return STATUS_TONES[status] ?? STATUS_TONES.Pending;
 }
 

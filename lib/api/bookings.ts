@@ -1,10 +1,12 @@
 import { apiClient } from '@/lib/api/client';
 import type {
+  BookingRepairs,
   Bid,
   BookingDetail,
   BookingSummary,
   CreateBookingRequest,
   JobCompletion,
+  PastArtisan,
 } from '@/lib/booking/types';
 
 /**
@@ -24,6 +26,12 @@ export async function createBooking(
 }
 
 /** The current customer's bookings (history), newest first; optional status filter. */
+/** Artisans you have completed jobs with, most recent first. */
+export async function getPastArtisans(): Promise<PastArtisan[]> {
+  const { data } = await apiClient.get<PastArtisan[]>('/api/v1/bookings/past-artisans');
+  return data;
+}
+
 export async function getBookings(status?: string): Promise<BookingSummary[]> {
   const { data } = await apiClient.get<BookingSummary[]>(BASE, {
     params: status ? { status } : undefined,
@@ -115,5 +123,23 @@ export async function choosePaymentMethod(
     `${BASE}/${bookingId}/payment-method`,
     { method },
   );
+  return data;
+}
+
+/** The repairs the artisan proposed on a job, and what is paid and owed. */
+export async function getBookingRepairs(bookingId: string): Promise<BookingRepairs> {
+  const { data } = await apiClient.get<BookingRepairs>(`/api/v1/bookings/${bookingId}/repairs`);
+  return data;
+}
+
+/** Approve the listed repairs; every other proposed repair is declined. */
+export async function decideRepairs(bookingId: string, approvedRepairIds: string[]): Promise<BookingRepairs> {
+  const { data } = await apiClient.post<BookingRepairs>(`/api/v1/bookings/${bookingId}/repairs/decision`, { approvedRepairIds });
+  return data;
+}
+
+/** Don't go ahead with a custom quote: pay only the visit; the job closes. */
+export async function declineCustomQuote(bookingId: string): Promise<BookingDetail> {
+  const { data } = await apiClient.post<BookingDetail>(`/api/v1/bookings/${bookingId}/quote/decline`);
   return data;
 }

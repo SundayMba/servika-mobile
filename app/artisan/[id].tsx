@@ -25,10 +25,9 @@ import {
   formatNaira,
   galleryImages,
 } from '@/lib/catalogue/assets';
-import { distanceLabel, isNewArtisan } from '@/lib/catalogue/display';
+import { distanceLabel } from '@/lib/catalogue/display';
 import { useArtisan, invalidateCatalogueLists } from '@/lib/catalogue/hooks';
 import { useOpenChat } from '@/lib/chat/hooks';
-import { timeAgo, useArtisanReviews } from '@/lib/reviews/hooks';
 
 /** A small inline icon + label stat used in the identity row. */
 function InfoStat({
@@ -46,21 +45,6 @@ function InfoStat({
   );
 }
 
-/** Filled/empty star row for a given rating. */
-function Stars({ rating, size = 12 }: { rating: number; size?: number }) {
-  return (
-    <View className="flex-row items-center gap-0.5">
-      {[1, 2, 3, 4, 5].map((i) => (
-        <Ionicons
-          key={i}
-          name={i <= Math.round(rating) ? 'star' : 'star-outline'}
-          size={size}
-          color="#FBBF24"
-        />
-      ))}
-    </View>
-  );
-}
 
 function SectionTitle({ title }: { title: string }) {
   return (
@@ -91,7 +75,6 @@ export default function ArtisanProfile() {
   }, [isError, queryClient]);
   const isFavorite = useIsFavorite(id, isAuthenticated);
   const toggleFavorite = useToggleFavorite();
-  const { data: reviews } = useArtisanReviews(id);
 
   if (isLoading) {
     return (
@@ -213,26 +196,10 @@ export default function ArtisanProfile() {
               ) : null}
             </View>
 
-            {/* Rating + experience */}
+            {/* Experience and Servika history: no star average (ratings are collected, not shown) */}
             <View className="mt-1.5 flex-row items-center gap-2">
-              <Ionicons name="star" size={15} color="#FBBF24" />
-              {isNewArtisan(artisan.reviewCount) ? (
-                <AppText weight="semibold" className="text-[13px] text-gray-700">
-                  New on Servika
-                </AppText>
-              ) : (
-                <>
-                  <AppText weight="semibold" className="text-[13px] text-gray-700">
-                    {artisan.rating.toFixed(1)}
-                  </AppText>
-                  <AppText className="text-[13px] text-gray-400">
-                    ({artisan.reviewCount} reviews)
-                  </AppText>
-                </>
-              )}
-              <AppText className="text-[13px] text-gray-300">•</AppText>
               <AppText className="text-[13px] text-gray-500">
-                {artisan.experienceYears}+ years experience
+                {[artisan.experienceYears ? `${artisan.experienceYears}+ years experience` : null, (artisan.completedJobs ?? 0) > 0 ? `${artisan.completedJobs} job${artisan.completedJobs === 1 ? '' : 's'} on Servika` : 'New on Servika'].filter(Boolean).join(' · ')}
               </AppText>
             </View>
 
@@ -345,143 +312,40 @@ export default function ArtisanProfile() {
             </View>
           </View>
 
-          {/* Fixed-price services — book instantly at the listed price */}
-          {(artisan.pricedServices?.length ?? 0) > 0 ? (
+          {/* Their standard services, each checked by Servika before it shows */}
+          {artisan.pricedServices.length > 0 ? (
             <View className="mt-7 px-5">
-              <AppText weight="semibold" className="mb-3 text-[16px] text-gray-900">
-                Book a service
-              </AppText>
-              <View className="rounded-2xl border border-gray-100 bg-white">
+              <SectionTitle title="Services" />
+              <View className="overflow-hidden rounded-2xl border border-gray-100 bg-white">
                 {artisan.pricedServices.map((s, i) => (
                   <Pressable
                     key={s.id}
                     accessibilityRole="button"
-                    accessibilityLabel={`Book ${s.name} for ${formatNaira(s.priceNaira)}`}
-                    onPress={() =>
-                      guard(() =>
-                        router.push({
-                          pathname: '/booking/request',
-                          params: {
-                            service: s.name,
-                            artisanId: artisan.id,
-                            artisanServiceId: s.id,
-                            fixedPrice: String(s.priceNaira),
-                          },
-                        }),
-                      )
-                    }
-                    className={`flex-row items-center px-4 py-3.5 active:bg-gray-50 ${
-                      i === artisan.pricedServices.length - 1 ? '' : 'border-b border-gray-100'
-                    }`}
+                    onPress={() => router.push({ pathname: '/service/[id]', params: { id: s.id } })}
+                    className={`flex-row items-center gap-3 p-3 ${i > 0 ? 'border-t border-gray-100' : ''}`}
                   >
-                    <View className="flex-1 pr-3">
-                      <AppText weight="semibold" className="text-[14px] text-gray-900">{s.name}</AppText>
-                      <AppText weight="semibold" className="mt-0.5 text-[15px] text-primary">
-                        {formatNaira(s.priceNaira)}
-                      </AppText>
+                    <View className="h-12 w-12 items-center justify-center overflow-hidden rounded-xl bg-primary/10">
+                      {s.photoUrl ? (
+                        <Image source={{ uri: `${config.apiBaseUrl}${s.photoUrl}` }} contentFit="cover" style={{ width: 48, height: 48 }} />
+                      ) : (
+                        <Ionicons name="construct-outline" size={20} color={colors.primary} />
+                      )}
                     </View>
-                    <View className="h-9 items-center justify-center rounded-full bg-primary px-4">
-                      <AppText weight="semibold" className="text-[13px] text-white">Book</AppText>
-                    </View>
+                    <AppText weight="semibold" numberOfLines={2} className="flex-1 text-[14px] text-gray-900">{s.name}</AppText>
+                    <AppText weight="semibold" className="text-[14px] text-gray-900">{formatNaira(s.priceNaira)}</AppText>
+                    <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
                   </Pressable>
                 ))}
               </View>
-              <AppText className="mt-2 text-[11.5px] leading-4 text-gray-400">
-                Fixed prices. Pay securely once {artisan.fullName.split(' ')[0]} accepts, held
-                until the job is done.
-              </AppText>
             </View>
           ) : null}
 
-          {/* Customer reviews */}
-          <View className="mt-7">
-            <View className="mb-3 flex-row items-center justify-between px-5">
-              <AppText weight="semibold" className="text-[16px] text-gray-900">
-                Customer Reviews
-              </AppText>
-              {(reviews?.length ?? 0) > 0 ? (
-                <AppText weight="semibold" className="text-[13px] text-gray-400">
-                  {reviews!.length} total
-                </AppText>
-              ) : null}
-            </View>
-            {reviews === undefined ? (
-              <View className="items-center py-6">
-                <ActivityIndicator color={colors.primary} />
-              </View>
-            ) : reviews.length === 0 ? (
-              <View className="mx-5 items-center rounded-2xl border border-gray-100 bg-white px-4 py-7">
-                <Ionicons name="star-outline" size={26} color={colors.textMuted} />
-                <AppText weight="semibold" className="mt-2 text-[13px] text-gray-700">
-                  No reviews yet
-                </AppText>
-                <AppText className="mt-0.5 text-center text-[12px] text-gray-400">
-                  Be the first to review {artisan.fullName.split(' ')[0]} after a job.
-                </AppText>
-              </View>
-            ) : (
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ paddingHorizontal: 20, gap: 12 }}
-              >
-                {reviews.map((review) => (
-                  <View
-                    key={review.id}
-                    className="w-72 rounded-2xl border border-gray-100 bg-white p-4"
-                    style={{
-                      shadowColor: '#0F172A',
-                      shadowOpacity: 0.04,
-                      shadowRadius: 8,
-                      shadowOffset: { width: 0, height: 2 },
-                      elevation: 1,
-                    }}
-                  >
-                    <View className="flex-row items-center gap-3">
-                      <View
-                        className="h-10 w-10 items-center justify-center rounded-full"
-                        style={{ backgroundColor: `${artisan.accent}22` }}
-                      >
-                        <AppText
-                          weight="semibold"
-                          className="text-[15px]"
-                          style={{ color: artisan.accent }}
-                        >
-                          {review.customerName.trim().charAt(0).toUpperCase()}
-                        </AppText>
-                      </View>
-                      <View className="flex-1">
-                        <AppText weight="semibold" className="text-[14px] text-gray-900">
-                          {review.customerName}
-                        </AppText>
-                        <View className="mt-0.5 flex-row items-center gap-2">
-                          <Stars rating={review.rating} />
-                          <AppText className="text-[11px] text-gray-400">
-                            {timeAgo(review.createdAt)}
-                          </AppText>
-                        </View>
-                      </View>
-                    </View>
-                    {review.comment ? (
-                      <AppText
-                        numberOfLines={3}
-                        className="mt-3 text-[13px] leading-5 text-gray-500"
-                      >
-                        {review.comment}
-                      </AppText>
-                    ) : null}
-                  </View>
-                ))}
-              </ScrollView>
-            )}
-          </View>
-
-          {/* Work gallery — hidden until there's something to show */}
+          {/* Recent work — hidden until there's something to show */}
           {gallery.length === 0 ? null : (
           <View className="mt-7">
             <View className="mb-3 px-5">
               <AppText weight="semibold" className="text-[16px] text-gray-900">
-                Work Gallery
+                Recent work
               </AppText>
             </View>
             <ScrollView
@@ -569,12 +433,12 @@ export default function ArtisanProfile() {
         </Pressable>
         <View className="flex-1">
           <Button
-            label="Book This Artisan"
+            label={`Book ${artisan.fullName.split(' ')[0]}`}
             onPress={() =>
               guard(() =>
                 router.push({
                   pathname: '/booking/request',
-                  params: { service: `${artisan.specialty}`, artisanId: artisan.id },
+                  params: { service: `${artisan.specialty}`, artisanId: artisan.id, rebook: '1' },
                 }),
               )
             }

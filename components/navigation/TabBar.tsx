@@ -22,14 +22,13 @@ type TabMeta = {
 
 /**
  * Per-route presentation for the bottom tab bar. Keyed by the route name
- * (the file name inside app/(tabs)). The `explore` route — the Uber-style
- * nearby-artisans map — is rendered as the raised center button rather than
- * a normal tab. (Categories moved to a plain stack screen at /categories.)
+ * (the file name inside app/(tabs)). Five tabs; Services is where every trade and
+ * standard service lives. Artisans themselves are never browsed.
  */
 const TABS: Record<string, TabMeta> = {
   home: { label: 'Home', icon: 'home-outline' },
+  services: { label: 'Services', icon: 'grid-outline' },
   bookings: { label: 'Bookings', icon: 'calendar-outline' },
-  explore: { label: 'Explore', icon: 'map-outline' },
   messages: { label: 'Messages', icon: 'chatbubble-ellipses-outline', badge: true },
   profile: { label: 'Profile', icon: 'person-outline' },
 };
@@ -95,18 +94,6 @@ export function TabBar({
           }
         };
 
-        // The center "Explore" (map) tab renders as a raised circular button.
-        if (route.name === 'explore') {
-          return (
-            <CenterButton
-              key={route.key}
-              meta={meta}
-              isFocused={isFocused}
-              onPress={onPress}
-            />
-          );
-        }
-
         const color = isFocused ? colors.white : colors.inkFaint;
         const labelColor = isFocused ? colors.ink : colors.inkFaint;
 
@@ -136,39 +123,6 @@ export function TabBar({
         );
       })}
     </View>
-  );
-}
-
-function CenterButton({
-  meta,
-  isFocused,
-  onPress,
-}: {
-  meta: TabMeta;
-  isFocused: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityState={isFocused ? { selected: true } : {}}
-      accessibilityLabel={meta.label}
-      onPress={onPress}
-      style={styles.centerTab}
-    >
-      {/* Raised, ringed in the bar's own white so it reads as cut out of it.
-          No gradient and no glow — the canvas draws it flat. */}
-      <View style={styles.raised}>
-        <Ionicons name={meta.icon} size={23} color={colors.white} />
-      </View>
-      <AppText
-        weight={isFocused ? 'semibold' : 'medium'}
-        numberOfLines={1}
-        style={[styles.label, styles.centerLabel, { color: isFocused ? colors.ink : colors.inkFaint }]}
-      >
-        {meta.label}
-      </AppText>
-    </Pressable>
   );
 }
 

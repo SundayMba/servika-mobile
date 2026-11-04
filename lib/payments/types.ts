@@ -40,6 +40,12 @@ export interface FeeSchedule {
   maxCounterRounds?: number;
   /** Whether a customer may choose cash after service. Off = every job is paid in the app. */
   allowCashPayments?: boolean;
+  /** Admin switch: list not-yet-bookable services as "Coming soon". Off by default. */
+  showComingSoonServices?: boolean;
+  /** Minutes an artisan has to accept a job Servika offers them. */
+  offerWindowMinutes?: number;
+  /** The diagnosis visit fee ("not sure what's wrong?"), credited against the repairs. */
+  diagnosisFeeNaira?: number;
 }
 
 /** GET /fees/quote?amount=: the exact fees for an amount, computed server-side. */

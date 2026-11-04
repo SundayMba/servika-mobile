@@ -118,7 +118,7 @@ export default function ForgotPassword() {
         <CheckTile />
         <View style={{ marginTop: 30 }}>
           <Headline>New password,{'\n'}same you.</Headline>
-          <Lede>You are signed in on this phone. Any other phone you used stays signed in until it next checks with us, so sign out there if that was not you.</Lede>
+          <Lede>You&apos;re signed in on this phone. Other phones stay signed in for now, so sign out there if that wasn&apos;t you.</Lede>
         </View>
       </AuthScreen>
     );

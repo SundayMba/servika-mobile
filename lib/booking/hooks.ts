@@ -13,6 +13,10 @@ import {
   rebroadcastBooking,
   decideMaterialsAdvance,
   counterBid,
+  getPastArtisans,
+  getBookingRepairs,
+  decideRepairs,
+  declineCustomQuote,
 } from '@/lib/api/bookings';
 
 /**
@@ -20,6 +24,11 @@ import {
  * job progresses, so they get a short stale time and mutations invalidate the
  * cached list/detail so the UI re-fetches.
  */
+
+/** The artisans this customer has used before (Book again). */
+export function usePastArtisans(enabled = true) {
+  return useQuery({ queryKey: ['past-artisans'], queryFn: getPastArtisans, enabled, staleTime: 60_000 });
+}
 
 export function useBookings(status?: string, options?: { enabled?: boolean }) {
   return useQuery({
@@ -170,6 +179,41 @@ export function useChoosePaymentMethod() {
     onSuccess: (booking) => {
       queryClient.setQueryData(['booking', booking.id], booking);
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
+    },
+  });
+}
+
+/** The repairs on a job. Polls while the artisan is at the door, so a new list shows without a pull. */
+export function useBookingRepairs(bookingId: string | undefined, enabled: boolean) {
+  return useQuery({
+    queryKey: ['booking-repairs', bookingId],
+    queryFn: () => getBookingRepairs(bookingId as string),
+    enabled: !!bookingId && enabled,
+    refetchInterval: 20_000,
+  });
+}
+
+export function useDecideRepairs(bookingId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (approvedRepairIds: string[]) => decideRepairs(bookingId, approvedRepairIds),
+    onSuccess: (data) => {
+      qc.setQueryData(['booking-repairs', bookingId], data);
+      qc.invalidateQueries({ queryKey: ['booking', bookingId] });
+      qc.invalidateQueries({ queryKey: ['bookings'] });
+    },
+  });
+}
+
+/** Decline a custom quote: the visit is the job. */
+export function useDeclineCustomQuote(bookingId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => declineCustomQuote(bookingId),
+    onSuccess: (booking) => {
+      qc.setQueryData(['booking', booking.id], booking);
+      qc.invalidateQueries({ queryKey: ['bookings'] });
+      qc.invalidateQueries({ queryKey: ['booking-bids', booking.id] });
     },
   });
 }

@@ -31,6 +31,9 @@ import {
 } from '@/lib/booking/display';
 import { FieldError } from '@/components/FieldError';
 import { BottomSheet } from '@/components/BottomSheet';
+import { FindingArtisanCard, WHOS_COMING_STATUSES, WhosComingCard } from '@/components/booking/WhosComingCard';
+import { CustomQuoteCard } from '@/components/booking/CustomQuoteCard';
+import { OffersSheet } from '@/components/booking/OffersSheet';
 import {
   useAcceptBid,
   useBooking,
@@ -49,10 +52,10 @@ import { useBookingDispute } from '@/lib/disputes/hooks';
 import type { Dispute } from '@/lib/disputes/types';
 import { timeAgo, useBookingReview } from '@/lib/reviews/hooks';
 
-function StatusChip({ status }: { status: BookingStatus }) {
-  const s = statusStyle(status);
+function StatusChip({ status, awaitingPayment }: { status: BookingStatus; awaitingPayment?: boolean }) {
+  const s = statusStyle(status, awaitingPayment);
   return (
-    <View className={`self-start rounded-full px-3 py-1 ${s.bg}`}>
+    <View className={`mt-1 shrink-0 self-start rounded-full px-3 py-1 ${s.bg}`}>
       <AppText weight="semibold" className={`text-[12px] ${s.text}`}>{s.label}</AppText>
     </View>
   );
@@ -135,24 +138,21 @@ function Row({ label, value }: { label: string; value: string }) {
 // "Best match" mirrors the catalogue's RankScore (rating + certificate bonus),
 // tie-broken by price then proximity — so a certified 4.8★ artisan outranks an
 // uncertified 4.9★ one, and among equals the cheaper/closer offer wins.
-type OfferSort = 'best' | 'price' | 'rating' | 'nearest';
+type OfferSort = 'best' | 'price' | 'nearest';
 
 const OFFER_SORTS: { key: OfferSort; label: string }[] = [
   { key: 'best', label: 'Best match' },
   { key: 'price', label: 'Lowest price' },
-  { key: 'rating', label: 'Top rated' },
   { key: 'nearest', label: 'Nearest' },
 ];
 
 function sortOffers(bids: Bid[], sort: OfferSort): Bid[] {
-  const score = (b: Bid) => b.rating + (b.hasCertificate ? 0.5 : 0);
+  const score = (b: Bid) => (b.hasCertificate ? 0.5 : 0);
   const far = Number.POSITIVE_INFINITY;
   return [...bids].sort((a, b) => {
     switch (sort) {
       case 'price':
         return a.amountNaira - b.amountNaira || score(b) - score(a);
-      case 'rating':
-        return b.rating - a.rating || a.amountNaira - b.amountNaira;
       case 'nearest':
         return (a.distanceKm ?? far) - (b.distanceKm ?? far) || a.amountNaira - b.amountNaira;
       default:
@@ -248,10 +248,15 @@ export default function BookingDetailScreen() {
     booking.paymentState !== 'Paid' &&
     booking.initialQuoteAmountNaira == null &&
     ['Pending', 'Accepted', 'OnMyWay', 'Arrived'].includes(booking.status);
-  const acceptingBids =
-    (booking?.status === 'Open' && booking.assessmentMode === 'RemoteQuote') ||
-    isDirectAwaitingQuote;
-  const { data: allBids } = useBookingBids(id, { enabled: !!acceptingBids });
+  // A direct request (code or Book again) is quoted by its one artisan, shown inline below.
+  const acceptingBids = isDirectAwaitingQuote;
+  // Only a job priced by bids can be opened to other artisans; a set-price or paid booking ends if its artisan says no.
+  const canOpenForBids =
+    !!booking && booking.pricingModel !== 'Fixed' && !booking.priceBookItemId && !booking.diagnosisFeeNaira &&
+    !booking.isCustomQuote && !(booking.paidNaira ?? 0);
+  // An open job is priced by bids: every artisan who answered shows in the offers sheet.
+  const openBidding = booking?.status === 'Open' && booking.assessmentMode === 'RemoteQuote' && !booking.awaitingUpfrontPayment;
+  const { data: allBids } = useBookingBids(id, { enabled: !!acceptingBids || !!openBidding });
   const [offerSort, setOfferSort] = useState<OfferSort>('best');
   const activeBids = allBids?.filter((b) => b.status === 'Active');
   const bids = activeBids ? sortOffers(activeBids, offerSort) : undefined;
@@ -260,10 +265,7 @@ export default function BookingDetailScreen() {
     activeBids && activeBids.length > 1
       ? [...activeBids].sort((a, b) => a.amountNaira - b.amountNaira)[0].id
       : null;
-  const topRatedId =
-    activeBids && activeBids.length > 1
-      ? [...activeBids].sort((a, b) => b.rating - a.rating)[0].id
-      : null;
+  const topRatedId: string | null = null;
   const acceptBidMutation = useAcceptBid();
   const choosePayment = useChoosePaymentMethod();
   const decideAdvance = useDecideMaterialsAdvance();
@@ -360,19 +362,28 @@ export default function BookingDetailScreen() {
   };
 
   const confirmAcceptBid = (bid: Bid) => {
+    const visit = bid.kind === 'VisitFirst';
+    const first = bid.artisanName.split(' ')[0];
     appAlert(
-      'Accept this offer?',
-      `${bid.artisanName} will do the job for ${formatNaira(bid.amountNaira)}.`,
+      visit ? `Pick ${first} to visit?` : 'Accept this offer?',
+      visit
+        ? bid.visitFeeNaira > 0
+          ? `You pay ${formatNaira(bid.visitFeeNaira)} now. ${first} visits and sends a price, minus the visit fee. Say no and you pay only the visit. Other offers close.`
+          : `${first} visits free and sends a price. You pay only if you accept it. Other offers close.`
+        : `${bid.artisanName} will do the job for ${formatNaira(bid.amountNaira)}. The other offers close.`,
       [
         { text: 'Not yet', style: 'cancel' },
         {
-          text: 'Accept offer',
+          text: visit ? `Pick ${first}` : 'Accept offer',
           onPress: () =>
             acceptBidMutation.mutate(
               { bookingId: id, bidId: bid.id },
               {
-                // Price agreed → straight to the payment moment.
-                onSuccess: () => setPaySheetOpen(true),
+                // A paid visit goes straight to checkout; an agreed price to the payment moment.
+                onSuccess: (b) => {
+                  if (!visit) setPaySheetOpen(true);
+                  else if (b.awaitingUpfrontPayment) payNow();
+                },
                 onError: (err) =>
                   appAlert(
                     'Could not accept',
@@ -479,19 +490,55 @@ export default function BookingDetailScreen() {
       ) : (
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 32 }}
+          contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: openBidding && bids?.length ? 170 : 32 }}
         >
-          <View className="flex-row items-center justify-between">
-            <AppText weight="semibold" className="text-[20px] text-gray-900">
+          <View className="flex-row items-start justify-between gap-3">
+            <AppText weight="semibold" className="flex-1 text-[20px] text-gray-900">
               {booking.serviceName}
             </AppText>
-            <StatusChip status={booking.status} />
+            <StatusChip status={booking.status} awaitingPayment={booking.awaitingUpfrontPayment} />
           </View>
           {booking.artisanName ? (
             <AppText className="mt-1 text-[13px] text-gray-500">
               with {booking.artisanName}
             </AppText>
           ) : null}
+
+          {booking.awaitingUpfrontPayment && (booking.status === 'Open' || booking.status === 'Pending') ? (
+            // A Servika price-book job waits for its money before anyone is sent.
+            <View className="mt-4 rounded-2xl border border-primary/20 bg-primary/5 p-4">
+              <View className="flex-row items-center gap-2">
+                <Ionicons name="lock-closed-outline" size={18} color={colors.primary} />
+                <AppText weight="semibold" className="flex-1 text-[15px] text-gray-900">
+                  {booking.paymentState === 'Pending' ? 'Confirming your payment' : 'Pay to confirm this job'}
+                </AppText>
+              </View>
+              <AppText className="mt-1 text-[12.5px] leading-[18px] text-gray-600">
+                {booking.paymentState === 'Pending'
+                  ? 'A bank transfer can take a few minutes. Servika sends a checked artisan the moment it lands.'
+                  : `Servika sends a checked artisan once ${formatNaira(booking.initialQuoteAmountNaira ?? 0)} is paid. Unpaid bookings close after two hours.`}
+              </AppText>
+            </View>
+          ) : booking.status === 'Open' ? (
+            <FindingArtisanCard booking={booking} offers={openBidding ? (activeBids?.length ?? 0) : 0} />
+          ) : booking.status === 'Accepted' && booking.awaitingUpfrontPayment ? (
+            // A picked visit-first artisan waits for the visit fee before heading out.
+            <View className="mt-4 rounded-2xl border border-primary/20 bg-primary/5 p-4">
+              <View className="flex-row items-center gap-2">
+                <Ionicons name="lock-closed-outline" size={18} color={colors.primary} />
+                <AppText weight="semibold" className="flex-1 text-[15px] text-gray-900">
+                  {booking.paymentState === 'Pending' ? 'Confirming your payment' : `Pay the visit so ${booking.artisanName?.split(' ')[0] ?? 'they'} can come`}
+                </AppText>
+              </View>
+              <AppText className="mt-1 text-[12.5px] leading-[18px] text-gray-600">
+                {`${formatNaira(booking.diagnosisFeeNaira ?? booking.initialQuoteAmountNaira ?? 0)} is held by Servika and comes off the price once you accept it.`}
+              </AppText>
+            </View>
+          ) : null}
+          {booking.artisanId && WHOS_COMING_STATUSES.includes(booking.status) ? (
+            <WhosComingCard artisanId={booking.artisanId} />
+          ) : null}
+          <CustomQuoteCard booking={booking} onPay={payNow} />
 
           {acceptingBids ? (
             <View className="mt-6">
@@ -510,23 +557,22 @@ export default function BookingDetailScreen() {
                   </AppText>
                   <AppText className="mt-0.5 text-center text-[12px] leading-4 text-gray-400">
                     {isDirectPending
-                      ? `${booking.artisanName ?? 'The artisan'} is reviewing your request. They'll send a price or come inspect for free first. We'll notify you.`
+                      ? `${booking.artisanName ?? 'The artisan'} will send a price or visit free first. We'll notify you.`
                       : isDirectAwaitingQuote
-                        ? `${booking.artisanName ?? 'The artisan'} is inspecting the job (free) and will send their price here. You only pay after you accept it.`
-                        : 'Artisans are reviewing your photos. Offers usually arrive within a few hours, and we will notify you.'}
+                        ? `${booking.artisanName ?? 'The artisan'} is checking the job for free. Pay only after you accept their price.`
+                        : "Artisans are pricing from your photos. We'll notify you when offers come in."}
                   </AppText>
                   {/* The decisive anti-leakage moment: the artisan may be standing
                       in the customer's home. Protection only exists in-app, so say
                       it exactly here, where a side deal would happen. */}
                   <View className="mt-3 rounded-xl bg-amber-50 px-3 py-2.5">
                     <AppText className="text-[12px] leading-4 text-amber-800">
-                      Keep the price inside Servika. Money you pay in the app is
-                      held safely until the job is done, and you can get it back
-                      if something goes wrong. We cannot protect any payment made
-                      outside the app.
+                      Pay only in the app. We hold it until the job is done and
+                      refund it if things go wrong. We can&apos;t protect any
+                      payment made outside the app.
                     </AppText>
                   </View>
-                  {isDirectPending ? (
+                  {isDirectPending && canOpenForBids ? (
                     <Pressable
                       accessibilityRole="button"
                       disabled={rebroadcast.isPending}
@@ -617,9 +663,9 @@ export default function BookingDetailScreen() {
                           ) : null}
                         </View>
                         <View className="mt-0.5 flex-row items-center gap-1">
-                          <Ionicons name="star" size={12} color="#FBBF24" />
+                          <Ionicons name="shield-checkmark" size={12} color={colors.onlineInk} />
                           <AppText className="text-[12px] text-gray-500">
-                            {bid.reviewCount ? `${bid.rating.toFixed(1)} (${bid.reviewCount} reviews)` : 'New'}
+                            ID checked
                             {distanceLabel(bid.distanceKm) ? ` · ${distanceLabel(bid.distanceKm)} away` : ''}
                           </AppText>
                         </View>
@@ -701,11 +747,13 @@ export default function BookingDetailScreen() {
                     {booking.artisanName ?? 'This artisan'} can&apos;t take this job
                   </AppText>
                   <AppText className="text-[12px] leading-4 text-gray-500">
-                    Don&apos;t start over. Send the same request to every{' '}
-                    {booking.serviceName.toLowerCase()} artisan nearby.
+                    {canOpenForBids
+                      ? `Send the same request to every ${booking.serviceName.toLowerCase()} artisan nearby.`
+                      : 'Anything you paid is refunded in full. Book another service or describe the job to get prices.'}
                   </AppText>
                 </View>
               </View>
+              {canOpenForBids ? (
               <Pressable
                 accessibilityRole="button"
                 disabled={rebroadcast.isPending}
@@ -718,6 +766,16 @@ export default function BookingDetailScreen() {
                   {rebroadcast.isPending ? 'Opening up…' : 'Ask other artisans instead'}
                 </AppText>
               </Pressable>
+              ) : (
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => router.navigate('/services')}
+                  className="mt-3 h-12 flex-row items-center justify-center gap-2 rounded-xl bg-primary active:opacity-80"
+                >
+                  <Ionicons name="grid-outline" size={16} color="#FFFFFF" />
+                  <AppText weight="semibold" className="text-[14px] text-white">Find another service</AppText>
+                </Pressable>
+              )}
             </View>
           ) : null}
 
@@ -754,10 +812,31 @@ export default function BookingDetailScreen() {
           <Section title="Pricing">
             {booking.initialQuoteAmountNaira != null ? (
               <>
-                <Row
-                  label={booking.pricingModel === 'Fixed' ? 'Fixed price' : 'Agreed price'}
-                  value={formatNaira(booking.initialQuoteAmountNaira)}
-                />
+                {booking.diagnosisFeeNaira ? (
+                  <>
+                    <Row label={booking.isCustomQuote ? 'Visit' : 'Diagnosis visit'} value={formatNaira(booking.diagnosisFeeNaira)} />
+                    {booking.isCustomQuote && booking.agreedWorkmanshipNaira != null ? (
+                      <>
+                        <Row label="Accepted quote" value={formatNaira((booking.agreedWorkmanshipNaira ?? 0) + (booking.agreedMaterialsNaira ?? 0))} />
+                        <Row label="Job total, visit credited" value={formatNaira(booking.initialQuoteAmountNaira)} />
+                      </>
+                    ) : null}
+                    {(booking.approvedRepairsNaira ?? 0) > 0 ? (
+                      <>
+                        <Row label="Approved repairs" value={formatNaira(booking.approvedRepairsNaira ?? 0)} />
+                        <Row label="Job total, fee credited" value={formatNaira(booking.initialQuoteAmountNaira)} />
+                      </>
+                    ) : null}
+                  </>
+                ) : (
+                  <Row
+                    label={booking.pricingModel === 'Fixed' ? 'Fixed price' : 'Agreed price'}
+                    value={formatNaira(booking.initialQuoteAmountNaira)}
+                  />
+                )}
+                {!booking.diagnosisFeeNaira && (booking.approvedRepairsNaira ?? 0) > 0 ? (
+                  <Row label="Includes approved extras" value={formatNaira(booking.approvedRepairsNaira ?? 0)} />
+                ) : null}
                 {booking.agreedMaterialsNaira != null && booking.agreedMaterialsNaira > 0 ? (
                   <>
                     <Row label="Labour" value={formatNaira(booking.agreedWorkmanshipNaira ?? 0)} />
@@ -862,9 +941,9 @@ export default function BookingDetailScreen() {
                 ) : null}
               </>
             ) : booking.initialQuoteAmountNaira != null &&
-              ['Accepted', 'OnMyWay', 'Arrived', 'InProgress', 'AwaitingConfirmation', 'Completed'].includes(
+              (['Accepted', 'OnMyWay', 'Arrived', 'InProgress', 'AwaitingConfirmation', 'Completed'].includes(
                 booking.status,
-              ) ? (
+              ) || (booking.awaitingUpfrontPayment && ['Open', 'Pending'].includes(booking.status))) ? (
               // Unpaid with an agreed price → pay into escrow (cash only while allowed).
               <>
                 <Pressable
@@ -878,7 +957,7 @@ export default function BookingDetailScreen() {
                   <AppText weight="semibold" className="text-[14px] text-white">
                     {paying
                       ? 'Opening secure payment…'
-                      : `Pay ${formatNaira(booking.initialQuoteAmountNaira)} into escrow`}
+                      : `Pay ${formatNaira(booking.amountDueNaira || booking.initialQuoteAmountNaira)} into escrow`}
                   </AppText>
                 </Pressable>
                 <AppText className="mt-2 text-center text-[11.5px] leading-4 text-gray-400">
@@ -910,8 +989,8 @@ export default function BookingDetailScreen() {
               </AppText>
             ) : (
               <AppText className="mt-1 text-[12px] leading-4 text-gray-500">
-                Nothing to pay yet. You&apos;ll get a price to review first, and
-                your payment is held securely until the job is done.
+                Nothing to pay yet. You review a price first, and we hold your
+                payment until the job is done.
               </AppText>
             )}
           </Section>
@@ -1043,6 +1122,16 @@ export default function BookingDetailScreen() {
       )}
 
       {/* ── Payment moment: how to settle the agreed price ── */}
+      {openBidding && bids && bids.length > 0 ? (
+        <OffersSheet
+          bids={bids}
+          busy={acceptBidMutation.isPending || paying}
+          onAccept={confirmAcceptBid}
+          onCounter={openCounter}
+          onProfile={(b) => router.push({ pathname: '/artisan/[id]', params: { id: b.artisanId } })}
+        />
+      ) : null}
+
       {/* ── Counter-offer: bargain on workmanship only; materials are per item ── */}
       <BottomSheet visible={!!counterFor} onClose={() => setCounterFor(null)}>
         <View className="px-5 pb-6 pt-1">
@@ -1104,8 +1193,7 @@ export default function BookingDetailScreen() {
           </Pressable>
           {counterFor ? (
             <AppText className="mt-3 text-center text-[11.5px] leading-4 text-gray-400">
-              Offer {counterFor.counterRounds + 1} of {counterFor.maxCounterRounds}. If they accept,
-              the price is agreed and you pay securely in the app.
+              One offer on the labour. If they accept, you pay that in the app. If not, their price stands.
             </AppText>
           ) : null}
         </View>
@@ -1169,8 +1257,8 @@ export default function BookingDetailScreen() {
             className="mt-5 h-14 flex-row items-center justify-center gap-2 rounded-2xl bg-primary active:opacity-90"
           >
             <Ionicons name="lock-closed" size={17} color="#FFFFFF" />
-            <AppText weight="semibold" className="text-[15px] text-white">
-              Pay securely, held until the job is done
+            <AppText weight="semibold" numberOfLines={1} className="flex-shrink text-[15px] text-white">
+              {payTotal != null ? `Pay ${formatNaira(payTotal)} securely` : 'Pay securely'}
             </AppText>
           </Pressable>
 
@@ -1189,8 +1277,8 @@ export default function BookingDetailScreen() {
           ) : null}
           <AppText className="mt-2.5 text-center text-[11.5px] leading-4 text-gray-400">
             {cashAllowed
-              ? 'Online payment is protected by escrow and released to the artisan only when you confirm the job. Cash jobs have limited dispute protection.'
-              : 'Servika holds your payment and releases it to the artisan only when you confirm the job. Card, bank transfer, USSD and OPay all work.'}
+              ? 'Paid online, held until you confirm the job. Cash has limited protection.'
+              : 'Held by Servika until you confirm the job. Card, transfer, USSD or OPay.'}
           </AppText>
         </View>
       </BottomSheet>

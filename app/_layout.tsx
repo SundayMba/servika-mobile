@@ -84,10 +84,6 @@ function RootLayout() {
           options={{ contentStyle: { backgroundColor: colors.white } }}
         />
         {/* The service profile shares the artisan profile's white canvas. */}
-        <Stack.Screen
-          name="service/[id]"
-          options={{ contentStyle: { backgroundColor: colors.white } }}
-        />
         </Stack>
         {/* Dev-only API connectivity indicator (Slice 0 rails check). */}
         <ApiStatusBadge />

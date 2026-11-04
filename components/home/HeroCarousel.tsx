@@ -32,7 +32,7 @@ export function HeroCarousel({
   /** Override the hero height (default 210). Thinner reads sleeker on the canopy. */
   height?: number;
   /** Freeze the typewriter/conveyor (e.g. while the parent scrolls) — its
-   *  ~14–26 setState ticks per second otherwise compete with the scroll. */
+   *  ~14–26 setState ticks per second otherwise slow the scroll down. */
   paused?: boolean;
 }) {
   const len = WORKING_ARTISANS.length;

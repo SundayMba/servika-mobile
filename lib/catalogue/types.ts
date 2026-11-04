@@ -22,8 +22,6 @@ export interface ArtisanSummary {
   imageKey: string;
   fullName: string;
   specialty: string;
-  rating: number;
-  reviewCount: number;
   /** Km from the selected area; null when unknown (never show "0 km"). */
   distanceKm: number | null;
   isAvailable: boolean;
@@ -80,7 +78,7 @@ export interface ArtisanServiceOffering {
   description?: string | null;
 }
 
-/** One card on the Home fixed-price rail (GET /api/v1/services/featured). */
+/** An artisan's service post, approved by Servika ops (GET /api/v1/services/sections, /services/{id}). */
 export interface FeaturedService {
   serviceId: string;
   name: string;
@@ -89,8 +87,6 @@ export interface FeaturedService {
   photoUrl: string | null;
   artisanId: string;
   artisanName: string;
-  rating: number;
-  reviewCount: number;
   hasCertificate: boolean;
   artisanPhotoUrl: string | null;
   isAvailable: boolean;
@@ -101,4 +97,27 @@ export interface FeaturedService {
   durationMinutes?: number | null;
   includes?: string[] | null;
   description?: string | null;
+}
+
+/** What a booking code reveals (GET /artisans/by-code/{code}): enough to book, nothing to browse. */
+export interface ArtisanByCode {
+  id: string;
+  firstName: string;
+  fullName: string;
+  specialty: string;
+  photoUrl: string | null;
+  location: string;
+  isAvailable: boolean;
+  isAway: boolean;
+  completedJobs: number;
+  categorySlugs: string[];
+  bookingCode: string;
+}
+
+/** One trade's row on Home: "Electrical standard services" and its approved posts. */
+export interface ServiceSection {
+  categorySlug: string;
+  categoryName: string;
+  title: string;
+  services: FeaturedService[];
 }

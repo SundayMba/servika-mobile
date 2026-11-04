@@ -16,6 +16,9 @@ import { AppText } from '@/components/ui/AppText';
 import { colors } from '@/constants/colors';
 import { formatDate, isActiveBooking, statusTone } from '@/lib/booking/display';
 import { useBookings } from '@/lib/booking/hooks';
+import { PastArtisansRail } from '@/components/booking/PastArtisansRail';
+import { AuthPromptSheet } from '@/components/AuthPromptSheet';
+import { useAuthGate } from '@/lib/auth/useAuthGate';
 import type { BookingStatus, BookingSummary } from '@/lib/booking/types';
 
 /**
@@ -43,7 +46,7 @@ function BookingCard({
   booking: BookingSummary;
   onPress: () => void;
 }) {
-  const tone = statusTone(booking.status);
+  const tone = statusTone(booking.status, booking.awaitingUpfrontPayment);
   return (
     <Pressable
       accessibilityRole="button"
@@ -103,6 +106,7 @@ export default function Bookings() {
   const insets = useSafeAreaInsets();
   const [tab, setTab] = useState<TabId>('active');
   const { data, isLoading, isError, refetch, isRefetching } = useBookings();
+  const { guard, promptVisible, hidePrompt, onSignedIn } = useAuthGate();
 
   const counts = useMemo(() => {
     const all = data ?? [];
@@ -202,6 +206,22 @@ export default function Bookings() {
             paddingBottom: Math.max(insets.bottom, 14) + 88,
           }}
           ItemSeparatorComponent={Separator}
+          ListHeaderComponent={
+            <View style={{ paddingTop: 4 }}>
+              <PastArtisansRail
+                onBook={(a) =>
+                  guard(() =>
+                    router.push({ pathname: '/booking/request', params: { service: a.specialty, artisanId: a.artisanId, rebook: '1' } }),
+                  )
+                }
+              />
+              <Pressable accessibilityRole="button" onPress={() => router.push('/book-by-code')} style={styles.codeRow}>
+                <Ionicons name="key-outline" size={16} color={colors.accentDeep} />
+                <AppText weight="semibold" style={styles.codeText}>Have an artisan&apos;s code? Book them directly</AppText>
+                <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
+              </Pressable>
+            </View>
+          }
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl
@@ -221,7 +241,7 @@ export default function Bookings() {
               </AppText>
               <AppText style={styles.emptyBody}>
                 {tab === 'active'
-                  ? 'Find an artisan and request a service. It’ll show up here.'
+                  ? 'Tell us what needs fixing on Home. Your jobs show up here.'
                   : `You have no ${tab} bookings yet.`}
               </AppText>
             </View>
@@ -234,6 +254,7 @@ export default function Bookings() {
           )}
         />
       )}
+      <AuthPromptSheet visible={promptVisible} onClose={hidePrompt} onSignedIn={onSignedIn} reason="book" />
     </View>
   );
 }
@@ -241,6 +262,8 @@ export default function Bookings() {
 const Separator = () => <View style={styles.separator} />;
 
 const styles = StyleSheet.create({
+  codeRow: { marginTop: 14, flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 12, paddingHorizontal: 14, marginBottom: 12, borderRadius: 14, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.hairline },
+  codeText: { flex: 1, fontSize: 13.5, color: colors.textPrimary },
   root: {
     flex: 1,
     backgroundColor: colors.sand,

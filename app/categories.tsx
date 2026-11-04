@@ -12,10 +12,14 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppText } from '@/components/ui/AppText';
-import { SearchSheet } from '@/components/SearchSheet';
+import { AuthPromptSheet } from '@/components/AuthPromptSheet';
+import { CantFindCard } from '@/components/home/CantFindCard';
+import { InterestSheet } from '@/components/home/InterestSheet';
+import { useAuthGate } from '@/lib/auth/useAuthGate';
 import { colors } from '@/constants/colors';
 import { categoryIcon, categoryImage } from '@/lib/catalogue/assets';
 import { useCategories } from '@/lib/catalogue/hooks';
+import { useFeeSchedule } from '@/lib/payments/fees';
 import type { Category } from '@/lib/catalogue/types';
 
 // All service categories. A plain stack screen (no bottom tab bar) — reached
@@ -68,9 +72,13 @@ function CategoryCard({
 }
 
 export default function Categories() {
+  // Not-yet-bookable services show only when an admin switches "Coming soon" on.
+  const showComingSoon = !!useFeeSchedule().data?.showComingSoonServices;
   const router = useRouter();
 
-  const [searchVisible, setSearchVisible] = useState(false);
+  const [interest, setInterest] = useState<{ slug: string; name: string } | null>(null);
+  const [asking, setAsking] = useState(false);
+  const { promptVisible, hidePrompt, onSignedIn } = useAuthGate();
 
   const { data: categories, isLoading, isError } = useCategories();
 
@@ -87,20 +95,8 @@ export default function Categories() {
           >
             <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
           </Pressable>
-          <AppText weight="semibold" className="text-[26px] text-gray-900">Categories</AppText>
+          <AppText weight="semibold" className="text-[26px] text-gray-900">Every service</AppText>
         </View>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Search"
-          onPress={() => setSearchVisible(true)}
-          className="h-10 w-10 items-center justify-center rounded-full bg-white"
-        >
-          <Ionicons
-            name="search-outline"
-            size={20}
-            color={colors.textPrimary}
-          />
-        </Pressable>
       </View>
 
       <ScrollView
@@ -118,28 +114,35 @@ export default function Categories() {
             </AppText>
           </View>
         ) : (
-          <View className="flex-row flex-wrap justify-between px-5 pt-1">
-            {categories?.map((category) => (
-              <CategoryCard
-                key={category.id}
-                category={category}
-                onPress={() =>
-                  router.push({
-                    pathname: '/category/[id]',
-                    params: { id: category.slug },
-                  })
-                }
-              />
-            ))}
-          </View>
+          <>
+            <AppText weight="semibold" className="px-5 pb-3 text-[15px] text-gray-900">Book now</AppText>
+            <View className="flex-row flex-wrap justify-between px-5 pt-1">
+              {categories?.filter((c) => c.isPopular).map((category) => (
+                <CategoryCard
+                  key={category.id}
+                  category={category}
+                  onPress={() => router.push({ pathname: '/category/[slug]', params: { slug: category.slug, name: category.name } })}
+                />
+              ))}
+            </View>
+            {showComingSoon ? (
+              <>
+                <AppText weight="semibold" className="px-5 pb-1 pt-6 text-[15px] text-gray-900">Coming soon</AppText>
+                <AppText className="px-5 pb-3 text-[13px] text-gray-500">Not offered yet. Tap one to tell us you need it.</AppText>
+                <View className="flex-row flex-wrap justify-between px-5 pt-1" style={{ opacity: 0.75 }}>
+                  {categories?.filter((c) => !c.isPopular).map((category) => (
+                    <CategoryCard key={category.id} category={category} onPress={() => setInterest({ slug: category.slug, name: category.name })} />
+                  ))}
+                </View>
+              </>
+            ) : null}
+            <CantFindCard onPress={() => setAsking(true)} style={{ marginHorizontal: 20, marginTop: 24 }} />
+          </>
         )}
       </ScrollView>
 
-      {/* Search (open to guests) */}
-      <SearchSheet
-        visible={searchVisible}
-        onClose={() => setSearchVisible(false)}
-      />
+      <InterestSheet visible={!!interest || asking} onClose={() => { setInterest(null); setAsking(false); }} category={interest} />
+      <AuthPromptSheet visible={promptVisible} onClose={hidePrompt} onSignedIn={onSignedIn} reason="book" />
     </SafeAreaView>
   );
 }
