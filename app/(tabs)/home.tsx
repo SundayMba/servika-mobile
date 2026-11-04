@@ -19,6 +19,7 @@ import { AuthPromptSheet } from '@/components/AuthPromptSheet';
 import { PastArtisansRail } from '@/components/booking/PastArtisansRail';
 import { ActiveBookingCarousel } from '@/components/home/ActiveBookingCarousel';
 import { HeroCarousel } from '@/components/home/HeroCarousel';
+import { CantFindCard } from '@/components/home/CantFindCard';
 import { InterestSheet } from '@/components/home/InterestSheet';
 import { JobTile } from '@/components/home/JobTile';
 import { LocationSheet } from '@/components/home/LocationSheet';
@@ -111,7 +112,6 @@ export default function Home() {
     [categoriesQuery.data, categoriesQuery.isError],
   );
   const tiles = useMemo(() => categories.filter((c) => c.isPopular), [categories]);
-  const comingSoon = useMemo(() => categories.filter((c) => !c.isPopular), [categories]);
   const activeBookings = useMemo(() => (bookingsQuery.data ?? []).filter((b) => isActiveBooking(b.status)), [bookingsQuery.data]);
 
   // Only claim "near you" when we know where "you" is.
@@ -261,8 +261,10 @@ export default function Home() {
         {/* ── Standard services, one row per trade: posts artisans price themselves, checked by Servika ── */}
         {sectionsQuery.isLoading ? (
           <ServiceSectionSkeleton gutter={GUTTER} />
-        ) : (
-          (sectionsQuery.data ?? []).map((section) => (
+        ) : (sectionsQuery.data?.length ?? 0) > 0 ? (
+          <View style={{ gap: 22 }}>
+            <SectionHead title="Standard services" subtitle="Set prices from checked artisans. Book in a tap." scale={scale} />
+            {(sectionsQuery.data ?? []).map((section) => (
             <ServiceSectionRow
               key={section.categorySlug}
               section={section}
@@ -270,8 +272,9 @@ export default function Home() {
               onOpen={(item) => router.push({ pathname: '/service/[id]', params: { id: item.serviceId } })}
               onSeeAll={() => router.push({ pathname: '/category/[slug]', params: { slug: section.categorySlug, name: section.categoryName } })}
             />
-          ))
-        )}
+            ))}
+          </View>
+        ) : null}
 
         {/* ── Book again ── */}
         {isAuthenticated ? (
@@ -310,21 +313,8 @@ export default function Home() {
           ))}
         </View>
 
-        {/* ── Coming soon ── */}
-        {comingSoon.length > 0 ? (
-          <View style={{ gap: 12 }}>
-            <SectionHead title="Coming soon" scale={scale} />
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: GUTTER, gap: 8 }}>
-              {comingSoon.map((c) => (
-                <Pressable key={c.id} accessibilityRole="button" onPress={() => setInterest({ category: { slug: c.slug, name: c.name }, reason: 'service' })} style={styles.soonChip}>
-                  <View style={[styles.soonDot, { backgroundColor: c.tint || colors.inkSubtle }]} />
-                  <AppText weight="medium" style={styles.soonLabel}>{c.name}</AppText>
-                </Pressable>
-              ))}
-            </ScrollView>
-            <AppText style={[styles.gutter, styles.note]}>Need one of these? Tap it and tell us. Requests decide what Servika adds next.</AppText>
-          </View>
-        ) : null}
+        {/* ── Asking for what Servika does not offer yet ── */}
+        <CantFindCard onPress={() => setInterest({ category: null, reason: 'service' })} style={styles.gutter} />
 
         {/* ── Estates and facility managers ── */}
         <Pressable
@@ -451,9 +441,6 @@ const styles = StyleSheet.create({
   trustLabel: { alignSelf: 'stretch', fontSize: 12.5, textAlign: 'center', color: colors.ink },
   trustSub: { alignSelf: 'stretch', fontSize: 11, textAlign: 'center', color: colors.inkSubtle },
 
-  soonChip: { flexDirection: 'row', alignItems: 'center', gap: 7, paddingHorizontal: 14, height: 38, borderRadius: 999, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.hairline },
-  soonDot: { width: 7, height: 7, borderRadius: 999 },
-  soonLabel: { fontSize: 13, color: colors.ink },
 
   inkCard: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: 22, backgroundColor: '#14171B', padding: 16 },
   inkIcon: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 14, backgroundColor: 'rgba(249,115,22,0.16)' },

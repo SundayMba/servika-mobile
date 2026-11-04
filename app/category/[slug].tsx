@@ -115,7 +115,7 @@ export default function CategoryScreen() {
         ) : posts.length > 0 ? (
           <View style={{ gap: 10 }}>
             <View style={styles.gutter}>
-              <AppText weight="semibold" style={styles.section}>{title} standard services</AppText>
+              <AppText weight="semibold" style={styles.section}>Standard services</AppText>
               <AppText style={styles.sectionNote}>Set prices from artisans, checked by Servika. Book in a tap.</AppText>
             </View>
             <View style={[styles.gutter, styles.card]}>

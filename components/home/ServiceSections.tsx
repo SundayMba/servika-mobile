@@ -86,7 +86,7 @@ export function useServiceCardWidth() {
   return Math.min(240, Math.max(196, Math.round(width * 0.56)));
 }
 
-/** One trade's row: its heading, "See all", and the posts side by side. */
+/** One trade's row under Home's "Standard services": the trade as a subheading, "See all", and the posts side by side. */
 export function ServiceSectionRow({
   section,
   gutter,
@@ -102,7 +102,7 @@ export function ServiceSectionRow({
   return (
     <View style={{ gap: 12 }}>
       <View style={[styles.head, { paddingHorizontal: gutter }]}>
-        <AppText weight="semibold" numberOfLines={1} style={styles.title}>{section.title}</AppText>
+        <AppText weight="semibold" numberOfLines={1} style={styles.title}>{section.categoryName}</AppText>
         <Pressable accessibilityRole="button" hitSlop={8} onPress={onSeeAll}>
           <AppText weight="medium" style={styles.seeAll}>See all</AppText>
         </Pressable>
@@ -139,7 +139,7 @@ export function ServiceSectionSkeleton({ gutter }: { gutter: number }) {
 
 const styles = StyleSheet.create({
   head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
-  title: { flexGrow: 1, flexShrink: 1, flexBasis: 0, fontSize: 17, letterSpacing: -0.3, color: colors.ink },
+  title: { flexGrow: 1, flexShrink: 1, flexBasis: 0, fontSize: 15.5, letterSpacing: -0.2, color: colors.inkMuted },
   seeAll: { fontSize: 13, color: colors.accentDeep },
   card: { borderRadius: 20, overflow: 'hidden', backgroundColor: colors.white, borderWidth: 1, borderColor: colors.hairline },
   // Android won't clip a child to a bordered parent's radius, so the photo rounds its own corners.

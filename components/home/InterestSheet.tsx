@@ -41,13 +41,13 @@ export function InterestSheet({
     }
   }, [visible, category?.slug]);
 
-  const title = reason === 'area' ? 'Not in your area yet' : category ? `${category.name} is coming soon` : 'Something else?';
+  const title = reason === 'area' ? 'Not in your area yet' : category ? `${category.name} is coming soon` : 'What service do you need?';
   const lede =
     reason === 'area'
       ? `Servika starts in Lekki. Tell us you are in ${area || 'your area'} and we will know where to go next.`
       : category
         ? `We are not taking ${category.name.toLowerCase()} jobs yet. Tell us what you need and we will know to add it.`
-        : 'Describe the job. We use it to decide what Servika offers next.';
+        : 'Tell us the service you are looking for. Requests like yours decide what Servika adds next.';
 
   const send = () => {
     if (!category && !note.trim()) {
@@ -88,7 +88,7 @@ export function InterestSheet({
             <TextInput
               value={note}
               onChangeText={(t) => setNote(t.slice(0, 300))}
-              placeholder={reason === 'area' ? 'Anything we should know (optional)' : 'What needs doing? (optional)'}
+              placeholder={reason === 'area' ? 'Anything we should know (optional)' : category ? 'What needs doing? (optional)' : 'e.g. Pest control, roof repair, CCTV installation'}
               placeholderTextColor={colors.inkSubtle}
               multiline
               style={{ minHeight: 84, borderRadius: 16, borderWidth: 1, borderColor: colors.hairlineStrong, backgroundColor: colors.white, padding: 14, fontSize: 15, color: colors.ink, textAlignVertical: 'top' }}

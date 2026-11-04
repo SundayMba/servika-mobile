@@ -97,7 +97,7 @@ export default function ScanCode() {
           </>
         ) : (
           <AppText style={styles.hint}>
-            {notServika ? 'That QR is not a Servika code. Ask the artisan to show their Servika code.' : 'Point at the QR on their phone, card or flyer.'}
+            {notServika ? 'Invalid Servika QR Code. Ask the artisan to show their Servika code.' : 'Point at the QR on their phone, card or flyer.'}
           </AppText>
         )}
         <Pressable accessibilityRole="button" onPress={() => router.replace('/book-by-code')} style={styles.secondary}>

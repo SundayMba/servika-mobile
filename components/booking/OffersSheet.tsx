@@ -1,6 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Image } from 'expo-image';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
@@ -135,8 +135,8 @@ function OfferCard({
 }
 
 /**
- * The offers on an open job, Uber-style: a sheet docked at the bottom that shows the count and the
- * lowest price, and slides up to list every artisan who answered. Each offer is either a price
+ * The offers on an open job, Uber-style: the sheet opens on its own as offers come in and lists every
+ * artisan who answered; the customer can collapse it to the count and the lowest price. Each offer is either a price
  * (labour + materials) or "visit first" with the artisan's visit fee (or free). No stars: the
  * customer compares price, distance and jobs done on Servika.
  */
@@ -156,12 +156,22 @@ export function OffersSheet({
   const insets = useSafeAreaInsets();
   const { height: screen } = useWindowDimensions();
   const [sort, setSort] = useState<Sort>('price');
-  const [open, setOpen] = useState(false);
+  // Offers coming in is the moment the customer is waiting for, so the sheet starts open.
+  const [open, setOpen] = useState(true);
   const full = Math.round(screen * 0.78);
   const peek = PEEK + Math.max(insets.bottom, 12);
   // translateY: 0 = fully open; full - peek = collapsed.
   const closedY = full - peek;
-  const y = useSharedValue(closedY);
+  const y = useSharedValue(0);
+  // Each new offer slides the sheet back up, even if the customer had collapsed it.
+  const seen = useRef(bids.length);
+  useEffect(() => {
+    if (bids.length > seen.current) {
+      y.value = withTiming(0, { duration: 300, easing: EASE });
+      setOpen(true);
+    }
+    seen.current = bids.length;
+  }, [bids.length, y]);
   const start = useSharedValue(0);
 
   const sorted = useMemo(() => sortBids(bids, sort), [bids, sort]);
