@@ -250,6 +250,10 @@ export default function BookingDetailScreen() {
     ['Pending', 'Accepted', 'OnMyWay', 'Arrived'].includes(booking.status);
   // A direct request (code or Book again) is quoted by its one artisan, shown inline below.
   const acceptingBids = isDirectAwaitingQuote;
+  // Only a job priced by bids can be opened to other artisans; a set-price or paid booking ends if its artisan says no.
+  const canOpenForBids =
+    !!booking && booking.pricingModel !== 'Fixed' && !booking.priceBookItemId && !booking.diagnosisFeeNaira &&
+    !booking.isCustomQuote && !(booking.paidNaira ?? 0);
   // An open job is priced by bids: every artisan who answered shows in the offers sheet.
   const openBidding = booking?.status === 'Open' && booking.assessmentMode === 'RemoteQuote' && !booking.awaitingUpfrontPayment;
   const { data: allBids } = useBookingBids(id, { enabled: !!acceptingBids || !!openBidding });
@@ -568,7 +572,7 @@ export default function BookingDetailScreen() {
                       payment made outside the app.
                     </AppText>
                   </View>
-                  {isDirectPending ? (
+                  {isDirectPending && canOpenForBids ? (
                     <Pressable
                       accessibilityRole="button"
                       disabled={rebroadcast.isPending}
@@ -743,11 +747,13 @@ export default function BookingDetailScreen() {
                     {booking.artisanName ?? 'This artisan'} can&apos;t take this job
                   </AppText>
                   <AppText className="text-[12px] leading-4 text-gray-500">
-                    Don&apos;t start over. Send the same request to every{' '}
-                    {booking.serviceName.toLowerCase()} artisan nearby.
+                    {canOpenForBids
+                      ? `Send the same request to every ${booking.serviceName.toLowerCase()} artisan nearby.`
+                      : 'Anything you paid is refunded in full. Book another service or describe the job to get prices.'}
                   </AppText>
                 </View>
               </View>
+              {canOpenForBids ? (
               <Pressable
                 accessibilityRole="button"
                 disabled={rebroadcast.isPending}
@@ -760,6 +766,16 @@ export default function BookingDetailScreen() {
                   {rebroadcast.isPending ? 'Opening up…' : 'Ask other artisans instead'}
                 </AppText>
               </Pressable>
+              ) : (
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => router.navigate('/services')}
+                  className="mt-3 h-12 flex-row items-center justify-center gap-2 rounded-xl bg-primary active:opacity-80"
+                >
+                  <Ionicons name="grid-outline" size={16} color="#FFFFFF" />
+                  <AppText weight="semibold" className="text-[14px] text-white">Find another service</AppText>
+                </Pressable>
+              )}
             </View>
           ) : null}
 
