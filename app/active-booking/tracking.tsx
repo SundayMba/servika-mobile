@@ -10,6 +10,7 @@ import { AppText } from '@/components/ui/AppText';
 import { appAlert } from '@/components/ui/AppAlert';
 import { ArtisanRow, VerifiedBadges } from '@/components/active-booking/parts';
 import { BottomSheet } from '@/components/BottomSheet';
+import { SafetyReminder } from '@/components/booking/SafetyReminder';
 import { Button } from '@/components/ui/Button';
 import { LiveMap } from '@/components/tracking/LiveMap';
 import { colors } from '@/constants/colors';
@@ -247,6 +248,17 @@ export default function LiveTracking() {
         <View className="mt-3">
           <VerifiedBadges verified={artisan?.isVerified} certified={artisan?.hasCertificate} />
         </View>
+        {booking ? (
+          <View className="mt-3">
+            <SafetyReminder
+              bookingId={booking.id}
+              status={booking.status}
+              artisanName={artisan?.fullName || booking.artisanName}
+              artisanId={booking.artisanId}
+              variant="strip"
+            />
+          </View>
+        ) : null}
         <View className="mt-4 flex-row gap-3">
           <ActionPill
             icon="chatbubble-ellipses"

@@ -32,6 +32,7 @@ import {
 import { FieldError } from '@/components/FieldError';
 import { BottomSheet } from '@/components/BottomSheet';
 import { FindingArtisanCard, WHOS_COMING_STATUSES, WhosComingCard } from '@/components/booking/WhosComingCard';
+import { SafetyReminder } from '@/components/booking/SafetyReminder';
 import { CustomQuoteCard } from '@/components/booking/CustomQuoteCard';
 import { OffersSheet } from '@/components/booking/OffersSheet';
 import {
@@ -538,6 +539,12 @@ export default function BookingDetailScreen() {
           {booking.artisanId && WHOS_COMING_STATUSES.includes(booking.status) ? (
             <WhosComingCard artisanId={booking.artisanId} />
           ) : null}
+          <SafetyReminder
+            bookingId={booking.id}
+            status={booking.status}
+            artisanName={booking.artisanName}
+            artisanId={booking.artisanId}
+          />
           <CustomQuoteCard booking={booking} onPay={payNow} />
 
           {acceptingBids ? (
