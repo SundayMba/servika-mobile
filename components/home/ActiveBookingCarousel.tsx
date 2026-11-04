@@ -15,7 +15,7 @@ import type { BookingStatus, BookingSummary } from '@/lib/booking/types';
 // Friendly one-liner for each in-flight status.
 const SUBTITLE: Record<BookingStatus, string> = {
   Draft: 'Not sent yet',
-  Open: 'Finding an artisan',
+  Open: 'Getting prices',
   Pending: 'Waiting for the artisan to accept',
   Accepted: 'Confirmed, preparing to head out',
   Rejected: 'The artisan could not take it',
@@ -140,7 +140,9 @@ export function ActiveBookingCarousel({
 
       <View className="items-end gap-1.5">
         <View className="rounded-full bg-primary px-3.5 py-2">
-          <AppText weight="semibold" className="text-[12px] text-white">Track</AppText>
+          <AppText weight="semibold" className="text-[12px] text-white">
+            {current.status === 'Open' ? 'See offers' : ['OnMyWay', 'Arrived', 'InProgress'].includes(current.status) ? 'Track' : 'Open'}
+          </AppText>
         </View>
         {n > 1 ? (
           <View className="flex-row gap-1">

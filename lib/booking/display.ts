@@ -11,7 +11,7 @@ type ChipStyle = { label: string; bg: string; text: string };
 
 const STATUS_STYLES: Record<BookingStatus, ChipStyle> = {
   Draft: { label: 'Draft', bg: 'bg-gray-100', text: 'text-gray-600' },
-  Open: { label: 'Finding an artisan', bg: 'bg-amber-100', text: 'text-amber-700' },
+  Open: { label: 'Getting prices', bg: 'bg-amber-100', text: 'text-amber-700' },
   Pending: { label: 'Pending', bg: 'bg-amber-100', text: 'text-amber-700' },
   Accepted: { label: 'Accepted', bg: 'bg-blue-100', text: 'text-blue-700' },
   Rejected: { label: 'Rejected', bg: 'bg-gray-100', text: 'text-gray-600' },
@@ -58,7 +58,7 @@ const RED = { bg: '#FBE7E7', fg: '#C42B1C' };
 
 const STATUS_TONES: Record<BookingStatus, StatusTone> = {
   Draft: { label: 'Draft', ...NEUTRAL },
-  Open: { label: 'Finding an artisan', ...AMBER },
+  Open: { label: 'Getting prices', ...AMBER },
   Pending: { label: 'Pending', ...AMBER },
   Accepted: { label: 'Accepted', ...BLUE },
   Rejected: { label: 'Rejected', ...NEUTRAL },

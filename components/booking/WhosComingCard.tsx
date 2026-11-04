@@ -66,7 +66,7 @@ export function WhosComingCard({ artisanId }: { artisanId: string }) {
   );
 }
 
-/** The Open state: Servika is offering the job to one artisan at a time. */
+/** The Open state: artisans nearby are sending prices or offers to visit first. */
 export function FindingArtisanCard({ booking, offers = 0 }: { booking: BookingDetail; offers?: number }) {
   const stuck = !!booking.offersExhaustedAtUtc && offers === 0;
   return (

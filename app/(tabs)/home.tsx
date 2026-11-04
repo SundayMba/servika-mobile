@@ -196,7 +196,7 @@ export default function Home() {
 
         {/* ── The original banner ── */}
         <View style={[styles.gutter, styles.hero]}>
-          <HeroCarousel bare height={186} paused={scrolling} onGetHelp={() => router.push('/categories')} />
+          <HeroCarousel bare height={186} paused={scrolling} onGetHelp={() => router.navigate('/services')} />
         </View>
 
         {/* ── A job in flight comes first ── */}
@@ -244,7 +244,7 @@ export default function Home() {
 
         {/* ── What needs fixing? Six cards: five trades and "more" ── */}
         <View style={{ gap: 14 }}>
-          <SectionHead title="What needs fixing?" action="All services" onAction={() => router.push('/categories')} scale={scale} />
+          <SectionHead title="What needs fixing?" action="All services" onAction={() => router.navigate('/services')} scale={scale} />
           {tilesPending ? (
             <ServiceGridSkeleton />
           ) : (
@@ -252,7 +252,7 @@ export default function Home() {
               {tiles.map((c) => (
                 <JobTile key={c.id} label={c.name} image={categoryImage(c.slug)} tint={c.tint} width={tileWidth} onPress={() => openTrade(c)} />
               ))}
-              <JobTile label="Something else" icon="grid-outline" width={tileWidth} onPress={() => router.push('/categories')} />
+              <JobTile label="Something else" icon="grid-outline" width={tileWidth} onPress={() => router.navigate('/services')} />
             </View>
           )}
           <AppText style={[styles.gutter, styles.note]}>Pick the job and describe it. Checked artisans send their prices, and you choose who comes.</AppText>

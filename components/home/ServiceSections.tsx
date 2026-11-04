@@ -1,6 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Image } from 'expo-image';
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions, type ImageSourcePropType } from 'react-native';
 
 import { AppText } from '@/components/ui/AppText';
@@ -123,6 +123,35 @@ export function ServiceSectionRow({
   );
 }
 
+/** One post as a list row: cover, name, artisan · duration · distance, price. */
+export function ServiceListRow({ item, first, onPress }: { item: FeaturedService; first: boolean; onPress: () => void }) {
+  const [pressed, setPressed] = useState(false);
+  const cover = serviceCover(item);
+  const meta = [item.artisanName, durationLabel(item.durationMinutes), distanceLabel(item.distanceKm)].filter(Boolean).join(' · ');
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`${item.name}, ${formatNaira(item.priceNaira)}`}
+      onPress={onPress}
+      onPressIn={() => setPressed(true)}
+      onPressOut={() => setPressed(false)}
+      style={[listStyles.row, !first && listStyles.rowDivider, pressed && listStyles.rowPressed]}
+    >
+      <View style={listStyles.thumb}>
+        {cover ? <Image source={cover} contentFit="cover" contentPosition="top" style={StyleSheet.absoluteFill} /> : <Ionicons name="construct-outline" size={22} color={colors.accentDeep} />}
+      </View>
+      <View style={listStyles.rowBody}>
+        <AppText weight="semibold" numberOfLines={2} style={listStyles.rowName}>{item.name}</AppText>
+        <AppText numberOfLines={1} style={listStyles.rowMeta}>{meta}</AppText>
+      </View>
+      <View style={listStyles.rowPrice}>
+        <AppText weight="semibold" style={listStyles.price}>{formatNaira(item.priceNaira)}</AppText>
+        <Ionicons name="chevron-forward" size={16} color={colors.inkFaint} />
+      </View>
+    </Pressable>
+  );
+}
+
 export function ServiceSectionSkeleton({ gutter }: { gutter: number }) {
   const width = useServiceCardWidth();
   return (
@@ -156,4 +185,16 @@ const styles = StyleSheet.create({
   meta: { fontSize: 12, color: colors.inkSubtle },
   skelTitle: { width: 190, height: 18, borderRadius: 6, backgroundColor: colors.hairline },
   skelCard: { borderRadius: 20, backgroundColor: colors.hairline },
+});
+
+const listStyles = StyleSheet.create({
+  row: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12 },
+  rowDivider: { borderTopWidth: 1, borderTopColor: colors.hairline },
+  rowPressed: { backgroundColor: '#FBFAF8' },
+  thumb: { width: 64, height: 64, borderRadius: 16, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', backgroundColor: colors.accentTint },
+  rowBody: { flex: 1, gap: 4 },
+  rowName: { fontSize: 14.5, color: colors.ink },
+  rowMeta: { fontSize: 12, color: colors.inkSubtle },
+  rowPrice: { alignItems: 'flex-end', gap: 6 },
+  price: { fontSize: 15, color: colors.ink },
 });

@@ -22,11 +22,12 @@ type TabMeta = {
 
 /**
  * Per-route presentation for the bottom tab bar. Keyed by the route name
- * (the file name inside app/(tabs)). Four tabs: nobody browses artisans, so the
- * Explore map is gone (Business Model v1.4, section 15).
+ * (the file name inside app/(tabs)). Five tabs; Services is where every trade and
+ * standard service lives. Artisans themselves are never browsed.
  */
 const TABS: Record<string, TabMeta> = {
   home: { label: 'Home', icon: 'home-outline' },
+  services: { label: 'Services', icon: 'grid-outline' },
   bookings: { label: 'Bookings', icon: 'calendar-outline' },
   messages: { label: 'Messages', icon: 'chatbubble-ellipses-outline', badge: true },
   profile: { label: 'Profile', icon: 'person-outline' },

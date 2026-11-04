@@ -40,6 +40,7 @@ export default function TabsLayout() {
       >
         <Tabs.Screen name="home" />
         <Tabs.Screen name="bookings" />
+        <Tabs.Screen name="services" />
         <Tabs.Screen name="messages" />
         <Tabs.Screen name="profile" />
       </Tabs>

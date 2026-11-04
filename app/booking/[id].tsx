@@ -248,7 +248,7 @@ export default function BookingDetailScreen() {
     booking.paymentState !== 'Paid' &&
     booking.initialQuoteAmountNaira == null &&
     ['Pending', 'Accepted', 'OnMyWay', 'Arrived'].includes(booking.status);
-  // Servika assigns every open request, so quotes only ever come from the assigned artisan.
+  // A direct request (code or Book again) is quoted by its one artisan, shown inline below.
   const acceptingBids = isDirectAwaitingQuote;
   // An open job is priced by bids: every artisan who answered shows in the offers sheet.
   const openBidding = booking?.status === 'Open' && booking.assessmentMode === 'RemoteQuote' && !booking.awaitingUpfrontPayment;
@@ -1243,8 +1243,8 @@ export default function BookingDetailScreen() {
             className="mt-5 h-14 flex-row items-center justify-center gap-2 rounded-2xl bg-primary active:opacity-90"
           >
             <Ionicons name="lock-closed" size={17} color="#FFFFFF" />
-            <AppText weight="semibold" className="text-[15px] text-white">
-              Pay securely, held until the job is done
+            <AppText weight="semibold" numberOfLines={1} className="flex-shrink text-[15px] text-white">
+              {payTotal != null ? `Pay ${formatNaira(payTotal)} securely` : 'Pay securely'}
             </AppText>
           </Pressable>
 
