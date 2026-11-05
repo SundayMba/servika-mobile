@@ -224,6 +224,8 @@ export interface Bid {
   kind: 'Price' | 'VisitFirst';
   /** VisitFirst only: what the visit costs (0 = free). Credited against the price. */
   visitFeeNaira: number;
+  /** When the artisan can come; null = as soon as you pick them. */
+  availableFromUtc?: string | null;
   photoUrl: string | null;
   /** Total the customer pays: workmanshipNaira + materialsNaira. */
   amountNaira: number;
