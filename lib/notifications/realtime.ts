@@ -36,8 +36,10 @@ export function useNotificationsRealtime() {
       .configureLogging(LogLevel.Critical) // transient WS drops auto-reconnect; don't spam console.error / dev LogBox
       .build();
 
-    conn.on('NotificationReceived', () => {
+    conn.on('NotificationReceived', (event?: { audience?: string }) => {
       if (cancelled) return;
+      // Same account signed into the other app: its notices are not ours.
+      if (event?.audience === 'Artisan') return;
       // The feed + bell badge, and any booking the event may have moved.
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
       queryClient.invalidateQueries({ queryKey: ['bookings'] });

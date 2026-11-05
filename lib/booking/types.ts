@@ -76,6 +76,8 @@ export interface CreateBookingRequest {
   /** "Something else": a paid visit, then an itemised quote; optionally the listed kind of custom work. */
   customQuote?: boolean;
   customPriceBookItemId?: string | null;
+  /** The customer ticked "I'll keep my home safe while the artisan is there". */
+  safetyAcknowledged?: boolean;
 }
 
 /** A row in the customer's "My Bookings" history (GET /api/v1/bookings). */
@@ -222,6 +224,10 @@ export interface Bid {
   kind: 'Price' | 'VisitFirst';
   /** VisitFirst only: what the visit costs (0 = free). Credited against the price. */
   visitFeeNaira: number;
+  /** When the artisan can come; null = as soon as you pick them. */
+  availableFromUtc?: string | null;
+  /** On another job right now; availableFromUtc is when they expect to be free. */
+  artisanBusy?: boolean;
   photoUrl: string | null;
   /** Total the customer pays: workmanshipNaira + materialsNaira. */
   amountNaira: number;

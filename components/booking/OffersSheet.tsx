@@ -13,12 +13,40 @@ import { formatNaira } from '@/lib/catalogue/assets';
 import { distanceLabel } from '@/lib/catalogue/display';
 import { config } from '@/lib/config';
 
-type Sort = 'price' | 'nearest' | 'jobs';
+type Sort = 'price' | 'soonest' | 'nearest' | 'jobs';
 const SORTS: { key: Sort; label: string }[] = [
   { key: 'price', label: 'Lowest price' },
+  { key: 'soonest', label: 'Soonest' },
   { key: 'nearest', label: 'Nearest' },
   { key: 'jobs', label: 'Most jobs' },
 ];
+
+/** When an artisan can start: now (no time given) or the time they named. */
+const startsAt = (b: Bid) => (b.availableFromUtc ? new Date(b.availableFromUtc).getTime() : 0);
+
+/**
+ * "Can come now", "Free from 3pm today", or for an artisan on another job "On a job now · free from 3:30pm".
+ * A busy artisan always names a time; the customer weighs it against the other offers.
+ */
+export function startLabel(
+  availableFromUtc: string | null | undefined,
+  busy = false,
+  now = new Date(),
+): { text: string; now: boolean } {
+  if (!availableFromUtc || new Date(availableFromUtc) <= now)
+    return busy ? { text: 'On a job now · finishing soon', now: false } : { text: 'Can come now', now: true };
+  const d = new Date(availableFromUtc);
+  const time = d.toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true }).replace(':00', '');
+  const tomorrow = new Date(now);
+  tomorrow.setDate(now.getDate() + 1);
+  const day =
+    d.toDateString() === now.toDateString()
+      ? 'today'
+      : d.toDateString() === tomorrow.toDateString()
+        ? 'tomorrow'
+        : d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+  return { text: busy ? `On a job now · free from ${time} ${day}` : `Free from ${time} ${day}`, now: false };
+}
 
 // Collapsed, only the handle and the summary row show.
 const PEEK = 80;
@@ -29,6 +57,7 @@ function sortBids(bids: Bid[], sort: Sort): Bid[] {
   const far = Number.POSITIVE_INFINITY;
   const cost = (b: Bid) => (b.kind === 'VisitFirst' ? b.visitFeeNaira + 0.5 : b.amountNaira);
   return [...bids].sort((a, b) => {
+    if (sort === 'soonest') return startsAt(a) - startsAt(b) || cost(a) - cost(b);
     if (sort === 'nearest') return (a.distanceKm ?? far) - (b.distanceKm ?? far) || cost(a) - cost(b);
     if (sort === 'jobs') return b.completedJobs - a.completedJobs || cost(a) - cost(b);
     // Lowest price: priced offers first (you know the whole cost), then visit offers by fee.
@@ -56,6 +85,7 @@ function OfferCard({
   const first = bid.artisanName.split(' ')[0];
   const canCounter = !visit && bid.counterRounds < bid.maxCounterRounds;
   const distance = distanceLabel(bid.distanceKm);
+  const start = startLabel(bid.availableFromUtc, bid.artisanBusy);
   return (
     <View style={styles.card}>
       <View style={styles.cardTop}>
@@ -75,6 +105,10 @@ function OfferCard({
             ID checked · {bid.completedJobs > 0 ? `${bid.completedJobs} ${bid.completedJobs === 1 ? 'job' : 'jobs'} done` : 'New'}
             {distance ? ` · ${distance}` : ''}
           </AppText>
+          <View style={styles.startRow}>
+            <Ionicons name={bid.artisanBusy ? 'construct-outline' : 'time-outline'} size={13} color={start.now ? colors.successOnInkText : colors.accentDeep} />
+            <AppText weight="medium" style={[styles.startText, { color: start.now ? colors.successOnInkText : colors.accentDeep }]}>{start.text}</AppText>
+          </View>
         </Pressable>
         <View style={{ alignItems: 'flex-end' }}>
           {visit ? (
@@ -266,6 +300,8 @@ export function OffersSheet({
 }
 
 const styles = StyleSheet.create({
+  startRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 3 },
+  startText: { fontSize: 12.5 },
   backdrop: { backgroundColor: '#000' },
   sheet: {
     position: 'absolute',

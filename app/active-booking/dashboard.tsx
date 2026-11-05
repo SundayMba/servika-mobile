@@ -282,7 +282,7 @@ export default function ActiveBookingDashboard() {
         ) : null}
 
         <AppText className="mt-5 text-center text-[11px] text-gray-400">
-          🛡 Secure. Trusted. Servika.
+          Paid in the app. Held until the job is done.
         </AppText>
       </ScrollView>
     </SafeAreaView>

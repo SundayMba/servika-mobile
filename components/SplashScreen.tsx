@@ -60,7 +60,7 @@ export function SplashScreen({ onReady, onFinish }: Props) {
       <Image source={LOGO} style={styles.logo} resizeMode="contain" />
       <View style={styles.textBlock}>
         <Text style={styles.brandName}>Servika</Text>
-        <Text style={styles.tagline}>Verified artisans. Trusted service.</Text>
+        <Text style={styles.tagline}>Checked artisans. Fair prices.</Text>
       </View>
       <Text style={styles.footer}>Payments held securely until the job is done</Text>
     </Animated.View>

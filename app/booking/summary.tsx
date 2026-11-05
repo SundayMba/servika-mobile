@@ -3,11 +3,12 @@ import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { Linking, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppText } from '@/components/ui/AppText';
 import { BookingSteps } from '@/components/booking/BookingSteps';
+import { BottomSheet } from '@/components/BottomSheet';
 import { Button } from '@/components/ui/Button';
 import { colors } from '@/constants/colors';
 import { authErrorMessage } from '@/lib/api/auth';
@@ -38,6 +39,17 @@ function Section({
     </View>
   );
 }
+
+const SAFETY_TERMS_URL = 'https://servika.com.ng/terms#safety';
+
+const SAFETY_POINTS: { icon: keyof typeof Ionicons.glyphMap; text: string }[] = [
+  { icon: 'wallet-outline', text: 'Put cash, jewellery and small valuables away.' },
+  { icon: 'people-outline', text: 'Have an adult at home while the artisan is there.' },
+  { icon: 'person-circle-outline', text: 'Check the person at the door is the one shown in the app.' },
+  { icon: 'card-outline', text: 'Keep payment in the app.' },
+  { icon: 'flag-outline', text: 'Report anything wrong in the app, or call 112 in an emergency.' },
+  { icon: 'information-circle-outline', text: 'Servika connects you with independent artisans and does not insure your property.' },
+];
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
@@ -119,6 +131,9 @@ export default function BookingSummary() {
 
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  // The customer agrees to their part in keeping the home safe before anything is sent.
+  const [safetyAck, setSafetyAck] = useState(false);
+  const [safetyInfo, setSafetyInfo] = useState(false);
   const { mutateAsync: createBooking } = useCreateBooking();
   const phoneGate = usePhoneGate();
 
@@ -126,7 +141,7 @@ export default function BookingSummary() {
     !!categorySlug && !!params.addressText && (isOpen || !artisanLoading);
 
   const handleProceed = async () => {
-    if (!categorySlug) return;
+    if (!categorySlug || !safetyAck) return;
 
     // Post the request now — open (broadcast) or direct (to the chosen artisan).
     // No payment step: the price is agreed via a quote first, paid after accept.
@@ -162,6 +177,7 @@ export default function BookingSummary() {
         assessmentMode: bookingMedia.get().assessment,
         mediaBase64: bookingMedia.get().photosBase64,
         videoBase64,
+        safetyAcknowledged: true,
       };
       const booking = await createBooking(body);
       bookingMedia.reset();
@@ -413,7 +429,7 @@ export default function BookingSummary() {
               </View>
               <AppText className="mt-1 text-[12px] leading-4 text-gray-500">
                 {isOpen
-                  ? 'Nothing to pay now. You pay only after you pick an offer, and the money is held until the job is done.'
+                  ? 'You pay only after you pick an offer, and the money is held until the job is done.'
                   : `${artisan?.fullName ?? 'The artisan'} will review your request and send you a quote (or come inspect for free). You only pay after you accept, and your payment is held securely until the job is done.`}
               </AppText>
             </>
@@ -426,16 +442,83 @@ export default function BookingSummary() {
           </View>
         ) : null}
 
+        {/* Home safety: the customer's part, agreed before the request goes out. */}
+        <View className="mt-4 rounded-2xl border border-gray-100 bg-white p-4">
+          <Pressable
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: safetyAck }}
+            onPress={() => setSafetyAck((v) => !v)}
+            className="flex-row items-center"
+          >
+            <View
+              className={`h-6 w-6 items-center justify-center rounded-md border-2 ${
+                safetyAck ? 'border-primary bg-primary' : 'border-gray-300 bg-white'
+              }`}
+            >
+              {safetyAck ? <Ionicons name="checkmark" size={16} color="#FFFFFF" /> : null}
+            </View>
+            <AppText weight="medium" className="ml-3 flex-1 text-[14px] leading-5 text-gray-900">
+              I&apos;ll keep my home safe while the artisan is there
+            </AppText>
+          </Pressable>
+          <Pressable
+            accessibilityRole="link"
+            hitSlop={8}
+            onPress={() => setSafetyInfo(true)}
+            className="ml-9 mt-1 self-start"
+          >
+            <AppText weight="semibold" className="text-[13px] text-primary">
+              What this means
+            </AppText>
+          </Pressable>
+        </View>
+
         {/* Proceed */}
         <View className="mt-6">
           <Button
             label={paysUpfront ? `Pay ${formatNaira(upfrontAmount)}` : isOpen ? 'Post Request' : 'Send Request'}
             loading={submitting || (!isOpen && artisanLoading)}
-            disabled={!canProceed}
+            disabled={!canProceed || !safetyAck}
             onPress={handleProceed}
           />
+          {!safetyAck ? (
+            <AppText className="mt-2 text-center text-[12px] text-gray-500">
+              Tick the box above to send your request.
+            </AppText>
+          ) : null}
         </View>
       </ScrollView>
+
+      <BottomSheet visible={safetyInfo} onClose={() => setSafetyInfo(false)} estimatedHeight={480}>
+        <AppText weight="semibold" className="text-[18px] text-gray-900">
+          Keeping your home safe
+        </AppText>
+        <AppText className="mt-1 text-[13px] leading-5 text-gray-500">
+          Your part while an artisan is in your home:
+        </AppText>
+        <View className="mt-4 gap-3">
+          {SAFETY_POINTS.map((p) => (
+            <View key={p.text} className="flex-row items-start">
+              <Ionicons name={p.icon} size={18} color={colors.primary} />
+              <AppText className="ml-3 flex-1 text-[14px] leading-5 text-gray-700">{p.text}</AppText>
+            </View>
+          ))}
+        </View>
+        <Pressable
+          accessibilityRole="link"
+          hitSlop={8}
+          onPress={() => Linking.openURL(SAFETY_TERMS_URL).catch(() => {})}
+          className="mt-5 flex-row items-center self-start"
+        >
+          <AppText weight="semibold" className="text-[13px] text-primary">
+            Read the safety terms
+          </AppText>
+          <Ionicons name="open-outline" size={14} color={colors.primary} style={{ marginLeft: 4 }} />
+        </Pressable>
+        <View className="mt-5">
+          <Button label="Got it" onPress={() => setSafetyInfo(false)} />
+        </View>
+      </BottomSheet>
     </SafeAreaView>
   );
 }

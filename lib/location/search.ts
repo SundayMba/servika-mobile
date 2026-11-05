@@ -309,9 +309,11 @@ export async function resolveCurrentArea(): Promise<CurrentArea> {
   let label = '';
   try {
     const [place] = await Location.reverseGeocodeAsync({ latitude, longitude });
-    label = place
-      ? [place.district || place.name || place.street, place.city || place.region].filter(Boolean).join(', ')
-      : '';
+    // A house number or plot ("9a", "12B") is not an area name; prefer the neighbourhood.
+    const isNumberish = (v?: string | null) => !!v && /\d/.test(v) && v.trim().length <= 6;
+    const areaName = [place?.district, place?.subregion, isNumberish(place?.name) ? null : place?.name, place?.street]
+      .find((v) => v && !isNumberish(v));
+    label = place ? [areaName, place.city || place.region].filter(Boolean).join(', ') : '';
   } catch {
     /* fall through to Photon */
   }
