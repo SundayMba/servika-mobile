@@ -226,6 +226,8 @@ export interface Bid {
   visitFeeNaira: number;
   /** When the artisan can come; null = as soon as you pick them. */
   availableFromUtc?: string | null;
+  /** On another job right now; availableFromUtc is when they expect to be free. */
+  artisanBusy?: boolean;
   photoUrl: string | null;
   /** Total the customer pays: workmanshipNaira + materialsNaira. */
   amountNaira: number;

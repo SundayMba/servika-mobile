@@ -24,9 +24,17 @@ const SORTS: { key: Sort; label: string }[] = [
 /** When an artisan can start: now (no time given) or the time they named. */
 const startsAt = (b: Bid) => (b.availableFromUtc ? new Date(b.availableFromUtc).getTime() : 0);
 
-/** "Can come now" or "Free from 3pm today". An artisan on another job always names a time. */
-export function startLabel(availableFromUtc: string | null | undefined, now = new Date()): { text: string; now: boolean } {
-  if (!availableFromUtc || new Date(availableFromUtc) <= now) return { text: 'Can come now', now: true };
+/**
+ * "Can come now", "Free from 3pm today", or for an artisan on another job "On a job now · free from 3:30pm".
+ * A busy artisan always names a time; the customer weighs it against the other offers.
+ */
+export function startLabel(
+  availableFromUtc: string | null | undefined,
+  busy = false,
+  now = new Date(),
+): { text: string; now: boolean } {
+  if (!availableFromUtc || new Date(availableFromUtc) <= now)
+    return busy ? { text: 'On a job now · finishing soon', now: false } : { text: 'Can come now', now: true };
   const d = new Date(availableFromUtc);
   const time = d.toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true }).replace(':00', '');
   const tomorrow = new Date(now);
@@ -37,7 +45,7 @@ export function startLabel(availableFromUtc: string | null | undefined, now = ne
       : d.toDateString() === tomorrow.toDateString()
         ? 'tomorrow'
         : d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
-  return { text: `Free from ${time} ${day}`, now: false };
+  return { text: busy ? `On a job now · free from ${time} ${day}` : `Free from ${time} ${day}`, now: false };
 }
 
 // Collapsed, only the handle and the summary row show.
@@ -77,7 +85,7 @@ function OfferCard({
   const first = bid.artisanName.split(' ')[0];
   const canCounter = !visit && bid.counterRounds < bid.maxCounterRounds;
   const distance = distanceLabel(bid.distanceKm);
-  const start = startLabel(bid.availableFromUtc);
+  const start = startLabel(bid.availableFromUtc, bid.artisanBusy);
   return (
     <View style={styles.card}>
       <View style={styles.cardTop}>
@@ -98,7 +106,7 @@ function OfferCard({
             {distance ? ` · ${distance}` : ''}
           </AppText>
           <View style={styles.startRow}>
-            <Ionicons name="time-outline" size={13} color={start.now ? colors.successOnInkText : colors.accentDeep} />
+            <Ionicons name={bid.artisanBusy ? 'construct-outline' : 'time-outline'} size={13} color={start.now ? colors.successOnInkText : colors.accentDeep} />
             <AppText weight="medium" style={[styles.startText, { color: start.now ? colors.successOnInkText : colors.accentDeep }]}>{start.text}</AppText>
           </View>
         </Pressable>
