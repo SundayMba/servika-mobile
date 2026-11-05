@@ -17,6 +17,8 @@ export type AppNotification = {
    * older APIs; routing falls back to type/bookingId.
    */
   kind?: string | null;
+  /** Which app the notice belongs to: 'Customer', 'Artisan' or 'Any'. Missing on older servers. */
+  audience?: string;
   isRead: boolean;
   createdAt: string;
 };
