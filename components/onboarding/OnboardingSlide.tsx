@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.semibold,
     color: colors.ink,
     // Android measures a negatively-tracked run one advance short and clips the
-    // final glyph ("already vouched for|."); give it that step back.
+    // final glyph ("ID-checked first|."); give it that step back.
     paddingRight: 2,
   },
   titleAccent: {

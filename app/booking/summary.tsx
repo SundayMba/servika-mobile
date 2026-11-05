@@ -429,7 +429,7 @@ export default function BookingSummary() {
               </View>
               <AppText className="mt-1 text-[12px] leading-4 text-gray-500">
                 {isOpen
-                  ? 'Nothing to pay now. You pay only after you pick an offer, and the money is held until the job is done.'
+                  ? 'You pay only after you pick an offer, and the money is held until the job is done.'
                   : `${artisan?.fullName ?? 'The artisan'} will review your request and send you a quote (or come inspect for free). You only pay after you accept, and your payment is held securely until the job is done.`}
               </AppText>
             </>

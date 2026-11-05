@@ -30,9 +30,9 @@ const SLIDES = [
     id: '1',
     image: require('@assets/images/onboarding/v2/find-artisans.webp'),
     title: 'Every artisan,',
-    titleAccent: 'already vouched for.',
+    titleAccent: 'ID-checked first.',
     subtitle:
-      'Electricians, plumbers and fridge repairers near you, each one ID-checked.',
+      'Electricians, plumbers and fridge repairers near you. A person at Servika checks each one.',
   },
   {
     id: '2',
