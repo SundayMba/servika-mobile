@@ -184,7 +184,7 @@ function EmptyState() {
         You&apos;re all caught up
       </AppText>
       <AppText className="mt-1.5 text-center text-[13px] leading-5 text-gray-500">
-        Booking updates show up here: accepted, on the way, job done.
+        Booking updates show up here.
       </AppText>
     </View>
   );
@@ -203,7 +203,7 @@ function GuestState({ onSignIn }: { onSignIn: () => void }) {
         Sign in for notifications
       </AppText>
       <AppText className="mt-1.5 text-center text-[13px] leading-5 text-gray-500">
-        Log in to get updates about your bookings and payments.
+        Get updates about your bookings and payments.
       </AppText>
       <Pressable
         accessibilityRole="button"

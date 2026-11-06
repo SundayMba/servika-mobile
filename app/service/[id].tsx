@@ -54,7 +54,7 @@ export default function ServiceScreen() {
       <View style={[styles.screen, styles.center, { paddingHorizontal: 32 }]}>
         <Ionicons name="construct-outline" size={34} color={colors.inkSubtle} />
         <AppText weight="semibold" style={styles.goneTitle}>This service is not available</AppText>
-        <AppText style={styles.goneBody}>The artisan may have paused it. You can still describe your job and get prices.</AppText>
+        <AppText style={styles.goneBody}>The artisan may have paused it.</AppText>
         <Pressable accessibilityRole="button" onPress={() => router.back()} style={[styles.book, { marginTop: 18, alignSelf: 'stretch' }]}>
           <AppText weight="semibold" style={styles.bookLabel}>Go back</AppText>
         </Pressable>

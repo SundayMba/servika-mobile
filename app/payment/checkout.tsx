@@ -35,7 +35,7 @@ export default function PaymentCheckout() {
         return;
       }
       if (result.status === 'pending') {
-        Alert.alert('Still confirming', "The bank hasn't confirmed yet. Your money is safe, and we'll notify you when it lands.");
+        Alert.alert('Still confirming', "We'll notify you when the bank confirms.");
       }
       back();
     },

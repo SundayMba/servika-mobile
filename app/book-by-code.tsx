@@ -56,7 +56,7 @@ export default function BookByCode() {
 
         <View className="px-5 pt-6">
           <AppText className="text-[14px] leading-5 text-gray-500">
-            Type the code or scan the QR an artisan gave you. The job goes to them first.
+            Type or scan the code an artisan gave you.
           </AppText>
           <View className="mt-4 flex-row items-center gap-2">
             <TextInput

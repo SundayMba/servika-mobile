@@ -13,11 +13,11 @@ export type AuthPromptReason = 'book' | 'chat' | 'request' | 'tab' | 'save';
 
 /** One kicker + headline + line per thing a guest can bump into. */
 const COPY: Record<AuthPromptReason, { kicker: string; title: string; message: string }> = {
-  book: { kicker: 'You tried to book', title: 'Booking is for people\nwe can vouch for.', message: 'Look at prices all day, nobody asks your name. To book an artisan, we need one.' },
-  chat: { kicker: 'You tried to chat', title: 'Chat is for people\nwe can vouch for.', message: 'Look at prices all day, nobody asks your name. To message an artisan, we need one.' },
-  request: { kicker: 'You tried to post a job', title: 'Artisans quote for\na real person.', message: 'Describe the job once you have a name and an email. Their offers land in your account.' },
-  tab: { kicker: 'This part needs an account', title: 'Your bookings and chats\nlive behind a name.', message: 'Look at prices all day, nobody asks your name. To keep anything of your own, we need one.' },
-  save: { kicker: 'You tried to save', title: 'Saving is for people\nwe can vouch for.', message: 'An account keeps your saved artisans on every phone you sign in on.' },
+  book: { kicker: 'You tried to book', title: 'Sign in to book.', message: 'Browsing is free. Booking needs an account.' },
+  chat: { kicker: 'You tried to chat', title: 'Sign in to chat.', message: 'Messaging an artisan needs an account.' },
+  request: { kicker: 'You tried to post a job', title: 'Sign in to post a job.', message: 'Offers from artisans come to your account.' },
+  tab: { kicker: 'This part needs an account', title: 'Sign in to continue.', message: 'Your bookings and chats live in your account.' },
+  save: { kicker: 'You tried to save', title: 'Sign in to save.', message: 'Saved artisans stay with your account.' },
 };
 
 type AuthPromptSheetProps = {
@@ -77,7 +77,7 @@ export function AuthPromptSheet({
 
         <View style={styles.footer}>
           <Pressable accessibilityRole="button" hitSlop={8} onPress={onClose}>
-            <AppText weight="medium" style={styles.notNow}>Not now, only looking</AppText>
+            <AppText weight="medium" style={styles.notNow}>Not now</AppText>
           </Pressable>
           <View style={styles.divider} />
           <Pressable accessibilityRole="button" hitSlop={8} onPress={logIn}>

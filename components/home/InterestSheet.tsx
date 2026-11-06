@@ -44,10 +44,10 @@ export function InterestSheet({
   const title = reason === 'area' ? 'Not in your area yet' : category ? `${category.name} is coming soon` : 'What service do you need?';
   const lede =
     reason === 'area'
-      ? `Servika starts in Lekki. Tell us you are in ${area || 'your area'} and we will know where to go next.`
+      ? `Tell us you are in ${area || 'your area'}.`
       : category
-        ? `We are not taking ${category.name.toLowerCase()} jobs yet. Tell us what you need and we will know to add it.`
-        : 'Tell us the service you are looking for. Requests like yours decide what Servika adds next.';
+        ? 'Tell us what you need.'
+        : 'Tell us the service you are looking for.';
 
   const send = () => {
     if (!category && !note.trim()) {
@@ -75,10 +75,7 @@ export function InterestSheet({
             <View style={{ width: 52, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: '#E6F5EE' }}>
               <Ionicons name="checkmark" size={26} color={colors.onlineInk} />
             </View>
-            <AppText weight="semibold" style={{ fontSize: 21, color: colors.ink }}>Thank you. It is counted.</AppText>
-            <AppText style={{ fontSize: 14.5, lineHeight: 21, color: colors.inkMuted }}>
-              Requests like yours decide where Servika goes next.
-            </AppText>
+            <AppText weight="semibold" style={{ fontSize: 21, color: colors.ink }}>Thanks, we got it.</AppText>
             <Button label="Done" onPress={onClose} />
           </>
         ) : (
@@ -94,7 +91,7 @@ export function InterestSheet({
               style={{ minHeight: 84, borderRadius: 16, borderWidth: 1, borderColor: colors.hairlineStrong, backgroundColor: colors.white, padding: 14, fontSize: 15, color: colors.ink, textAlignVertical: 'top' }}
             />
             {error ? <AppText style={{ fontSize: 13, color: '#B91C1C' }}>{error}</AppText> : null}
-            <Button label={record.isPending ? 'Sending…' : 'Tell Servika'} onPress={send} />
+            <Button label={record.isPending ? 'Sending…' : 'Send'} onPress={send} />
           </>
         )}
       </View>

@@ -309,8 +309,8 @@ export default function BookingRequest() {
               <Ionicons name="pricetag" size={13} color="#15803D" />
               <AppText weight="medium" className="text-[12px] text-green-700">
                 {isPriceBookJob
-                  ? `Servika price · ${formatNaira(Number(fixedPrice))}. Paid now, held until the job is done`
-                  : `Fixed price · ${formatNaira(Number(fixedPrice))}. Set by the artisan, no quote needed`}
+                  ? `Servika price · ${formatNaira(Number(fixedPrice))}. Held until the job is done`
+                  : `Fixed price · ${formatNaira(Number(fixedPrice))}`}
               </AppText>
             </View>
           ) : null}
@@ -327,7 +327,7 @@ export default function BookingRequest() {
                   : mode === 'diagnosis'
                     ? 'e.g. The AC runs but blows warm air since Monday'
                     : mode === 'custom'
-                      ? 'e.g. Fit a new 1.5HP split unit in the main bedroom, about 3 m from the outdoor spot'
+                      ? 'e.g. Fit a new 1.5HP split unit in the bedroom'
                       : 'Tell the artisan what you need done...'
               }
               placeholderTextColor={colors.textMuted}

@@ -131,7 +131,7 @@ function OfferCard({
           <AppText style={styles.visitText}>
             {first} needs to see the job before pricing it.{' '}
             {bid.visitFeeNaira > 0
-              ? `You pay ${formatNaira(bid.visitFeeNaira)} for the visit, and it comes off the price.`
+              ? `Visit ${formatNaira(bid.visitFeeNaira)}, taken off the price.`
               : 'The visit is free.'}
           </AppText>
         </View>
@@ -290,7 +290,7 @@ export function OffersSheet({
             />
           ))}
           <AppText style={styles.footer}>
-            Pay only after you pick. We hold it until the job is done. Never pay outside the app.
+            Held until the job is done. Never pay outside the app.
           </AppText>
         </ScrollView>
         </Animated.View>

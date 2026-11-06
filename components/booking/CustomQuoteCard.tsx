@@ -65,7 +65,7 @@ export function CustomQuoteCard({ booking, onPay }: { booking: BookingDetail; on
   const declineVisit = () =>
     appAlert(
       'Not go ahead?',
-      `You pay only the ${formatNaira(fee)} visit, which ${who} keeps for coming out. You can book a second opinion any time.`,
+      `You pay only the ${formatNaira(fee)} visit, which ${who} keeps.`,
       [
         { text: 'Back', style: 'cancel' },
         {
@@ -84,8 +84,7 @@ export function CustomQuoteCard({ booking, onPay }: { booking: BookingDetail; on
           <AppText weight="semibold" className="text-[15px] text-gray-900">Waiting for the quote</AppText>
         </View>
         <AppText className="mt-1 text-[12.5px] leading-[18px] text-gray-500">
-          {who} is looking at the job and will send a price here, labour and materials listed. Nothing is done until you
-          accept it.
+          {who} will send a price here. Nothing is done until you accept it.
         </AppText>
         <Pressable accessibilityRole="button" onPress={declineVisit} className="mt-2 items-center py-1.5">
           <AppText weight="semibold" className="text-[13px] text-gray-500">Not going ahead? Pay only the visit</AppText>

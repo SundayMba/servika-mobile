@@ -50,7 +50,7 @@ export default function TabsLayout() {
         reason="tab"
         onClose={() => setAuthPromptVisible(false)}
         title="Sign up to continue"
-        message="Create an account to manage your bookings, messages and profile."
+        message="Your bookings and chats live in your account."
         icon="lock-closed"
         onSignUp={() => {
           setAuthPromptVisible(false);

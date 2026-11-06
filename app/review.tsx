@@ -84,7 +84,7 @@ export default function ServiceReview() {
         bookingId: params.bookingId,
         body: { rating: overall, comment: text.trim() || null },
       });
-      appAlert('Thank you!', 'Your review has been submitted.', [
+      appAlert('Thank you', 'Your review was sent.', [
         { text: 'Done', onPress: () => router.replace('/bookings') },
       ]);
     } catch (err) {
@@ -109,9 +109,6 @@ export default function ServiceReview() {
         </Pressable>
         <View className="items-center">
           <AppText weight="semibold" className="text-[17px] text-gray-900">Review Artisan</AppText>
-          <AppText className="text-[12px] text-gray-500">
-            Share your experience and help others
-          </AppText>
         </View>
       </View>
 

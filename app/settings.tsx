@@ -98,14 +98,14 @@ export default function Settings() {
   const handleDeleteAccount = () => {
     appAlert(
       'Delete account?',
-      `Your account closes now and is erased after 30 days. Email ${SUPPORT_EMAIL} within 30 days to restore it. Unwithdrawn referral cash is lost.`,
+      `Your account is erased after 30 days. Email ${SUPPORT_EMAIL} before then to restore it. Unwithdrawn referral cash is lost.`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Continue',
           style: 'destructive',
           onPress: () =>
-            appAlert('Are you sure?', 'You will be signed out now. After 30 days your account and bookings are erased.', [
+            appAlert('Are you sure?', 'After 30 days your account and bookings are erased.', [
               { text: 'Keep my account', style: 'cancel' },
               {
                 text: 'Delete account',

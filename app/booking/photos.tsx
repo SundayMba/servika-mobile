@@ -172,9 +172,6 @@ export default function BookingPhotos() {
         </Pressable>
         <View className="items-center">
           <AppText weight="semibold" className="text-[17px] text-gray-900">Job Details</AppText>
-          <AppText className="text-[12px] text-gray-500">
-            Help the artisan understand the job
-          </AppText>
         </View>
       </View>
 
@@ -201,7 +198,7 @@ export default function BookingPhotos() {
             {bidding ? 'Add photos of the job' : 'Upload photos'}
           </AppText>
           <AppText className="mt-1 text-[13px] text-gray-500">
-            Tap to choose from your library · up to {MAX_PHOTOS}
+            Up to {MAX_PHOTOS} photos
           </AppText>
         </Pressable>
         <FieldError text={mediaErr && photos.length === 0 && !video ? mediaErr : undefined} />
@@ -252,7 +249,7 @@ export default function BookingPhotos() {
             <AppText className="mt-0.5 text-[12px] text-gray-500">
               {video
                 ? 'Tap to remove it'
-                : 'A quick walk-around clip gives artisans the full picture'}
+                : 'Up to about 30 seconds'}
             </AppText>
           </View>
           <Ionicons
@@ -261,19 +258,6 @@ export default function BookingPhotos() {
             color={video ? '#EF4444' : colors.primary}
           />
         </Pressable>
-
-        {/* Tips */}
-        <View className="mt-5 flex-row rounded-2xl bg-primary/5 p-4">
-          <Ionicons name="bulb-outline" size={18} color={colors.primary} />
-          <View className="ml-2 flex-1">
-            <AppText weight="semibold" className="text-[13px] text-gray-900">Tips</AppText>
-            <AppText className="mt-0.5 text-[12px] leading-4 text-gray-600">
-              {bidding
-                ? 'Clear photos and a short clip get you more prices and fewer "visit first" offers.'
-                : 'Clear photos help artisans price the job right.'}
-            </AppText>
-          </View>
-        </View>
 
         {/* Continue */}
         <View className="mt-7">

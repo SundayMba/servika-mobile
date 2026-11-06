@@ -93,7 +93,7 @@ export default function Wallet() {
             <View className="items-center py-16">
               <Ionicons name="receipt-outline" size={44} color={colors.textMuted} />
               <AppText className="mt-3 text-center text-[14px] text-gray-500">
-                No payments yet. Your booking payments and refunds will appear here.
+                No payments yet.
               </AppText>
             </View>
           ) : (

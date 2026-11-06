@@ -52,8 +52,8 @@ export default function Register() {
   const weakReason = !weak
     ? null
     : !checks[2].ok && checks[0].ok && checks[1].ok
-      ? 'Your password still contains your name or email. Change it and the button wakes up.'
-      : 'Eight characters with a number, and the button wakes up.';
+      ? 'Leave your name and email out of it.'
+      : 'Use 8 characters and a number.';
 
   const addDomain = (d: string) => {
     const v = email.trim();
@@ -71,8 +71,8 @@ export default function Register() {
     const name = fullName.trim();
     const emailValue = email.trim().toLowerCase();
     const next: typeof errs = {};
-    if (name.length < 2) next.name = 'Your name first, the way artisans should say it.';
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue)) next.email = 'That does not look like an email. Your code goes there.';
+    if (name.length < 2) next.name = 'Enter your name.';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue)) next.email = 'Enter a valid email.';
     setErrs(next);
     if (!passes) setWeakAttempt(true);
     if (next.name || next.email) return;
@@ -111,11 +111,10 @@ export default function Register() {
         }
       >
         <Headline>You already{'\n'}have one.</Headline>
-        <Lede>That email is already on a Servika account. Sign in and everything you saved is still there.</Lede>
+        <Lede>That email already has a Servika account.</Lede>
         <View style={{ marginTop: 18 }}>
           <UnderlineField label="Name" value={fullName} onChangeText={setFullName} editable={false} />
           <UnderlineField label="Email" value={email} onChangeText={setEmail} editable={false} tone="error" />
-          <AppText weight="medium" style={styles.takenNote}>Already taken. That is your account.</AppText>
         </View>
       </AuthScreen>
     );
@@ -144,7 +143,7 @@ export default function Register() {
               <AppText inline weight="semibold" style={styles.consentLink} onPress={() => openUrl(PRIVACY_URL)}>Privacy Policy</AppText>.
             </AppText>
           )}
-          <PrimaryButton label="Send my code" loadingLabel="Sending your code" loading={submitting} disabled={weak} onPress={submit} />
+          <PrimaryButton label="Continue" loadingLabel="Sending code" loading={submitting} disabled={weak} onPress={submit} />
           {weakReason ? <AppText style={styles.weakReason}>{weakReason}</AppText> : null}
           {keyboardUp ? null : (
             <>
@@ -158,19 +157,11 @@ export default function Register() {
       {weak ? (
         <>
           <Headline compact={keyboardUp}>That one is{keyboardUp ? ' ' : '\n'}too easy.</Headline>
-          {keyboardUp ? null : (
-            <Lede>
-              {!checks[2].ok && checks[0].ok && checks[1].ok
-                ? 'It has your name or email in it, the first thing anyone would try. Pick something only you would guess.'
-                : 'Your account can hold money in escrow. Eight characters and a number is the floor.'}
-            </Lede>
-          )}
         </>
       ) : (
         <>
           <Headline compact={keyboardUp}>First, what do{keyboardUp ? ' ' : '\n'}we call you?</Headline>
-          {keyboardUp ? null : <Lede>Name, email, a password you will remember. That is all we need to start.</Lede>}
-        </>
+                  </>
       )}
 
       <View style={{ marginTop: keyboardUp ? 6 : 22 }}>
@@ -179,7 +170,7 @@ export default function Register() {
           value={fullName}
           onChangeText={(t) => { setFullName(t); clear('name'); }}
           tone={errs.name ? 'error' : 'normal'}
-          placeholder="What artisans should call you"
+          placeholder="Full name"
           autoCapitalize="words"
           autoComplete="name"
           returnKeyType="next"
@@ -205,7 +196,7 @@ export default function Register() {
           label="Password"
           value={password}
           onChangeText={(t) => { setPassword(t); if (error) setError(null); }}
-          placeholder="At least eight characters"
+          placeholder="Choose a password"
           secure={!show}
           autoComplete="new-password"
           inputRef={passwordRef}
@@ -227,7 +218,6 @@ const styles = StyleSheet.create({
   weakReason: { marginTop: 10, textAlign: 'center', fontSize: 12.5, lineHeight: 18, color: colors.dangerOnInk },
   consent: { textAlign: 'center', fontSize: 11.5, lineHeight: 17, color: colors.onInkMeta, paddingHorizontal: 8 },
   consentLink: { fontSize: 11.5, color: colors.onInk },
-  takenNote: { paddingTop: 14, fontSize: 13.5, color: colors.dangerOnInk },
   domainRow: { flexDirection: 'row', gap: 8 },
   domainChip: { flex: 1, height: 38, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.onInkFill },
   domainLabel: { fontSize: 13, color: 'rgba(20,23,27,0.75)' },

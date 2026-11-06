@@ -149,7 +149,7 @@ export default function ChatScreen() {
               <View className="flex-1 items-center justify-center px-8">
                 <Ionicons name="chatbubbles-outline" size={40} color={colors.textMuted} />
                 <AppText className="mt-3 text-center text-[13px] text-gray-400">
-                  No messages yet. Say hello to coordinate the job.
+                  No messages yet.
                 </AppText>
               </View>
             ) : (

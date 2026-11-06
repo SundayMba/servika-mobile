@@ -7,7 +7,7 @@ import { AuthScreen, Banner, CheckTile, classifyAuthError, CodeDigits, FooterLin
 import { FieldError } from '@/components/FieldError';
 import { AppText } from '@/components/ui/AppText';
 import { colors } from '@/constants/colors';
-import { forgotPassword, login, resetPassword } from '@/lib/api/auth';
+import { forgotPassword, login, resetPassword, verifyOtp } from '@/lib/api/auth';
 import { useAuth } from '@/lib/auth/AuthContext';
 
 type Step = 'email' | 'code' | 'password' | 'changed';
@@ -51,7 +51,7 @@ export default function ForgotPassword() {
   const request = async () => {
     if (submitting) return;
     const value = email.trim().toLowerCase();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) && !/^\+?\d{10,14}$/.test(value)) return setErrs({ email: 'That does not look like an email. The code goes there.' });
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) && !/^\+?\d{10,14}$/.test(value)) return setErrs({ email: 'Enter a valid email.' });
     setErrs({});
     setError(null);
     setOffline(false);
@@ -83,11 +83,34 @@ export default function ForgotPassword() {
     }
   };
 
+  // Check the code with the server before asking for a new password, so a wrong code never gets past this step.
+  const checkCode = async (value = code) => {
+    if (submitting || value.length < 6) return;
+    setError(null);
+    setNotice(null);
+    setOffline(false);
+    setSubmitting(true);
+    try {
+      await verifyOtp({ emailOrPhone: email, otpCode: value, otpType: 'password_reset' });
+      clear('code');
+      setStep('password');
+    } catch (e) {
+      const f = classifyAuthError(e);
+      if (f.kind === 'offline') setOffline(true);
+      else if (f.kind === 'invalid' || f.kind === 'unauthorized') {
+        setCodeWrong(true);
+        setErrs({ code: 'That code is wrong or has expired.' });
+      } else setError(f.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const save = async () => {
     if (submitting) return;
     const next: typeof errs = {};
-    if (!passes) next.password = 'Eight characters and a number is the floor.';
-    if (!matches) next.confirm = 'The two passwords do not match yet.';
+    if (!passes) next.password = 'Use 8 characters and a number.';
+    if (!matches) next.confirm = 'The passwords do not match.';
     setErrs(next);
     if (next.password || next.confirm) return;
     setError(null);
@@ -105,7 +128,7 @@ export default function ForgotPassword() {
       else if (f.kind === 'invalid') {
         setCodeWrong(true);
         setStep('code');
-        setErrs({ code: 'That code is wrong or has timed out. Try it again or ask for a fresh one.' });
+        setErrs({ code: 'That code is wrong or has expired.' });
       } else setError(f.message);
     } finally {
       setSubmitting(false);
@@ -118,7 +141,7 @@ export default function ForgotPassword() {
         <CheckTile />
         <View style={{ marginTop: 30 }}>
           <Headline>New password,{'\n'}same you.</Headline>
-          <Lede>You&apos;re signed in on this phone. Other phones stay signed in for now, so sign out there if that wasn&apos;t you.</Lede>
+          <Lede>You&apos;re signed in. Other phones were signed out.</Lede>
         </View>
       </AuthScreen>
     );
@@ -129,22 +152,23 @@ export default function ForgotPassword() {
       <AuthScreen
         kicker="Reset · step 2"
         onBack={() => setStep('email')}
+        banner={offline ? <Banner text="No network. Nothing you typed is lost." actionLabel="Retry" onAction={() => checkCode()} /> : null}
         footer={
           <>
-            <PrimaryButton label="Continue" disabled={code.length < 6} onPress={() => { setError(null); clear('code'); setStep('password'); }} />
+            <PrimaryButton label="Continue" loadingLabel="Checking" loading={submitting} disabled={code.length < 6} onPress={() => checkCode()} />
             <FooterLink action="Wrong email? Change it" onPress={() => setStep('email')} />
           </>
         }
       >
-        <Headline>Six digits to{'\n'}prove it is you.</Headline>
+        <Headline>Enter your{'\n'}code.</Headline>
         <Lede>Sent to {email}</Lede>
         <View style={{ marginTop: 36, gap: 24 }}>
-          <CodeDigits value={code} onChange={(v) => { setCode(v); setCodeWrong(false); setError(null); clear('code'); }} tone={codeWrong ? 'wrong' : 'normal'} />
+          <CodeDigits value={code} onChange={(v) => { setCode(v); setCodeWrong(false); setError(null); clear('code'); if (v.length === 6) checkCode(v); }} tone={codeWrong ? 'wrong' : 'normal'} editable={!submitting} />
           <View>
             <Rule tone={codeWrong ? 'wrong' : 'normal'} />
             <FieldError text={errs.code} />
           </View>
-          <ResendRow cooldown={cooldown} onResend={resend} onPaste={setCode} />
+          <ResendRow cooldown={cooldown} onResend={resend} onPaste={(v) => { setCode(v); if (v.length === 6) checkCode(v); }} />
           {notice ? <AppText style={inkStyles.notice}>{notice}</AppText> : null}
           {error ? <AppText style={[inkStyles.error, { marginTop: 0 }]}>{error}</AppText> : null}
         </View>
@@ -160,15 +184,14 @@ export default function ForgotPassword() {
         banner={offline ? <Banner text="No network. Nothing you typed is lost." actionLabel="Retry" onAction={save} /> : null}
         footer={<PrimaryButton label="Save and sign in" loadingLabel="Saving" loading={submitting} disabled={!passes || !matches} onPress={save} />}
       >
-        <Headline>Pick something{'\n'}you will keep.</Headline>
-        <Lede>Eight characters and a number. You are signed in here the moment it saves.</Lede>
+        <Headline>New{'\n'}password.</Headline>
         <View style={{ marginTop: 18 }}>
           <UnderlineField
             label="New password"
             value={password}
             onChangeText={(t) => { setPassword(t); clear('password'); }}
             tone={errs.password ? 'error' : 'normal'}
-            placeholder="At least eight characters"
+            placeholder="New password"
             secure={!show}
             autoComplete="new-password"
             autoFocus
@@ -210,13 +233,13 @@ export default function ForgotPassword() {
       banner={offline ? <Banner text="No network. Nothing you typed is lost." actionLabel="Retry" onAction={request} /> : null}
       footer={
         <>
-          <PrimaryButton label="Send the code" loadingLabel="Sending the code" loading={submitting} onPress={request} />
-          <FooterLink action="I remember it after all" onPress={() => (router.canGoBack() ? router.back() : router.replace('/login'))} />
+          <PrimaryButton label="Send code" loadingLabel="Sending" loading={submitting} onPress={request} />
+          <FooterLink action="Back to sign in" onPress={() => (router.canGoBack() ? router.back() : router.replace('/login'))} />
         </>
       }
     >
-      <Headline>Which email{'\n'}do you use?</Headline>
-      <Lede>We send six digits to it. Nothing about your account changes until you use them.</Lede>
+      <Headline>Reset your{'\n'}password.</Headline>
+      <Lede>We will email you a 6-digit code.</Lede>
       <View style={{ marginTop: 18 }}>
         <UnderlineField
           label="Email"
@@ -231,7 +254,7 @@ export default function ForgotPassword() {
           tone={errs.email ? 'error' : 'normal'}
         />
         <FieldError text={errs.email} />
-        <AppText style={styles.hint}>The code only goes out if an account uses this address. Check spam if it takes more than a minute.</AppText>
+        <AppText style={styles.hint}>Not there in a minute? Check spam.</AppText>
         {error ? <AppText style={inkStyles.error}>{error}</AppText> : null}
       </View>
     </AuthScreen>

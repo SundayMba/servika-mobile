@@ -181,7 +181,7 @@ export function PaystackCheckout({ url, reference, returnScheme, title = 'Secure
   };
 
   const leave = () => {
-    Alert.alert('Leave this payment?', 'Nothing is charged unless you complete it. You can start again from the booking.', [
+    Alert.alert('Leave this payment?', 'Nothing is charged unless you finish.', [
       { text: 'Stay', style: 'cancel' },
       { text: 'Leave', style: 'destructive', onPress: () => finish({ status: 'cancelled' }) },
     ]);
@@ -226,7 +226,7 @@ export function PaystackCheckout({ url, reference, returnScheme, title = 'Secure
           icon="close-circle"
           tint="#B3261E"
           title="The payment did not go through"
-          body="Your bank declined it or the payment was stopped. Nothing was charged. Try again or pay another way."
+          body="Nothing was charged. Try again or pay another way."
           primary={{ label: retrying ? 'Starting again' : 'Try again', onPress: retry, disabled: retrying }}
           secondary={{ label: 'Back', onPress: () => finish({ status: 'failed', info: null }) }}
           bottom={insets.bottom}
@@ -236,9 +236,9 @@ export function PaystackCheckout({ url, reference, returnScheme, title = 'Secure
           icon="time"
           tint="#C2560B"
           title="Still waiting for the bank"
-          body="Transfers can take a few minutes. Your money is safe, and we'll notify you once the bank confirms."
+          body="Transfers can take a few minutes. We'll notify you once the bank confirms."
           primary={{ label: 'Check again', onPress: () => void check('manual').then((r) => r === 'pending' && startPolling()) }}
-          secondary={{ label: 'I will wait for the notification', onPress: () => finish({ status: 'pending', info: null }) }}
+          secondary={{ label: 'Wait for the notification', onPress: () => finish({ status: 'pending', info: null }) }}
           bottom={insets.bottom}
         />
       ) : (
@@ -252,7 +252,7 @@ export function PaystackCheckout({ url, reference, returnScheme, title = 'Secure
           {phase === 'waiting' ? (
             <View style={styles.strip}>
               <ActivityIndicator size="small" color="#C2560B" />
-              <Text style={styles.stripText}>Waiting for the bank to confirm. This completes on its own.</Text>
+              <Text style={styles.stripText}>Waiting for the bank to confirm.</Text>
             </View>
           ) : null}
           <WebView
@@ -305,7 +305,7 @@ async function openExternal(target: string) {
     }
     await Linking.openURL(target);
   } catch {
-    Alert.alert('Could not open the app', 'Finish the payment in your bank or wallet app, then come back here. We check automatically.');
+    Alert.alert('Could not open the app', 'Finish the payment in your bank or wallet app, then come back here.');
   }
 }
 

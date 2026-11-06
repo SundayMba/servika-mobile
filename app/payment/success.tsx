@@ -80,8 +80,7 @@ export default function PaymentSuccess() {
             </AppText>
           ) : null}
           <AppText className="mt-2 px-4 text-center text-[14px] leading-5 text-gray-500">
-            Held securely by Servika. {booking?.artisanName ?? 'The artisan'} is paid only
-            once you confirm the job is done.
+            Held until you confirm the job is done.
           </AppText>
         </View>
 
