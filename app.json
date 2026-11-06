@@ -2,7 +2,7 @@
   "expo": {
     "name": "Servika",
     "slug": "servika",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "orientation": "portrait",
     "icon": "./assets/images/general-sizes/servika-orange-clean-icon-1024x1024.png",
     "scheme": "servika",
@@ -38,6 +38,28 @@
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.RECORD_AUDIO"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "servika.com.ng",
+              "pathPrefix": "/a/"
+            },
+            {
+              "scheme": "https",
+              "host": "www.servika.com.ng",
+              "pathPrefix": "/a/"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
       ]
     },
     "web": {

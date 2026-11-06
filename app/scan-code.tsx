@@ -10,7 +10,7 @@ import { colors } from '@/constants/colors';
 
 /**
  * Reads an artisan's booking code out of whatever their QR holds: the link
- * (https://servika.com.ng/a/EMEKA42), the app link (servika://a/EMEKA42) or the bare code.
+ * (https://www.servika.com.ng/a/EMEKA42), the app link (servika://a/EMEKA42) or the bare code.
  * Anything else is not a Servika code.
  */
 export function codeFromScan(data: string): string | null {
