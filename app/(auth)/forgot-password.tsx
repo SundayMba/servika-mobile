@@ -185,14 +185,13 @@ export default function ForgotPassword() {
         footer={<PrimaryButton label="Save and sign in" loadingLabel="Saving" loading={submitting} disabled={!passes || !matches} onPress={save} />}
       >
         <Headline>New{'\n'}password.</Headline>
-        <Lede>At least 8 characters and a number.</Lede>
         <View style={{ marginTop: 18 }}>
           <UnderlineField
             label="New password"
             value={password}
             onChangeText={(t) => { setPassword(t); clear('password'); }}
             tone={errs.password ? 'error' : 'normal'}
-            placeholder="At least eight characters"
+            placeholder="New password"
             secure={!show}
             autoComplete="new-password"
             autoFocus

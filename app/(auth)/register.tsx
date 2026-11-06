@@ -196,7 +196,7 @@ export default function Register() {
           label="Password"
           value={password}
           onChangeText={(t) => { setPassword(t); if (error) setError(null); }}
-          placeholder="At least eight characters"
+          placeholder="Choose a password"
           secure={!show}
           autoComplete="new-password"
           inputRef={passwordRef}
