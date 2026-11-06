@@ -32,7 +32,7 @@ const SLIDES = [
     title: 'Every artisan,',
     titleAccent: 'ID-checked first.',
     subtitle:
-      'Electricians, plumbers and fridge repairers near you. A person at Servika checks each one.',
+      'A person at Servika checks every artisan near you.',
   },
   {
     id: '2',
@@ -40,7 +40,7 @@ const SLIDES = [
     title: 'Look around',
     titleAccent: 'before you sign up.',
     subtitle:
-      'Browse every category and see real prices as a guest. No account until you actually want one.',
+      'Browse services and prices as a guest.',
   },
   {
     id: '3',
@@ -48,7 +48,7 @@ const SLIDES = [
     title: 'Your money waits',
     titleAccent: "until it's fixed.",
     subtitle:
-      'Booking is free. Pay once you accept a price. We hold it until you confirm the job is done.',
+      'Pay once you accept a price. We hold it until the job is done.',
   },
 ] as const;
 

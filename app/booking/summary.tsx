@@ -287,10 +287,10 @@ export default function BookingSummary() {
               </AppText>
               <AppText className="text-[12px] leading-4 text-gray-500">
                 {isCustom
-                  ? 'Once you pay the visit, Servika sends a checked artisan. They send an itemised quote, Servika checks large ones, and nothing is done until you accept.'
+                  ? 'Pay the visit. The artisan sends an itemised quote, and nothing is done until you accept.'
                   : isDiagnosis
-                  ? 'Once you pay the visit, Servika sends a checked artisan. They price the repairs from Servika\'s list, with a photo of each fault, and nothing is done until you approve.'
-                  : 'Once you pay, Servika offers the job to a checked artisan near you. You see who is coming before they arrive.'}
+                  ? 'Pay the visit. The artisan prices the repairs, and nothing is done until you approve.'
+                  : 'Once you pay, Servika offers the job to a checked artisan near you.'}
               </AppText>
             </View>
           </View>
@@ -302,7 +302,7 @@ export default function BookingSummary() {
             <View className="ml-3 flex-1">
               <AppText weight="semibold" className="text-[15px] text-gray-900">Open request</AppText>
               <AppText className="text-[12px] leading-4 text-gray-500">
-                {`Checked ${serviceName.toLowerCase()} artisans nearby send their prices, or offer to visit first. You pick one.`}
+                Artisans nearby send prices or offer to visit first. You pick one.
               </AppText>
             </View>
           </View>
@@ -387,8 +387,7 @@ export default function BookingSummary() {
               <Row label="Visit" value={formatNaira(diagnosisFee)} />
               <AppText className="mt-1 text-[12px] leading-4 text-gray-500">
                 You pay {formatNaira(diagnosisFee)}
-                {usersBearFees ? ' plus a small payment fee' : ''} now for the visit. If you accept the quote it comes off the
-                total. If you don&apos;t, the visit is all you pay.
+                {usersBearFees ? ' plus a small payment fee' : ''} now. It comes off the quote if you accept.
               </AppText>
             </>
           ) : isDiagnosis ? (
@@ -396,8 +395,7 @@ export default function BookingSummary() {
               <Row label="Diagnosis visit" value={formatNaira(diagnosisFee)} />
               <AppText className="mt-1 text-[12px] leading-4 text-gray-500">
                 You pay {formatNaira(diagnosisFee)}
-                {usersBearFees ? ' plus a small payment fee' : ''} now. If you go ahead with the repairs it comes off
-                their price. If you don&apos;t, it pays for the visit and that is all you pay.
+                {usersBearFees ? ' plus a small payment fee' : ''} now. It comes off the repairs if you go ahead.
               </AppText>
             </>
           ) : isPriceBook ? (
@@ -405,18 +403,17 @@ export default function BookingSummary() {
               <Row label="Servika price" value={formatNaira(fixedPrice!)} />
               <AppText className="mt-1 text-[12px] leading-4 text-gray-500">
                 You pay {formatNaira(fixedPrice!)}
-                {usersBearFees ? ' plus a small payment fee' : ''} now. Servika holds it and pays the artisan only
-                after you confirm the job is done. Cancel before they arrive and you get it all back.
+                {usersBearFees ? ' plus a small payment fee' : ''} now, held until you confirm the job is done.
+                Cancel before they arrive for a full refund.
               </AppText>
             </>
           ) : isFixed ? (
             <>
               <Row label="Fixed price" value={formatNaira(fixedPrice!)} />
               <AppText className="mt-1 text-[12px] leading-4 text-gray-500">
-                {artisan?.fullName ?? 'The artisan'} confirms your booking, then you
-                pay {formatNaira(fixedPrice!)}
-                {usersBearFees ? ' plus a small payment fee' : ''} securely. Servika
-                holds it until the job is done. Nothing to pay now.
+                Pay {formatNaira(fixedPrice!)}
+                {usersBearFees ? ' plus a small payment fee' : ''} after {artisan?.fullName ?? 'the artisan'} accepts.
+                Held until the job is done.
               </AppText>
             </>
           ) : (
@@ -429,8 +426,8 @@ export default function BookingSummary() {
               </View>
               <AppText className="mt-1 text-[12px] leading-4 text-gray-500">
                 {isOpen
-                  ? 'You pay only after you pick an offer, and the money is held until the job is done.'
-                  : `${artisan?.fullName ?? 'The artisan'} will review your request and send you a quote (or come inspect for free). You only pay after you accept, and your payment is held securely until the job is done.`}
+                  ? 'Pay only after you pick an offer. Held until the job is done.'
+                  : 'Pay only after you accept a price. Held until the job is done.'}
               </AppText>
             </>
           )}
@@ -483,7 +480,7 @@ export default function BookingSummary() {
           />
           {!safetyAck ? (
             <AppText className="mt-2 text-center text-[12px] text-gray-500">
-              Tick the box above to send your request.
+              Tick the box to continue.
             </AppText>
           ) : null}
         </View>
@@ -492,9 +489,6 @@ export default function BookingSummary() {
       <BottomSheet visible={safetyInfo} onClose={() => setSafetyInfo(false)} estimatedHeight={480}>
         <AppText weight="semibold" className="text-[18px] text-gray-900">
           Keeping your home safe
-        </AppText>
-        <AppText className="mt-1 text-[13px] leading-5 text-gray-500">
-          Your part while an artisan is in your home:
         </AppText>
         <View className="mt-4 gap-3">
           {SAFETY_POINTS.map((p) => (

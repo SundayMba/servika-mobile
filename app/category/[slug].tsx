@@ -16,8 +16,8 @@ const GUTTER = 20;
 
 const STEPS: { icon: React.ComponentProps<typeof Ionicons>['name']; text: string }[] = [
   { icon: 'create-outline', text: 'Describe the job and add photos' },
-  { icon: 'pricetags-outline', text: 'Checked artisans nearby send prices, or offer to visit first' },
-  { icon: 'checkmark-circle-outline', text: 'You pick one. Pay in the app, held until it is done' },
+  { icon: 'pricetags-outline', text: 'Artisans nearby send prices or offer to visit' },
+  { icon: 'checkmark-circle-outline', text: 'Pick one. Your payment is held until it is done' },
 ];
 
 /**
@@ -58,7 +58,6 @@ export default function CategoryScreen() {
           <PriceCover photoUrl={null} categorySlug={slug} side="right" style={StyleSheet.absoluteFill} />
           <View style={styles.bannerText}>
             <AppText weight="semibold" style={styles.bannerTitle}>Describe it.{'\n'}Get prices.</AppText>
-            <AppText style={styles.bannerSub}>Checked artisans near you send prices. You pick one.</AppText>
           </View>
         </View>
 
@@ -83,7 +82,7 @@ export default function CategoryScreen() {
           <View style={{ gap: 10 }}>
             <View style={styles.gutter}>
               <AppText weight="semibold" style={styles.section}>Standard services</AppText>
-              <AppText style={styles.sectionNote}>Set prices from artisans, checked by Servika. Book in a tap.</AppText>
+              <AppText style={styles.sectionNote}>Fixed prices from checked artisans.</AppText>
             </View>
             <View style={[styles.gutter, styles.card]}>
               {posts.map((p, i) => (

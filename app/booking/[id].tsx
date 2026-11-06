@@ -369,8 +369,8 @@ export default function BookingDetailScreen() {
       visit ? `Pick ${first} to visit?` : 'Accept this offer?',
       visit
         ? bid.visitFeeNaira > 0
-          ? `You pay ${formatNaira(bid.visitFeeNaira)} now. ${first} visits and sends a price, minus the visit fee. Say no and you pay only the visit. Other offers close.`
-          : `${first} visits free and sends a price. You pay only if you accept it. Other offers close.`
+          ? `Pay ${formatNaira(bid.visitFeeNaira)} now. ${first} visits and sends a price, minus the visit fee. Other offers close.`
+          : `${first} visits free and sends a price. Other offers close.`
         : `${bid.artisanName} will do the job for ${formatNaira(bid.amountNaira)}. The other offers close.`,
       [
         { text: 'Not yet', style: 'cancel' },
@@ -410,7 +410,7 @@ export default function BookingDetailScreen() {
   const confirmRebroadcast = () => {
     appAlert(
       'Ask other artisans?',
-      `Your request will be opened to all ${booking?.serviceName?.toLowerCase() ?? ''} artisans nearby, with the same details. Nothing to re-type.`,
+      `We'll send the same request to every ${booking?.serviceName?.toLowerCase() ?? ''} artisan nearby.`,
       [
         { text: 'Not yet', style: 'cancel' },
         {
@@ -429,8 +429,8 @@ export default function BookingDetailScreen() {
     appAlert(
       'Cancel booking?',
       booking?.paymentState === 'Paid'
-        ? `This will withdraw your request.${cancelRefundNote(booking)}`
-        : 'This will withdraw your request. You can always book again.',
+        ? `This withdraws your request.${cancelRefundNote(booking)}`
+        : 'This withdraws your request.',
       [
         { text: 'Keep booking', style: 'cancel' },
         {
@@ -516,8 +516,8 @@ export default function BookingDetailScreen() {
               </View>
               <AppText className="mt-1 text-[12.5px] leading-[18px] text-gray-600">
                 {booking.paymentState === 'Pending'
-                  ? 'A bank transfer can take a few minutes. Servika sends a checked artisan the moment it lands.'
-                  : `Servika sends a checked artisan once ${formatNaira(booking.initialQuoteAmountNaira ?? 0)} is paid. Unpaid bookings close after two hours.`}
+                  ? 'A bank transfer can take a few minutes.'
+                  : `Pay ${formatNaira(booking.initialQuoteAmountNaira ?? 0)} and Servika sends an artisan. Unpaid bookings close after two hours.`}
               </AppText>
             </View>
           ) : booking.status === 'Open' ? (
@@ -532,7 +532,7 @@ export default function BookingDetailScreen() {
                 </AppText>
               </View>
               <AppText className="mt-1 text-[12.5px] leading-[18px] text-gray-600">
-                {`${formatNaira(booking.diagnosisFeeNaira ?? booking.initialQuoteAmountNaira ?? 0)} is held by Servika and comes off the price once you accept it.`}
+                {`${formatNaira(booking.diagnosisFeeNaira ?? booking.initialQuoteAmountNaira ?? 0)}, taken off the price if you accept it.`}
               </AppText>
             </View>
           ) : null}
@@ -564,19 +564,17 @@ export default function BookingDetailScreen() {
                   </AppText>
                   <AppText className="mt-0.5 text-center text-[12px] leading-4 text-gray-400">
                     {isDirectPending
-                      ? `${booking.artisanName ?? 'The artisan'} will send a price or visit free first. We'll notify you.`
+                      ? `${booking.artisanName ?? 'The artisan'} will send a price or visit first.`
                       : isDirectAwaitingQuote
-                        ? `${booking.artisanName ?? 'The artisan'} is checking the job for free. Pay only after you accept their price.`
-                        : "Artisans are pricing from your photos. We'll notify you when offers come in."}
+                        ? `${booking.artisanName ?? 'The artisan'} is checking the job.`
+                        : 'Artisans are pricing your job.'}
                   </AppText>
                   {/* The decisive anti-leakage moment: the artisan may be standing
                       in the customer's home. Protection only exists in-app, so say
                       it exactly here, where a side deal would happen. */}
                   <View className="mt-3 rounded-xl bg-amber-50 px-3 py-2.5">
                     <AppText className="text-[12px] leading-4 text-amber-800">
-                      Pay only in the app. We hold it until the job is done and
-                      refund it if things go wrong. We can&apos;t protect any
-                      payment made outside the app.
+                      Pay only in the app. We can&apos;t protect payments made outside it.
                     </AppText>
                   </View>
                   {isDirectPending && canOpenForBids ? (
@@ -756,7 +754,7 @@ export default function BookingDetailScreen() {
                   <AppText className="text-[12px] leading-4 text-gray-500">
                     {canOpenForBids
                       ? `Send the same request to every ${booking.serviceName.toLowerCase()} artisan nearby.`
-                      : 'Anything you paid is refunded in full. Book another service or describe the job to get prices.'}
+                      : 'Anything you paid is refunded in full.'}
                   </AppText>
                 </View>
               </View>
@@ -861,11 +859,9 @@ export default function BookingDetailScreen() {
                   </AppText>
                 </View>
                 <AppText className="mt-2 text-[12.5px] leading-4 text-gray-600">
-                  {booking.artisanName ?? 'Your artisan'} asked for this from the{' '}
-                  {formatNaira(booking.agreedMaterialsNaira ?? 0)} materials cost you agreed, to buy
-                  the parts now. Approving sends it to them today; your{' '}
-                  {formatNaira(booking.agreedWorkmanshipNaira ?? 0)} labour payment stays held
-                  until you confirm the job. Released materials money cannot be refunded.
+                  To buy parts now, from the {formatNaira(booking.agreedMaterialsNaira ?? 0)} materials
+                  you agreed. Labour stays held until you confirm the job. Released materials money
+                  cannot be refunded.
                 </AppText>
                 <View className="mt-3 flex-row gap-2.5">
                   <Pressable
@@ -926,9 +922,8 @@ export default function BookingDetailScreen() {
                 <View className="mt-2 flex-row items-center gap-2 rounded-xl bg-amber-50 px-3 py-2.5">
                   <Ionicons name="cash-outline" size={16} color="#B45309" />
                   <AppText weight="semibold" className="flex-1 text-[12px] leading-4 text-amber-700">
-                    Cash on service: pay {formatNaira(booking.initialQuoteAmountNaira)} to{' '}
-                    {booking.artisanName ?? 'the artisan'} when the job is done.
-                    Cash jobs have limited dispute protection.
+                    Pay {formatNaira(booking.initialQuoteAmountNaira)} cash when the job is done.
+                    Cash has limited dispute protection.
                   </AppText>
                 </View>
                 {!['InProgress', 'AwaitingConfirmation', 'Completed', 'Cancelled', 'Disputed'].includes(
@@ -942,7 +937,7 @@ export default function BookingDetailScreen() {
                   >
                     <Ionicons name="lock-closed" size={13} color={colors.primary} />
                     <AppText weight="semibold" className="text-[13px] text-primary">
-                      {paying ? 'Opening secure payment…' : 'Switch to secure online payment'}
+                      {paying ? 'Opening payment…' : 'Pay online instead'}
                     </AppText>
                   </Pressable>
                 ) : null}
@@ -969,8 +964,8 @@ export default function BookingDetailScreen() {
                 </Pressable>
                 <AppText className="mt-2 text-center text-[11.5px] leading-4 text-gray-400">
                   {feeSchedule.data?.usersBearFees
-                    ? 'Work starts once your payment is secured. A small payment fee is added at checkout.'
-                    : 'Work starts once your payment is secured.'}
+                    ? 'Work starts once you pay. A small payment fee is added.'
+                    : 'Work starts once you pay.'}
                 </AppText>
                 {cashAllowed && !['InProgress', 'AwaitingConfirmation', 'Completed'].includes(booking.status) ? (
                   <Pressable
@@ -980,7 +975,7 @@ export default function BookingDetailScreen() {
                     className="mt-1 items-center py-1"
                   >
                     <AppText weight="semibold" className="text-[12.5px] text-gray-500">
-                      Prefer cash? Pay after the service instead
+                      Pay cash after the job
                     </AppText>
                   </Pressable>
                 ) : null}
@@ -990,14 +985,12 @@ export default function BookingDetailScreen() {
               // Fixed-price booking waiting on the artisan to accept — payment
               // opens once they confirm (avoids charging for a job they decline).
               <AppText className="mt-1 text-[12px] leading-4 text-gray-500">
-                Waiting for {booking.artisanName ?? 'the artisan'} to accept. Once
-                they confirm, pay {formatNaira(booking.initialQuoteAmountNaira)}{' '}
-                securely. We hold it until the job is done.
+                Pay {formatNaira(booking.initialQuoteAmountNaira)} once {booking.artisanName ?? 'the artisan'} accepts.
+                Held until the job is done.
               </AppText>
             ) : (
               <AppText className="mt-1 text-[12px] leading-4 text-gray-500">
-                Nothing to pay yet. You review a price first, and we hold your
-                payment until the job is done.
+                Nothing to pay until you accept a price.
               </AppText>
             )}
           </Section>
@@ -1146,15 +1139,14 @@ export default function BookingDetailScreen() {
             Make an offer
           </AppText>
           <AppText className="mt-1 text-[13px] leading-5 text-gray-500">
-            {counterFor?.artisanName} quoted {formatNaira(counterFor?.workmanshipNaira ?? 0)} for
-            workmanship
+            {counterFor?.artisanName} quoted {formatNaira(counterFor?.workmanshipNaira ?? 0)} for labour
             {counterFor && counterFor.materialsNaira > 0
-              ? ` plus ${formatNaira(counterFor.materialsNaira)} in materials (priced per item, not negotiable)`
+              ? ` plus ${formatNaira(counterFor.materialsNaira)} for materials, which stay fixed`
               : ''}
-            . Propose what you would pay for the work; they can accept, decline, or send a new price.
+            .
           </AppText>
           <AppText weight="medium" className="mb-1.5 mt-5 text-[12px] text-gray-500">
-            Your workmanship offer (₦)
+            Your labour offer (₦)
           </AppText>
           <View className={`flex-row items-center rounded-2xl border bg-white px-4 ${counterAmountErr ? 'border-red-400' : 'border-gray-200'}`}>
             <AppText weight="semibold" className="text-[18px] text-gray-400">₦</AppText>
@@ -1200,7 +1192,7 @@ export default function BookingDetailScreen() {
           </Pressable>
           {counterFor ? (
             <AppText className="mt-3 text-center text-[11.5px] leading-4 text-gray-400">
-              One offer on the labour. If they accept, you pay that in the app. If not, their price stands.
+              You get one offer. If they decline, their price stands.
             </AppText>
           ) : null}
         </View>
@@ -1212,7 +1204,7 @@ export default function BookingDetailScreen() {
             <View className="h-14 w-14 items-center justify-center rounded-full bg-green-100">
               <Ionicons name="checkmark" size={28} color="#16A34A" />
             </View>
-            <AppText weight="semibold" className="mt-3 text-[18px] text-gray-900">Price agreed!</AppText>
+            <AppText weight="semibold" className="mt-3 text-[18px] text-gray-900">Price agreed</AppText>
             <AppText className="mt-1 text-center text-[13px] leading-5 text-gray-500">
               {booking?.artisanName ?? 'Your artisan'} will do the job for{' '}
               <AppText inline weight="semibold" className="text-gray-900">
@@ -1220,7 +1212,7 @@ export default function BookingDetailScreen() {
                   ? formatNaira(booking.initialQuoteAmountNaira)
                   : 'the agreed price'}
               </AppText>
-              . How would you like to pay?
+              .
             </AppText>
           </View>
 
@@ -1239,10 +1231,6 @@ export default function BookingDetailScreen() {
               {usersBearFees === false ? (
                 <AppText className="mt-1 text-[11.5px] leading-4 text-gray-400">
                   {feeCoveredUntil ? `Servika covers the card fee until ${feeCoveredUntil}.` : 'Servika covers the card fee for now.'}
-                </AppText>
-              ) : usersBearFees === true ? (
-                <AppText className="mt-1 text-[11.5px] leading-4 text-gray-400">
-                  The card processing charge, shown up front.
                 </AppText>
               ) : null}
               <View className="mt-2 flex-row items-center justify-between border-t border-gray-200 pt-2">
@@ -1284,8 +1272,8 @@ export default function BookingDetailScreen() {
           ) : null}
           <AppText className="mt-2.5 text-center text-[11.5px] leading-4 text-gray-400">
             {cashAllowed
-              ? 'Paid online, held until you confirm the job. Cash has limited protection.'
-              : 'Held by Servika until you confirm the job. Card, transfer, USSD or OPay.'}
+              ? 'Held until you confirm the job. Cash has limited protection.'
+              : 'Held until you confirm the job.'}
           </AppText>
         </View>
       </BottomSheet>

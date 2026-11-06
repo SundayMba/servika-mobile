@@ -297,18 +297,13 @@ export default function ArtisanProfile() {
                 </View>
                 <View className="flex-1">
                   <AppText weight="semibold" className="text-[15px] text-gray-900">
-                    Free inspection · No booking fee
+                    No booking fee
                   </AppText>
                   <AppText weight="medium" className="text-[12px] text-gray-500">
                     You only pay a price you&apos;ve agreed
                   </AppText>
                 </View>
               </View>
-              <AppText className="mt-3 text-[12px] leading-4 text-gray-500">
-                {artisan.fullName.split(' ')[0]} reviews your request and sends a
-                quote, or inspects the job free of charge first. Your payment is
-                held securely by Servika until the work is done.
-              </AppText>
             </View>
           </View>
 

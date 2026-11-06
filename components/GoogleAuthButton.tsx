@@ -84,7 +84,7 @@ export function GoogleAuthButton({ variant = 'light', onBusyChange, onSignedIn }
         'Google sign-in failed',
         authErrorMessage(
           e,
-          'Could not sign in with Google. If Google sign-in was just added, rebuild the app and try again.',
+          'Could not sign in with Google. Try again.',
         ),
       );
     } finally {

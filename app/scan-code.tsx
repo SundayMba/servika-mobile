@@ -85,11 +85,11 @@ export default function ScanCode() {
 
       <View style={[styles.bottom, { paddingBottom: insets.bottom + 24 }]}>
         {!Camera ? (
-          <AppText style={styles.hint}>Update the app to scan codes. You can still type the code instead.</AppText>
+          <AppText style={styles.hint}>Update the app to scan codes.</AppText>
         ) : !granted ? (
           <>
             <AppText style={styles.hint}>
-              {canAskAgain ? 'Allow the camera to scan the QR on their phone, card or flyer.' : 'Camera access is off for Servika. Turn it on in your phone settings.'}
+              {canAskAgain ? 'Allow the camera to scan their code.' : 'Turn on camera access in your phone settings.'}
             </AppText>
             <Pressable accessibilityRole="button" onPress={() => (canAskAgain ? ask?.() : Linking.openSettings())} style={styles.primary}>
               <AppText weight="semibold" style={styles.primaryLabel}>{canAskAgain ? 'Allow camera' : 'Open settings'}</AppText>
@@ -97,7 +97,7 @@ export default function ScanCode() {
           </>
         ) : (
           <AppText style={styles.hint}>
-            {notServika ? 'Invalid Servika QR Code. Ask the artisan to show their Servika code.' : 'Point at the QR on their phone, card or flyer.'}
+            {notServika ? 'That is not a Servika code.' : 'Point at their QR code.'}
           </AppText>
         )}
         <Pressable accessibilityRole="button" onPress={() => router.replace('/book-by-code')} style={styles.secondary}>

@@ -230,7 +230,7 @@ export default function Home() {
               <Ionicons name="navigate-outline" size={20} color={colors.accentDeep} />
             </View>
             <AppText weight="semibold" style={styles.areaTitle}>We&apos;re not in {areaShort || 'your area'} yet</AppText>
-            <AppText style={styles.areaBody}>We start in Lekki Phase 1, Ikate, Chevron and Agungi. Join the waitlist and we&apos;ll tell you when we reach you.</AppText>
+            <AppText style={styles.areaBody}>For now we cover Lekki Phase 1, Ikate, Chevron and Agungi.</AppText>
             <View style={styles.areaActions}>
               <Pressable accessibilityRole="button" onPress={() => Linking.openURL(SITE_URL).catch(() => undefined)} style={styles.areaPrimary}>
                 <AppText weight="semibold" style={styles.areaPrimaryLabel}>Join the waitlist</AppText>
@@ -255,7 +255,6 @@ export default function Home() {
               <JobTile label="Something else" icon="grid-outline" width={tileWidth} onPress={() => router.navigate('/services')} />
             </View>
           )}
-          <AppText style={[styles.gutter, styles.note]}>Describe the job. Checked artisans send prices, and you choose who comes.</AppText>
         </View>
 
         {/* ── Standard services, one row per trade: posts artisans price themselves, checked by Servika ── */}
@@ -263,7 +262,7 @@ export default function Home() {
           <ServiceSectionSkeleton gutter={GUTTER} />
         ) : (sectionsQuery.data?.length ?? 0) > 0 ? (
           <View style={{ gap: 22 }}>
-            <SectionHead title="Standard services" subtitle="Set prices from checked artisans. Book in a tap." scale={scale} />
+            <SectionHead title="Standard services" subtitle="Fixed prices from checked artisans." scale={scale} />
             {(sectionsQuery.data ?? []).map((section) => (
             <ServiceSectionRow
               key={section.categorySlug}
@@ -292,7 +291,7 @@ export default function Home() {
             </View>
             <View style={{ flex: 1, gap: 2 }}>
               <AppText weight="semibold" style={styles.codeTitle}>Have an artisan&apos;s code?</AppText>
-              <AppText style={styles.codeSub}>Book someone you already know, through Servika</AppText>
+              <AppText style={styles.codeSub}>Book someone you already know</AppText>
             </View>
           </Pressable>
           <Pressable accessibilityRole="button" accessibilityLabel="Scan an artisan's QR code" onPress={() => router.push('/scan-code')} style={styles.scanBtn}>
@@ -327,7 +326,7 @@ export default function Home() {
           </View>
           <View style={{ flex: 1, gap: 3 }}>
             <AppText weight="semibold" style={styles.inkTitle}>Manage an estate or office?</AppText>
-            <AppText style={styles.inkSub}>Tell us what your estate needs. Our team plans the visits and sends the right artisans.</AppText>
+            <AppText style={styles.inkSub}>Tell us what you need and we&apos;ll call you back.</AppText>
           </View>
           <Ionicons name="arrow-forward" size={18} color="rgba(255,255,255,0.75)" />
         </Pressable>
@@ -336,7 +335,7 @@ export default function Home() {
           <View style={[styles.gutter, styles.guestCard]}>
             <View style={{ flex: 1, gap: 3 }}>
               <AppText weight="semibold" style={styles.guestTitle}>Ready to book?</AppText>
-              <AppText style={styles.guestSub}>Make an account in a minute to book and track jobs.</AppText>
+              <AppText style={styles.guestSub}>Sign up to book and track jobs.</AppText>
             </View>
             <Pressable accessibilityRole="button" accessibilityLabel="Sign up" onPress={() => router.push('/register')} style={styles.signUp}>
               <AppText weight="semibold" style={styles.signUpLabel}>Sign up</AppText>
@@ -415,7 +414,6 @@ const styles = StyleSheet.create({
   sectionSub: { alignSelf: 'stretch', fontSize: 12.5, color: colors.inkSubtle },
   sectionAction: { fontSize: 13, color: colors.accentDeep },
   grid: { flexDirection: 'row', flexWrap: 'wrap', columnGap: TILE_GAP, rowGap: 20, paddingHorizontal: GUTTER },
-  note: { fontSize: 12.5, lineHeight: 18, color: colors.inkSubtle },
 
   areaCard: { borderRadius: 24, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.hairline, padding: 18, gap: 8 },
   areaCardIcon: { width: 40, height: 40, borderRadius: 13, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFF1E4', marginBottom: 2 },

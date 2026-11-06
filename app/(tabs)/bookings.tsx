@@ -241,7 +241,7 @@ export default function Bookings() {
               </AppText>
               <AppText style={styles.emptyBody}>
                 {tab === 'active'
-                  ? 'Tell us what needs fixing on Home. Your jobs show up here.'
+                  ? 'Your jobs show up here.'
                   : `You have no ${tab} bookings yet.`}
               </AppText>
             </View>

@@ -257,16 +257,17 @@ export function PasswordStrength({ password, checks, showChecklist }: { password
   const failing = passed < 3 && password.length > 0;
   const personalOnly = failing && password.length >= 8 && /\d/.test(password);
   const verdict = !password
-    ? 'Eight characters and a number keeps it out of reach.'
+    ? 'At least 8 characters and a number'
     : personalOnly
       ? 'Too close to your name or email'
       : failing
       ? `${password.length < 8 ? `${['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven'][password.length] ?? password.length} characters` : 'Eight characters'}${/\d/.test(password) ? '' : ', no number'}`
       : strong
-        ? 'Strong. That one will hold.'
-        : 'Decent. A symbol makes it strong.';
-  const color = failing ? colors.dangerOnInk : segments >= 2 ? colors.onInkBody : colors.onInkFaint;
-  const barColor = failing ? colors.dangerRule : colors.orange;
+        ? 'Strong'
+        : 'Good. Add a symbol to make it strong';
+  // Red while a rule fails, amber when it passes but could be stronger, green when strong.
+  const barColor = failing ? colors.dangerRule : strong ? colors.successOnInk : colors.amberOnInk;
+  const color = !password ? colors.onInkFaint : failing ? colors.dangerOnInk : strong ? colors.successOnInkText : colors.amberOnInk;
   return (
     <View style={{ paddingTop: 12 }}>
       {password ? (
@@ -285,8 +286,8 @@ export function PasswordStrength({ password, checks, showChecklist }: { password
         <View style={styles.checklist}>
           {checks.map((c) => (
             <View key={c.label} style={styles.checkRow}>
-              <View style={[styles.checkDot, { backgroundColor: c.ok ? 'rgba(228,98,10,0.14)' : 'rgba(229,72,77,0.12)' }]}>
-                <AppText weight="semibold" style={{ fontSize: 10, color: c.ok ? colors.orangeOnDark : colors.dangerOnInk }}>{c.ok ? '✓' : '✕'}</AppText>
+              <View style={[styles.checkDot, { backgroundColor: c.ok ? 'rgba(14,158,112,0.14)' : 'rgba(229,72,77,0.12)' }]}>
+                <AppText weight="semibold" style={{ fontSize: 10, color: c.ok ? colors.successOnInkText : colors.dangerOnInk }}>{c.ok ? '✓' : '✕'}</AppText>
               </View>
               <AppText style={styles.checkLabel}>{c.label}</AppText>
             </View>
@@ -518,7 +519,7 @@ export function GoogleInFlight({ visible }: { visible: boolean }) {
           </View>
         </View>
         <AppText weight="medium" style={styles.googleTitle}>Talking to Google</AppText>
-        <AppText style={styles.googleBody}>Getting your name and email back. No password ever passes through us.</AppText>
+        <AppText style={styles.googleBody}>Your password never passes through us.</AppText>
       </View>
     </Modal>
   );

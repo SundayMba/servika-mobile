@@ -100,7 +100,7 @@ export default function Refer() {
             {reward ? `Earn ${formatNaira(reward)} per artisan` : 'Earn cash for every artisan'}
           </AppText>
           <AppText className="mt-1.5 text-center text-[13px] leading-5 text-white/60">
-            Bring artisans to Servika. You get paid when they finish their first job.
+            Paid when they finish their first job.
           </AppText>
         </View>
       </View>

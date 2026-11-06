@@ -11,6 +11,8 @@ import { login } from '@/lib/api/auth';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { clearLastAccount, getLastAccount, lastSeenLabel, type LastAccount } from '@/lib/auth/lastAccount';
 
+const SIGN_IN_FAILED = 'Those sign-in details did not work. Check them and try again, or reset your password.';
+
 function initials(name: string) {
   return name.trim().split(/\s+/).slice(0, 2).map((p) => p[0] ?? '').join('').toUpperCase();
 }
@@ -55,8 +57,8 @@ export default function Login() {
     if (submitting) return;
     const emailOrPhone = identifier.trim();
     const next: typeof errs = {};
-    if (!emailOrPhone) next.identifier = 'Your email or phone first.';
-    if (!password) next.password = 'Your password, then we are in.';
+    if (!emailOrPhone) next.identifier = 'Enter your email or phone.';
+    if (!password) next.password = 'Enter your password.';
     setErrs(next);
     setError(null);
     if (next.identifier || next.password) return;
@@ -73,10 +75,10 @@ export default function Login() {
         router.push({ pathname: '/verify', params: { email: res.email, flow: 'login' } });
       }
     } catch (e) {
-      const f = classifyAuthError(e, 'That email and password do not match.');
+      // Never say which of the two was wrong: that would tell a stranger the account exists.
+      const f = classifyAuthError(e, SIGN_IN_FAILED);
       if (f.kind === 'offline') setOffline(true);
-      else if (f.kind === 'unauthorized' && f.message === 'Invalid email/phone or password.') setErrs({ password: 'That password does not match this email. Try again, or reset it.' });
-      else if (f.kind === 'unauthorized') setError(f.message);
+      else if (f.kind === 'unauthorized' && f.message === 'Invalid email/phone or password.') setError(SIGN_IN_FAILED);
       else setError(f.message);
     } finally {
       setSubmitting(false);
@@ -91,7 +93,7 @@ export default function Login() {
       banner={offline ? <Banner text="No network. Nothing you typed is lost." actionLabel="Retry" onAction={submit} /> : null}
       footer={
         <>
-          <PrimaryButton label="Sign me in" loadingLabel="Signing you in" loading={submitting} onPress={submit} />
+          <PrimaryButton label="Sign in" loadingLabel="Signing in" loading={submitting} onPress={submit} />
           <GoogleAuthButton variant="dark" onBusyChange={setGoogleBusy} />
           <FooterLink prompt="New here?" action="Make an account" onPress={() => router.replace('/register')} />
         </>
@@ -110,7 +112,7 @@ export default function Login() {
       ) : (
         <>
           <Headline>Good to have{'\n'}you back.</Headline>
-          <Lede>Sign in to see your bookings and pick up any chat where you left it.</Lede>
+          <Lede>Sign in to see your bookings and chats.</Lede>
         </>
       )}
 
@@ -154,7 +156,7 @@ export default function Login() {
         />
         <FieldError text={errs.password} />
         <Pressable accessibilityRole="button" hitSlop={8} onPress={() => router.push({ pathname: '/forgot-password', params: identifier ? { email: identifier } : {} })} style={styles.forgot}>
-          <AppText weight="semibold" style={styles.forgotText}>Forgot it? We will email you a code</AppText>
+          <AppText weight="semibold" style={styles.forgotText}>Forgot password?</AppText>
         </Pressable>
         {error ? <AppText style={inkStyles.error}>{error}</AppText> : null}
       </View>

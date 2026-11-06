@@ -115,7 +115,7 @@ export default function ServicesTab() {
             ) : tradeMatches.length === 0 ? (
               <View style={[styles.gutter, styles.empty]}>
                 <AppText weight="semibold" style={styles.emptyTitle}>No standard service matches &ldquo;{query.trim()}&rdquo;</AppText>
-                <AppText style={styles.emptyBody}>Pick a trade below and describe the job instead. Artisans send their prices.</AppText>
+                <AppText style={styles.emptyBody}>Pick a trade below and describe the job.</AppText>
               </View>
             ) : null}
             <CantFindCard onPress={() => setAsking(true)} style={styles.gutter} />
@@ -126,7 +126,7 @@ export default function ServicesTab() {
             <View style={{ gap: 12 }}>
               <View style={styles.gutter}>
                 <AppText weight="semibold" style={styles.section}>Describe a job</AppText>
-                <AppText style={styles.sectionSub}>Pick the trade. Checked artisans send prices and you choose.</AppText>
+                <AppText style={styles.sectionSub}>Artisans send prices and you choose.</AppText>
               </View>
               {categoriesQuery.isLoading ? (
                 <ActivityIndicator color={colors.accentDeep} />
@@ -146,7 +146,7 @@ export default function ServicesTab() {
               <View style={{ gap: 14 }}>
                 <View style={styles.gutter}>
                   <AppText weight="semibold" style={styles.section}>Standard services</AppText>
-                  <AppText style={styles.sectionSub}>Set prices from checked artisans. Book in a tap.</AppText>
+                  <AppText style={styles.sectionSub}>Fixed prices from checked artisans.</AppText>
                 </View>
                 {sections.map((s) => (
                   <View key={s.categorySlug} style={{ gap: 8 }}>
@@ -172,7 +172,7 @@ export default function ServicesTab() {
               <View style={{ gap: 10 }}>
                 <View style={styles.gutter}>
                   <AppText weight="semibold" style={styles.section}>Coming soon</AppText>
-                  <AppText style={styles.sectionSub}>Not offered yet. Tap one to tell us you need it.</AppText>
+                  <AppText style={styles.sectionSub}>Tap one to tell us you need it.</AppText>
                 </View>
                 <View style={[styles.gutter, styles.chips]}>
                   {comingSoon.map((c) => (

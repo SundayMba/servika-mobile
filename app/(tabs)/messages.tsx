@@ -55,7 +55,7 @@ export default function Messages() {
         <Empty
           icon="chatbubbles-outline"
           title="No conversations yet"
-          body="Message an artisan from their profile to start a conversation."
+          body="Your chats with artisans show up here."
         />
       ) : (
         <ScrollView

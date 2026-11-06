@@ -109,11 +109,11 @@ export default function Verify() {
 
   if (phase === 'done') {
     return (
-      <AuthScreen back={false} contentStyle={styles.doneContent} footer={<PrimaryButton label="Take me home" onPress={home} />}>
+      <AuthScreen back={false} contentStyle={styles.doneContent} footer={<PrimaryButton label="Go to Home" onPress={home} />}>
         <CheckTile />
         <View style={{ marginTop: 30 }}>
           <Headline>You are in{firstName ? `,\n${firstName}.` : '.'}</Headline>
-          <Lede>Email verified. Home is waiting, and anything you were about to do is one tap away.</Lede>
+          <Lede>Your email is verified.</Lede>
         </View>
       </AuthScreen>
     );
@@ -126,13 +126,13 @@ export default function Verify() {
     <AuthScreen
       right={flow === 'register' ? <StepRule label="Step 2" progress={1} /> : undefined}
       kicker={flow === 'register' ? undefined : 'Confirming your email'}
-      banner={phase === 'offline' ? <Banner text="No network. Your code never left." actionLabel="Retry" onAction={() => setPhase('clean')} /> : null}
+      banner={phase === 'offline' ? <Banner text="No network." actionLabel="Retry" onAction={() => setPhase('clean')} /> : null}
       footer={
         <>
           {phase === 'locked' ? (
             <>
               <PrimaryButton label="Send a fresh code" icon="refresh" onPress={resend} />
-              <OutlineButton label="Reset my password instead" onPress={() => router.push({ pathname: '/forgot-password', params: { email } })} />
+              <OutlineButton label="Reset password" onPress={() => router.push({ pathname: '/forgot-password', params: { email } })} />
             </>
           ) : phase === 'expired' ? (
             <PrimaryButton label="Send a fresh code" icon="refresh" onPress={resend} />
@@ -141,7 +141,7 @@ export default function Verify() {
           ) : phase === 'wrong' ? (
             <PrimaryButton label="Try this code" disabled={code.length < LENGTH} onPress={() => submit(code)} />
           ) : (
-            <PrimaryButton label="Let me in" loadingLabel="Checking your code" loading={phase === 'checking'} disabled={code.length < LENGTH} onPress={() => submit(code)} />
+            <PrimaryButton label="Verify" loadingLabel="Checking" loading={phase === 'checking'} disabled={code.length < LENGTH} onPress={() => submit(code)} />
           )}
           <FooterLink action="Wrong email? Change it" onPress={() => (router.canGoBack() ? router.back() : router.replace('/register'))} />
         </>
@@ -154,8 +154,8 @@ export default function Verify() {
         </>
       ) : (
         <>
-          <Headline>Six digits,{'\n'}nothing else.</Headline>
-          <Lede>Sent to {email}. It lands in seconds.</Lede>
+          <Headline>Enter your{'\n'}code.</Headline>
+          <Lede>We sent 6 digits to {email}.</Lede>
         </>
       )}
 
@@ -163,7 +163,7 @@ export default function Verify() {
         <CodeDigits value={phase === 'locked' || phase === 'expired' ? '' : code} onChange={onChange} tone={digitsTone} editable={phase === 'clean' || phase === 'wrong' || phase === 'offline'} />
         <Rule tone={phase === 'wrong' || phase === 'locked' ? 'wrong' : 'normal'} />
         {phase === 'wrong' ? (
-          <AppText weight="medium" style={styles.wrong}>That is not the code. {left === 1 ? 'One try left' : `${TRIES_WORDS[left] ?? left} tries left`}, then you will need a fresh code.</AppText>
+          <AppText weight="medium" style={styles.wrong}>Wrong code. {left === 1 ? 'One try left' : `${TRIES_WORDS[left] ?? left} tries left`}.</AppText>
         ) : phase === 'locked' ? (
           <View style={{ gap: 9 }}>
             <AppText weight="semibold" style={styles.lockedTitle}>
@@ -172,10 +172,8 @@ export default function Verify() {
             <AppText style={styles.lockedBody}>{message ?? 'Ask for a fresh code, or reset your password instead.'}</AppText>
           </View>
         ) : phase === 'expired' ? (
-          <AppText weight="medium" style={styles.expired}>That code timed out. Ten minutes is all it gets.</AppText>
-        ) : phase === 'offline' ? (
-          <AppText style={styles.lockedBody}>Nothing you typed is lost. Your details sit on this phone until the code gets through.</AppText>
-        ) : (
+          <AppText weight="medium" style={styles.expired}>That code expired after 10 minutes.</AppText>
+        ) : phase === 'offline' ? null : (
           <ResendRow cooldown={cooldown} onResend={resend} onPaste={(c) => onChange(c)} />
         )}
         {message && phase !== 'locked' ? <AppText style={inkStyles.notice}>{message}</AppText> : null}

@@ -234,9 +234,6 @@ export default function BookingLocation() {
                   ? 'Getting your location…'
                   : 'Use my current location'}
               </AppText>
-              <AppText className="mt-0.5 text-[12px] text-gray-500">
-                We&apos;ll fill in your address automatically.
-              </AppText>
             </View>
             {coords ? (
               <Ionicons name="checkmark-circle" size={20} color="#22C55E" />
@@ -259,7 +256,7 @@ export default function BookingLocation() {
                 setLocateErr(undefined);
                 setCoords(null); // typed address no longer matches the GPS fix
               }}
-              placeholder="Enter the address the artisan should come to"
+              placeholder="Enter the address"
               placeholderTextColor={colors.textMuted}
               multiline
               textAlignVertical="top"

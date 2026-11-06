@@ -13,7 +13,7 @@ export function CantFindCard({ onPress, style }: { onPress: () => void; style?: 
       </View>
       <View style={{ flex: 1, gap: 3 }}>
         <AppText weight="semibold" style={styles.title}>Can&apos;t find what you want?</AppText>
-        <AppText style={styles.sub}>Tell us the service you need. Requests decide what Servika adds next.</AppText>
+        <AppText style={styles.sub}>Tell us the service you need.</AppText>
       </View>
       <Ionicons name="arrow-forward" size={18} color={colors.ink} />
     </Pressable>

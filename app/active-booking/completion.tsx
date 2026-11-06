@@ -185,9 +185,9 @@ export default function ServiceCompletion() {
         <View className="mt-5 flex-row items-start gap-2 rounded-2xl bg-primary/5 p-3.5">
           <Ionicons name="information-circle-outline" size={18} color={colors.primary} />
           <AppText className="flex-1 text-[12px] leading-4 text-gray-600">
-            {`Confirming finalises the job and lets you rate ${name.split(' ')[0]}.`}
+            {'Confirm once you are happy with the work.'}
             {awaiting && autoConfirmLabel
-              ? ` If you do nothing, it confirms itself on ${autoConfirmLabel}.`
+              ? ` It confirms itself on ${autoConfirmLabel}.`
               : ''}
           </AppText>
         </View>

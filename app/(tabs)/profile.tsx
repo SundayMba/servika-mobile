@@ -127,7 +127,7 @@ export default function Profile() {
             You&apos;re browsing as a guest
           </AppText>
           <AppText style={styles.guestBody}>
-            Sign in to manage your profile, bookings and messages.
+            Sign in to see your bookings and messages.
           </AppText>
           <Pressable
             accessibilityRole="button"
@@ -178,9 +178,6 @@ export default function Profile() {
         <View style={styles.headerCopy}>
           <AppText weight="semibold" style={styles.title}>
             Profile
-          </AppText>
-          <AppText weight="medium" style={styles.subtitle}>
-            Manage your account and preferences
           </AppText>
         </View>
         <View style={styles.headerActions}>
@@ -280,9 +277,6 @@ export default function Profile() {
           <View style={styles.supportCopy}>
             <AppText weight="semibold" style={styles.supportTitle}>
               Need help with a service?
-            </AppText>
-            <AppText style={styles.supportBody}>
-              Our support team is ready to assist you.
             </AppText>
             <Pressable
               accessibilityRole="button"

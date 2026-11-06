@@ -119,9 +119,6 @@ export default function ActiveBookingDashboard() {
           </Pressable>
           <View>
             <AppText weight="semibold" className="text-[20px] text-gray-900">Active Booking</AppText>
-            <AppText className="text-[12px] text-gray-500">
-              Track your booking status in real time
-            </AppText>
           </View>
         </View>
         <View className="flex-row gap-2">
@@ -224,9 +221,6 @@ export default function ActiveBookingDashboard() {
           <Ionicons name="navigate-circle-outline" size={22} color={colors.primary} />
           <View className="ml-3 flex-1">
             <AppText weight="semibold" className="text-[13px] text-gray-900">Track your artisan live</AppText>
-            <AppText className="mt-0.5 text-[12px] leading-4 text-gray-600">
-              Watch their location on the map once they’re on the way.
-            </AppText>
           </View>
           <Ionicons name="chevron-forward" size={18} color={colors.primary} />
         </Pressable>

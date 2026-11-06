@@ -43,7 +43,7 @@ export default function ReportIssue() {
       // A dispute must be tied to a booking — never pretend one was filed.
       appAlert(
         'Open the booking first',
-        'To report an issue, open the booking it concerns and tap "Report an issue" there.',
+        'To report an issue, open the booking it concerns and tap "Report an issue".',
         [
           { text: 'My bookings', onPress: () => router.replace('/bookings') },
           { text: 'Close', style: 'cancel' },
@@ -83,9 +83,6 @@ export default function ReportIssue() {
         </Pressable>
         <View className="items-center">
           <AppText weight="semibold" className="text-[17px] text-gray-900">Report an Issue</AppText>
-          <AppText className="text-[12px] text-gray-500">
-            Help us understand what happened
-          </AppText>
         </View>
       </View>
 
