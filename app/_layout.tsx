@@ -67,6 +67,10 @@ function RootLayout() {
     <QueryProvider>
       <AuthProvider>
         <PhoneGateProvider>
+        {/* Screens mount only once the fonts are in: Android measures text in the fallback face and keeps that
+            width, so a screen opened before then (a cold start from a booking link) shows titles cut mid-word.
+            The splash overlay covers the wait. Same fix as Servika Pro. */}
+        {fontsLoaded ? (
         <Stack
         screenOptions={{
           headerShown: false,
@@ -85,6 +89,7 @@ function RootLayout() {
         />
         {/* The service profile shares the artisan profile's white canvas. */}
         </Stack>
+        ) : null}
         {/* Dev-only API connectivity indicator (Slice 0 rails check). */}
         <ApiStatusBadge />
           <UpdateBanner />
