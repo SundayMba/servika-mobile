@@ -41,7 +41,7 @@ export function InterestSheet({
     }
   }, [visible, category?.slug]);
 
-  const title = reason === 'area' ? 'Not in your area yet' : category ? `${category.name} is coming soon` : 'What service do you need?';
+  const title = reason === 'area' ? 'No artisans near you yet' : category ? `${category.name} is coming soon` : 'What service do you need?';
   const lede =
     reason === 'area'
       ? `Tell us you are in ${area || 'your area'}.`

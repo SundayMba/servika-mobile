@@ -21,6 +21,7 @@ import { ActiveBookingCarousel } from '@/components/home/ActiveBookingCarousel';
 import { HeroCarousel } from '@/components/home/HeroCarousel';
 import { CantFindCard } from '@/components/home/CantFindCard';
 import { InterestSheet } from '@/components/home/InterestSheet';
+import { WaitlistSheet } from '@/components/home/WaitlistSheet';
 import { JobTile } from '@/components/home/JobTile';
 import { LocationSheet } from '@/components/home/LocationSheet';
 import { ServiceSectionRow, ServiceSectionSkeleton } from '@/components/home/ServiceSections';
@@ -28,7 +29,7 @@ import { ActiveBookingSkeleton, ServiceGridSkeleton } from '@/components/home/Sk
 import { AppText } from '@/components/ui/AppText';
 import { colors } from '@/constants/colors';
 import { FALLBACK_CATEGORIES } from '@/constants/fallback-categories';
-import { SERVIKA_PRO_STORE_URL, SITE_URL } from '@/constants/links';
+import { SERVIKA_PRO_STORE_URL } from '@/constants/links';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useAuthGate } from '@/lib/auth/useAuthGate';
 import { isActiveBooking, isTrackable } from '@/lib/booking/display';
@@ -89,6 +90,7 @@ export default function Home() {
   const tileWidth = Math.floor((width - GUTTER * 2 - TILE_GAP * 2) / 3);
 
   const [locationVisible, setLocationVisible] = useState(false);
+  const [waitlistOpen, setWaitlistOpen] = useState(false);
   const [interest, setInterest] = useState<{ category: { slug: string; name: string } | null; reason: 'service' | 'area' } | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [scrolling, setScrolling] = useState(false);
@@ -116,7 +118,10 @@ export default function Home() {
 
   // Only claim "near you" when we know where "you" is.
   const availability = areaCoords ? availabilityQuery.data : undefined;
-  const outsideArea = !!areaCoords && availability?.covering === 0;
+  // Every service switched off by ops: nothing can be booked anywhere, so say that, not "not in your area".
+  const bookingsPaused = categoriesQuery.isSuccess && tiles.length === 0;
+  // No checked artisan would see a job posted here (none within the state-wide reach of this point).
+  const outsideArea = !bookingsPaused && !!areaCoords && availability?.covering === 0;
   const areaShort = area ? area.split(',')[0] : '';
 
   const onRefresh = useCallback(async () => {
@@ -182,7 +187,7 @@ export default function Home() {
             </AppText>
             <Ionicons name="chevron-down" size={13} color={colors.inkSubtle} />
           </Pressable>
-          {availability && !outsideArea ? (
+          {availability && availability.covering > 0 && !bookingsPaused ? (
             <View style={styles.livePill}>
               <View style={styles.liveDot} />
               <AppText weight="medium" numberOfLines={1} style={styles.liveText}>
@@ -223,20 +228,30 @@ export default function Home() {
           </Animated.View>
         ) : null}
 
-        {/* ── Not in your area yet ── */}
-        {outsideArea ? (
+        {/* ── Bookings paused, or nobody within reach yet ── */}
+        {bookingsPaused || outsideArea ? (
           <View style={[styles.gutter, styles.areaCard]}>
             <View style={styles.areaCardIcon}>
-              <Ionicons name="navigate-outline" size={20} color={colors.accentDeep} />
+              <Ionicons name={bookingsPaused ? 'time-outline' : 'navigate-outline'} size={20} color={colors.accentDeep} />
             </View>
-            <AppText weight="semibold" style={styles.areaTitle}>We&apos;re not in {areaShort || 'your area'} yet</AppText>
-            <AppText style={styles.areaBody}>For now we cover Lekki Phase 1, Ikate, Chevron and Agungi.</AppText>
+            <AppText weight="semibold" style={styles.areaTitle}>
+              {bookingsPaused ? 'Bookings open soon' : `No artisans near ${areaShort || 'you'} yet`}
+            </AppText>
+            <AppText style={styles.areaBody}>
+              {bookingsPaused
+                ? "We're getting our first artisans ready. Join the waitlist and we'll tell you the day you can book."
+                : "New artisans join every week. Join the waitlist and we'll tell you when one is near you."}
+            </AppText>
             <View style={styles.areaActions}>
-              <Pressable accessibilityRole="button" onPress={() => Linking.openURL(SITE_URL).catch(() => undefined)} style={styles.areaPrimary}>
+              <Pressable accessibilityRole="button" onPress={() => setWaitlistOpen(true)} style={styles.areaPrimary}>
                 <AppText weight="semibold" style={styles.areaPrimaryLabel}>Join the waitlist</AppText>
               </Pressable>
-              <Pressable accessibilityRole="button" onPress={() => setInterest({ category: null, reason: 'area' })} style={styles.areaSecondary}>
-                <AppText weight="semibold" style={styles.areaSecondaryLabel}>Tell us where</AppText>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => setInterest({ category: null, reason: bookingsPaused ? 'service' : 'area' })}
+                style={styles.areaSecondary}
+              >
+                <AppText weight="semibold" style={styles.areaSecondaryLabel}>{bookingsPaused ? 'Tell us more' : 'Tell us where'}</AppText>
               </Pressable>
             </View>
           </View>
@@ -367,6 +382,7 @@ export default function Home() {
         onOpenMap={() => router.push('/location-picker')}
         onClose={() => setLocationVisible(false)}
       />
+      <WaitlistSheet visible={waitlistOpen} onClose={() => setWaitlistOpen(false)} reason={bookingsPaused ? 'paused' : 'area'} />
       <InterestSheet visible={!!interest} onClose={() => setInterest(null)} category={interest?.category ?? null} reason={interest?.reason ?? 'service'} />
       <AuthPromptSheet
         onSignedIn={onSignedIn}
