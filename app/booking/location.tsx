@@ -18,6 +18,7 @@ import {
   searchPlaces,
   type PlaceResult,
 } from '@/lib/location/search';
+import { bookingDraft } from '@/lib/booking/draftStore';
 
 const dropShadow = {
   shadowColor: '#0F172A',
@@ -57,16 +58,21 @@ export default function BookingLocation() {
 
   // Everything earlier steps chose (booking code, Book again, the price-book job, the mode) rides along.
   const carried = useLocalSearchParams<Record<string, string>>();
-  const [instructions, setInstructions] = useState('');
-  const [addressText, setAddressText] = useState('');
+  // Seeded from the draft so going back to photos and forward again keeps the address.
+  const [instructions, setInstructions] = useState(() => bookingDraft.location().instructions);
+  const [addressText, setAddressText] = useState(() => bookingDraft.location().addressText);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(
-    null,
+    () => bookingDraft.location().coords,
   );
+  useEffect(() => {
+    bookingDraft.setLocation({ addressText, instructions, coords });
+  }, [addressText, instructions, coords]);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   // Places autocomplete under the address field: suggestions appear while the
   // user types and clear once they pick one (or use GPS).
   const [suggestions, setSuggestions] = useState<PlaceResult[]>([]);
-  const suppressSearch = useRef(false);
+  // A restored address must not pop the suggestions list open.
+  const suppressSearch = useRef(bookingDraft.location().addressText.length > 0);
 
   useEffect(() => {
     if (suppressSearch.current) {

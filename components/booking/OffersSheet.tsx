@@ -103,8 +103,15 @@ function OfferCard({
           </View>
           <AppText numberOfLines={1} style={styles.meta}>
             ID checked · {bid.completedJobs > 0 ? `${bid.completedJobs} ${bid.completedJobs === 1 ? 'job' : 'jobs'} done` : 'New'}
-            {distance ? ` · ${distance}` : ''}
           </AppText>
+          {bid.artisanArea || distance ? (
+            <View style={styles.startRow}>
+              <Ionicons name="location-outline" size={13} color={colors.textMuted} />
+              <AppText numberOfLines={1} style={[styles.meta, { marginTop: 0, flexShrink: 1 }]}>
+                {[bid.artisanArea?.split(',')[0]?.trim(), distance].filter(Boolean).join(' · ')}
+              </AppText>
+            </View>
+          ) : null}
           <View style={styles.startRow}>
             <Ionicons name={bid.artisanBusy ? 'construct-outline' : 'time-outline'} size={13} color={start.now ? colors.successOnInkText : colors.accentDeep} />
             <AppText weight="medium" style={[styles.startText, { color: start.now ? colors.successOnInkText : colors.accentDeep }]}>{start.text}</AppText>

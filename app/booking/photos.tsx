@@ -4,7 +4,7 @@ import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -75,10 +75,22 @@ export default function BookingPhotos() {
   }>();
   const isOpen = params.open === '1' && !params.artisanId;
 
-  const [photos, setPhotos] = useState<{ uri: string; base64: string }[]>([]);
+  // Seeded from the draft, so photos stay put when the customer comes back to this step.
+  const [photos, setPhotos] = useState<{ uri: string; base64: string }[]>(() => {
+    const d = bookingMedia.get();
+    return d.photoUris.map((uri, i) => ({ uri, base64: d.photosBase64[i] ?? '' })).filter((p) => p.base64);
+  });
 
   const [mediaErr] = useState<string | undefined>();
-  const [video, setVideo] = useState<{ uri: string } | null>(null);
+  const [video, setVideo] = useState<{ uri: string } | null>(() => {
+    const uri = bookingMedia.get().videoUri;
+    return uri ? { uri } : null;
+  });
+  // Kept in the draft as they change, so going back a step does not lose them either.
+  useEffect(() => {
+    bookingMedia.setPhotos(photos.map((p) => p.base64), photos.map((p) => p.uri));
+    bookingMedia.setVideo(video?.uri ?? null);
+  }, [photos, video]);
   // An open request is priced by bids; a request to one artisan is seen and priced by them.
   const assessment: AssessmentChoice = isOpen ? 'RemoteQuote' : 'Inspection';
   const [working, setWorking] = useState(false);

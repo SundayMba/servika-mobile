@@ -119,13 +119,18 @@ export default function BookingSummary() {
     : params.categorySlug && artisan?.categorySlugs?.includes(params.categorySlug)
       ? params.categorySlug
       : artisan?.categorySlugs?.[0];
-  const photoCount = (() => {
-    try {
-      return params.photos ? (JSON.parse(params.photos) as string[]).length : 0;
-    } catch {
-      return 0;
-    }
-  })();
+  const media = bookingMedia.get();
+  const photoCount = media.photoUris.length;
+  // Artisans price an open request from its photos, so one photo or a video is needed first
+  // (the server says the same). Tapping the notice goes back to the photos step, with
+  // everything typed so far kept.
+  const needsMedia = isOpen && media.assessment === 'RemoteQuote' && photoCount === 0 && !media.videoUri;
+  const goToPhotos = () => {
+    setErrorMsg(null);
+    // Summary sits on top of location, which sits on photos: step back two screens.
+    if (router.canDismiss()) router.dismiss(2);
+    else router.back();
+  };
 
   const usersBearFees = feeSchedule.data?.usersBearFees === true;
 
@@ -138,7 +143,7 @@ export default function BookingSummary() {
   const phoneGate = usePhoneGate();
 
   const canProceed =
-    !!categorySlug && !!params.addressText && (isOpen || !artisanLoading);
+    !!categorySlug && !!params.addressText && !needsMedia && (isOpen || !artisanLoading);
 
   const handleProceed = async () => {
     if (!categorySlug || !safetyAck) return;
@@ -433,7 +438,25 @@ export default function BookingSummary() {
           )}
         </Section>
 
-        {errorMsg ? (
+        {needsMedia || (errorMsg && /photo/i.test(errorMsg)) ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Add photos"
+            onPress={goToPhotos}
+            className="mt-4 flex-row items-center rounded-2xl border border-orange-200 bg-orange-50 p-3.5"
+          >
+            <View className="h-10 w-10 items-center justify-center rounded-full bg-white">
+              <Ionicons name="camera-outline" size={20} color={colors.primary} />
+            </View>
+            <View className="ml-3 flex-1">
+              <AppText weight="semibold" className="text-[14px] text-gray-900">Add a photo of the job</AppText>
+              <AppText className="mt-0.5 text-[12px] leading-4 text-gray-600">
+                Artisans price it from your photos or a short video.
+              </AppText>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={colors.primary} />
+          </Pressable>
+        ) : errorMsg ? (
           <View className="mt-4 rounded-2xl border border-red-100 bg-red-50 p-3">
             <AppText className="text-[13px] text-red-600">{errorMsg}</AppText>
           </View>
@@ -478,7 +501,11 @@ export default function BookingSummary() {
             disabled={!canProceed || !safetyAck}
             onPress={handleProceed}
           />
-          {!safetyAck ? (
+          {needsMedia ? (
+            <AppText className="mt-2 text-center text-[12px] text-gray-500">
+              Add a photo to continue.
+            </AppText>
+          ) : !safetyAck ? (
             <AppText className="mt-2 text-center text-[12px] text-gray-500">
               Tick the box to continue.
             </AppText>

@@ -228,6 +228,8 @@ export interface Bid {
   availableFromUtc?: string | null;
   /** On another job right now; availableFromUtc is when they expect to be free. */
   artisanBusy?: boolean;
+  /** Area the artisan works from (e.g. "Ajah, Lagos"). Never a street. */
+  artisanArea?: string | null;
   photoUrl: string | null;
   /** Total the customer pays: workmanshipNaira + materialsNaira. */
   amountNaira: number;

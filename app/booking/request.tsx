@@ -2,7 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -17,6 +17,7 @@ import { BookingSteps } from '@/components/booking/BookingSteps';
 import { BottomSheet } from '@/components/BottomSheet';
 import { Button } from '@/components/ui/Button';
 import { colors } from '@/constants/colors';
+import { bookingDraft } from '@/lib/booking/draftStore';
 import { bookingMedia } from '@/lib/booking/mediaStore';
 import { formatNaira } from '@/lib/catalogue/assets';
 import { useArtisan, useCategories } from '@/lib/catalogue/hooks';
@@ -134,6 +135,12 @@ export default function BookingRequest() {
     }>();
   const isPriceBookJob = !!priceBookItemId;
 
+  // A new booking starts here: forget the address, photos and video of any earlier one.
+  useEffect(() => {
+    bookingDraft.reset();
+    bookingMedia.reset();
+  }, []);
+
   const [description, setDescription] = useState('');
   // `date` holds an ISO datetime; the field shows it formatted.
   const [date, setDate] = useState<string | undefined>(undefined);
@@ -171,7 +178,10 @@ export default function BookingRequest() {
     ? [...new Set([artisan?.specialty, ...(artisan?.services ?? [])])]
         .filter((s): s is string => !!s)
         .map((label) => ({ label, slug: slugForLabel(label) }))
-    : (categories ?? []).map((c) => ({ label: c.name, slug: c.slug }));
+    : // Only services people can book today (the same ones on Home), plus the one this request came from.
+      (categories ?? [])
+        .filter((c) => c.isPopular || c.slug === categorySlug)
+        .map((c) => ({ label: c.name, slug: c.slug }));
 
   // Preferred time: a quick-pick preset OR a custom From–To window (the custom
   // window wins once both ends are set; picking either clears the other mode).
