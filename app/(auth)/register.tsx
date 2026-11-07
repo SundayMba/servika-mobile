@@ -148,7 +148,7 @@ export default function Register() {
           {keyboardUp ? null : (
             <>
               <GoogleAuthButton variant="dark" onBusyChange={setGoogleBusy} />
-              <FooterLink prompt="Been here before?" action="Sign in instead" onPress={() => router.replace('/login')} />
+              <FooterLink prompt="Already use Servika Pro?" action="Sign in with that email" onPress={() => router.replace('/login')} />
             </>
           )}
         </>
