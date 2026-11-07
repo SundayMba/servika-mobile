@@ -1,7 +1,10 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import { ActivityIndicator, Pressable, View } from 'react-native';
+
+import { PhotoViewer, type ViewerPhoto } from '@/components/PhotoViewer';
 
 import { AppText } from '@/components/ui/AppText';
 import { colors } from '@/constants/colors';
@@ -21,6 +24,9 @@ export const WHOS_COMING_STATUSES: BookingStatus[] = ['Accepted', 'OnMyWay', 'Ar
 export function WhosComingCard({ artisanId }: { artisanId: string }) {
   const router = useRouter();
   const { data: artisan, isLoading } = useArtisan(artisanId);
+  // Work photos that fail to load are dropped rather than left as empty boxes.
+  const [broken, setBroken] = useState<Set<string>>(() => new Set());
+  const [viewer, setViewer] = useState<{ photos: ViewerPhoto[]; index: number } | null>(null);
   if (isLoading) {
     return (
       <View className="mt-4 items-center rounded-2xl border border-gray-100 bg-white p-4">
@@ -29,7 +35,8 @@ export function WhosComingCard({ artisanId }: { artisanId: string }) {
     );
   }
   if (!artisan) return null;
-  const photos = artisan.galleryUrls.slice(0, 3);
+  const photos = artisan.galleryUrls.filter((u) => !broken.has(u)).slice(0, 3);
+  const faceUri = artisan.photoUrl ? `${config.apiBaseUrl}${artisan.photoUrl}` : null;
   const jobs = artisan.completedJobs ?? 0;
   return (
     <View className="mt-4 rounded-2xl border border-gray-100 bg-white p-4">
@@ -42,7 +49,20 @@ export function WhosComingCard({ artisanId }: { artisanId: string }) {
         onPress={() => router.push({ pathname: '/artisan/[id]', params: { id: artisan.id } })}
         className="flex-row items-center gap-3"
       >
-        <Image source={artisanPhotoSource(artisan.photoUrl, artisan.imageKey)} style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: '#EEE' }} contentFit="cover" />
+        {/* The face to check at the door: tap for full size. */}
+        <Pressable
+          accessibilityRole="imagebutton"
+          accessibilityLabel={`See ${artisan.fullName}'s photo full size`}
+          disabled={!faceUri}
+          onPress={() => faceUri && setViewer({ photos: [{ uri: faceUri }], index: 0 })}
+        >
+          <Image source={artisanPhotoSource(artisan.photoUrl, artisan.imageKey)} style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: '#EEE' }} contentFit="cover" />
+          {faceUri ? (
+            <View style={{ position: 'absolute', right: -2, bottom: -2, width: 20, height: 20, borderRadius: 10, backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#FFFFFF' }}>
+              <Ionicons name="expand" size={11} color="#FFFFFF" />
+            </View>
+          ) : null}
+        </Pressable>
         <View className="flex-1">
           <AppText weight="semibold" className="text-[16px] text-gray-900">{artisan.fullName}</AppText>
           <AppText className="mt-0.5 text-[13px] text-gray-500">
@@ -57,11 +77,25 @@ export function WhosComingCard({ artisanId }: { artisanId: string }) {
       </Pressable>
       {photos.length > 0 ? (
         <View className="mt-3 flex-row gap-2">
-          {photos.map((u) => (
-            <Image key={u} source={{ uri: `${config.apiBaseUrl}${u}` }} style={{ flex: 1, aspectRatio: 1, borderRadius: 12, backgroundColor: '#EEE' }} contentFit="cover" />
+          {photos.map((u, i) => (
+            <Pressable
+              key={u}
+              accessibilityRole="imagebutton"
+              accessibilityLabel="Recent work photo"
+              onPress={() => setViewer({ photos: photos.map((p) => ({ uri: `${config.apiBaseUrl}${p}` })), index: i })}
+              style={{ flex: 1 }}
+            >
+              <Image
+                source={{ uri: `${config.apiBaseUrl}${u}` }}
+                style={{ width: '100%', aspectRatio: 1, borderRadius: 12, backgroundColor: '#EEE' }}
+                contentFit="cover"
+                onError={() => setBroken((b) => new Set(b).add(u))}
+              />
+            </Pressable>
           ))}
         </View>
       ) : null}
+      <PhotoViewer visible={!!viewer} onClose={() => setViewer(null)} photos={viewer?.photos ?? []} initialIndex={viewer?.index ?? 0} />
     </View>
   );
 }

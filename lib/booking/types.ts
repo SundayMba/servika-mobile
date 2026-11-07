@@ -177,6 +177,14 @@ export interface BookingDetail {
   isCustomQuote?: boolean;
   typicalRangeMinNaira?: number | null;
   typicalRangeMaxNaira?: number | null;
+  /** 4 digits the customer reads out at the door; present only until the artisan enters it. */
+  doorCode?: string | null;
+  /** The artisan has arrived and must still enter the door code. */
+  doorCodeRequired?: boolean;
+  doorCodeConfirmedAtUtc?: string | null;
+  /** Too many wrong codes: show a new one. */
+  doorCodeLocked?: boolean;
+  doorCodeAttemptsLeft?: number;
 }
 
 /** One repair the artisan picked from Servika's add-on list, with a photo of the fault. */

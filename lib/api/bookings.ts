@@ -46,6 +46,12 @@ export async function getBooking(id: string): Promise<BookingDetail> {
 }
 
 /** Cancel a booking (allowed only while Pending/Accepted). Returns the updated booking. */
+/** Show a new door code (after too many wrong tries). */
+export async function newDoorCode(id: string): Promise<BookingDetail> {
+  const { data } = await apiClient.post<BookingDetail>(`${BASE}/${id}/door-code/new`);
+  return data;
+}
+
 export async function cancelBooking(id: string): Promise<BookingDetail> {
   const { data } = await apiClient.post<BookingDetail>(`${BASE}/${id}/cancel`);
   return data;

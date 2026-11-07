@@ -10,7 +10,10 @@ import { AppText } from '@/components/ui/AppText';
 import { appAlert } from '@/components/ui/AppAlert';
 import { ArtisanRow, VerifiedBadges } from '@/components/active-booking/parts';
 import { BottomSheet } from '@/components/BottomSheet';
+import { DoorCodeCard, hasDoorCode } from '@/components/booking/DoorCodeCard';
 import { SafetyReminder } from '@/components/booking/SafetyReminder';
+import { PhotoViewer } from '@/components/PhotoViewer';
+import { config } from '@/lib/config';
 import { Button } from '@/components/ui/Button';
 import { LiveMap } from '@/components/tracking/LiveMap';
 import { colors } from '@/constants/colors';
@@ -60,6 +63,7 @@ export default function LiveTracking() {
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string; artisanId?: string; name?: string }>();
   const [sheet, setSheet] = useState(false);
+  const [photoOpen, setPhotoOpen] = useState(false);
 
   // Foreground location permission (best-effort) so the customer's own blue
   // dot shows — useful when THEY move to meet a stationary artisan.
@@ -234,6 +238,7 @@ export default function LiveTracking() {
           completedJobs={artisan?.completedJobs}
           imageKey={imageKey}
           photoUrl={artisan?.photoUrl}
+          onPhotoPress={artisan?.photoUrl ? () => setPhotoOpen(true) : undefined}
           right={
             showEta ? (
               <View className="items-end">
@@ -248,7 +253,11 @@ export default function LiveTracking() {
         <View className="mt-3">
           <VerifiedBadges verified={artisan?.isVerified} certified={artisan?.hasCertificate} />
         </View>
-        {booking ? (
+        {booking && hasDoorCode(booking) ? (
+          <View className="mt-3">
+            <DoorCodeCard booking={booking} artisanName={artisan?.fullName || booking.artisanName} compact />
+          </View>
+        ) : booking ? (
           <View className="mt-3">
             <SafetyReminder
               bookingId={booking.id}
@@ -319,6 +328,13 @@ export default function LiveTracking() {
           ) : null}
         </View>
       </BottomSheet>
+
+      {/* The face at full size, for the check at the door. */}
+      <PhotoViewer
+        visible={photoOpen}
+        onClose={() => setPhotoOpen(false)}
+        photos={artisan?.photoUrl ? [{ uri: `${config.apiBaseUrl}${artisan.photoUrl}` }] : []}
+      />
     </SafeAreaView>
   );
 }

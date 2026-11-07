@@ -1,6 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Image } from 'expo-image';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import Svg, { Circle, Line, Path, Rect } from 'react-native-svg';
 
 import { AppText } from '@/components/ui/AppText';
@@ -149,6 +149,7 @@ export function ArtisanRow({
   imageKey,
   photoUrl,
   right,
+  onPhotoPress,
 }: {
   name: string;
   specialty: string;
@@ -157,6 +158,8 @@ export function ArtisanRow({
   imageKey: string;
   photoUrl?: string | null;
   right?: React.ReactNode;
+  /** Tap the face to see it full size (the check at the door). */
+  onPhotoPress?: () => void;
 }) {
   const avatar = artisanPhotoSource(photoUrl, imageKey);
   // Ratings are collected, not shown (Business Model v1.4): Servika history instead.
@@ -169,11 +172,18 @@ export function ArtisanRow({
   return (
     <View className="flex-row items-center">
       {avatar ? (
-        <Image
-          source={avatar}
-          style={{ width: 52, height: 52, borderRadius: 26 }}
-          contentFit="cover"
-        />
+        <Pressable
+          accessibilityRole="imagebutton"
+          accessibilityLabel={`See ${name}'s photo full size`}
+          disabled={!onPhotoPress}
+          onPress={onPhotoPress}
+        >
+          <Image
+            source={avatar}
+            style={{ width: 52, height: 52, borderRadius: 26 }}
+            contentFit="cover"
+          />
+        </Pressable>
       ) : (
         <View className="h-13 w-13 items-center justify-center rounded-full bg-primary/10">
           <Ionicons name="person" size={24} color={colors.primary} />

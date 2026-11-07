@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   acceptBid,
   cancelBooking,
+  newDoorCode,
   choosePaymentMethod,
   completeBooking,
   createBooking,
@@ -55,6 +56,15 @@ export function useCreateBooking() {
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
       queryClient.setQueryData(['booking', booking.id], booking);
     },
+  });
+}
+
+/** The customer shows a new door code. */
+export function useNewDoorCode() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: newDoorCode,
+    onSuccess: (booking) => queryClient.setQueryData(['booking', booking.id], booking),
   });
 }
 
